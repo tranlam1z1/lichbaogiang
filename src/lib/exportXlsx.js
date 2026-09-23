@@ -1,4 +1,4 @@
-// Xuất Lịch báo giảng ra Excel (.xlsx): mỗi tuần một sheet "Tuần N", in vừa khổ A4.
+// Xuất Kế hoạch giảng dạy ra Excel (.xlsx): mỗi tuần một sheet "Tuần N", in vừa khổ A4.
 import ExcelJS from 'exceljs';
 import { formatDM, formatDMY } from './calendar.js';
 
@@ -62,7 +62,7 @@ function addWeekSheet(wb, info, week, rows) {
   ws.mergeCells(2, 5, 2, last);
   put(2, 5, `Học kì ${week.semester || ''}`, { italic: true }, { horizontal: 'center' });
   ws.mergeCells(4, 1, 4, last);
-  put(4, 1, 'LỊCH BÁO GIẢNG', { bold: true, size: 16 }, { horizontal: 'center' });
+  put(4, 1, 'KẾ HOẠCH GIẢNG DẠY', { bold: true, size: 16 }, { horizontal: 'center' });
   ws.getRow(4).height = 24;
   ws.mergeCells(5, 1, 5, last);
   put(5, 1, `Tuần ${week.num}   –   Lớp ${info.className || ''}`, { bold: true, size: 13 }, { horizontal: 'center' });

@@ -1,6 +1,6 @@
-# Lịch báo giảng — ứng dụng web thay thế file Excel
+# Kế hoạch giảng dạy — ứng dụng web thay thế file Excel
 
-Ứng dụng React (tiếng Việt) giúp giáo viên tiểu học lập **Lịch báo giảng** từ thời khóa biểu và phân phối chương trình (PPCT), thay cho file Excel `LBG_NH_26-27 (Gấm 4A).xls`.
+Ứng dụng React (tiếng Việt) giúp giáo viên tiểu học lập **Kế hoạch giảng dạy** từ thời khóa biểu và phân phối chương trình (PPCT), thay cho file Excel `LBG_NH_26-27 (Gấm 4A).xls`.
 
 ## Chạy ứng dụng
 
@@ -44,7 +44,7 @@ src/
     text.js          chuẩn hóa tên môn, bỏ dấu để tìm kiếm
     calendar.js      ngày tháng, tuần hiện tại, tạo lại cả năm, kiểm tra lịch
     ppct.js          chỉ mục PPCT, tra tên bài, số tiết/tuần
-    schedule.js      dựng lịch báo giảng 1 tuần, gộp ô, đối chiếu TKB
+    schedule.js      dựng kế hoạch giảng dạy 1 tuần, gộp ô, đối chiếu TKB
     range.js         phạm vi xuất (tuần đang xem, HK I, HK II, cả năm, từ… đến…)
     exportDocx.js    tạo file Word (thư viện docx)
     exportXlsx.js    tạo file Excel (thư viện exceljs)
@@ -69,7 +69,7 @@ Script đổi cột tuần/tiết sang số, bỏ khoảng trắng thừa, và k
 
 ## Xuất file
 
-- **Word (.docx):** A4 đứng, Times New Roman, mỗi tuần một trang (mỗi tuần là một section). Đầu trang có cơ quan chủ quản, tên trường, năm học, học kì, "LỊCH BÁO GIẢNG", tuần, lớp, từ ngày … đến ngày …; bảng có gộp ô Thứ/Buổi; cuối trang chỗ ký *Giáo viên chủ nhiệm* và họ tên. Cỡ chữ bảng tự chọn (12 → 7pt) theo số dòng và độ dài tên bài để vừa một trang.
+- **Word (.docx):** A4 đứng, Times New Roman, mỗi tuần một trang (mỗi tuần là một section). Đầu trang có cơ quan chủ quản, tên trường, năm học, học kì, "KẾ HOẠCH GIẢNG DẠY", tuần, lớp, từ ngày … đến ngày …; bảng có gộp ô Thứ/Buổi; cuối trang chỗ ký *Giáo viên chủ nhiệm* và họ tên. Cỡ chữ bảng tự chọn (12 → 7pt) theo số dòng và độ dài tên bài để vừa một trang.
 - **Excel (.xlsx):** mỗi tuần một sheet "Tuần N", có viền, gộp ô, tự xuống dòng, in vừa 1 trang A4 đứng, lặp dòng tiêu đề.
 
 ## Kết quả kiểm tra trước khi giao

@@ -5,7 +5,7 @@ import { formatDM, formatDMY } from '../lib/calendar.js';
 import EditableText from './EditableText.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
-/** Bảng lịch báo giảng của một tuần. */
+/** Bảng kế hoạch giảng dạy của một tuần. */
 export default function LessonSheet({ week }) {
   const { state, dispatch, grade, index, ppctOverrides } = useApp();
   const [confirmReset, setConfirmReset] = useState(false);
@@ -31,7 +31,7 @@ export default function LessonSheet({ week }) {
     });
 
   return (
-    <section className="sheet" aria-label={`Lịch báo giảng tuần ${week.num}`}>
+    <section className="sheet" aria-label={`Kế hoạch giảng dạy tuần ${week.num}`}>
       <header className="sheet-head">
         <div className="sheet-title">
           <span className="sheet-week">Tuần {week.num}</span>

@@ -24,7 +24,7 @@ export default function App() {
           <div className="brand">
             <span className="brand-mark" aria-hidden="true">{info.className || '—'}</span>
             <div>
-              <h1>Lịch báo giảng</h1>
+              <h1>Kế hoạch giảng dạy</h1>
               <p className="brand-sub">
                 {info.school} · Năm học {info.schoolYear}
               </p>

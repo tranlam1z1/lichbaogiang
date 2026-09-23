@@ -2,7 +2,7 @@
   "name": "lich-bao-giang",
   "private": true,
   "version": "1.0.0",
-  "description": "Ứng dụng lập Lịch báo giảng cho giáo viên tiểu học (thay thế file Excel).",
+  "description": "Ứng dụng lập Kế hoạch giảng dạy cho giáo viên tiểu học (thay thế file Excel).",
   "type": "module",
   "scripts": {
     "dev": "vite",

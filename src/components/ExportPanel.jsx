@@ -31,7 +31,7 @@ export default function ExportPanel({ currentWeek }) {
         lessonOverrides: state.lessonOverrides,
       });
       const { downloadDocx, downloadXlsx } = await import('../lib/download.js');
-      const base = `Lich-bao-giang_${(state.info.className || 'lop').replace(/\s+/g, '')}_${rangeLabel(range, weeks)}`;
+      const base = `Ke-hoach-giang-day_${(state.info.className || 'lop').replace(/\s+/g, '')}_${rangeLabel(range, weeks)}`;
       if (kind === 'docx') await downloadDocx(data, state.info, `${base}.docx`);
       else await downloadXlsx(data, state.info, `${base}.xlsx`);
       setMessage({ tone: 'ok', text: `Đã tải ${weeks.length} tuần (${kind === 'docx' ? 'Word' : 'Excel'}).` });

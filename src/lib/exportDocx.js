@@ -1,4 +1,4 @@
-// Xuất Lịch báo giảng ra Word (.docx): A4 đứng, Times New Roman, mỗi tuần một trang.
+// Xuất Kế hoạch giảng dạy ra Word (.docx): A4 đứng, Times New Roman, mỗi tuần một trang.
 import {
   AlignmentType,
   BorderStyle,
@@ -180,7 +180,7 @@ function headerBlock(info, week) {
   });
   return [
     top,
-    para('LỊCH BÁO GIẢNG', { bold: true, pt: 17, align: AlignmentType.CENTER, before: 120 }),
+    para('KẾ HOẠCH GIẢNG DẠY', { bold: true, pt: 17, align: AlignmentType.CENTER, before: 120 }),
     para(`Tuần ${week.num}   –   Lớp ${info.className || ''}`, { bold: true, pt: 13, align: AlignmentType.CENTER }),
     para(`Từ ngày ${formatDMY(week.start)} đến ngày ${formatDMY(week.end)}`, { italics: true, pt: 12, align: AlignmentType.CENTER, after: 120 }),
   ];
@@ -230,7 +230,7 @@ export function buildDocx(weeks, info, { forcePt } = {}) {
   });
   return new Document({
     creator: info.teacher || 'Giáo viên',
-    title: `Lịch báo giảng lớp ${info.className || ''}`,
+    title: `Kế hoạch giảng dạy lớp ${info.className || ''}`,
     styles: {
       default: {
         document: { run: { font: FONT, size: 24 }, paragraph: { spacing: { before: 0, after: 0, line: 240 } } },

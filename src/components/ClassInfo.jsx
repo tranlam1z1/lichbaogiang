@@ -24,7 +24,7 @@ export default function ClassInfo() {
   const backup = async () => {
     const { downloadJson } = await import('../lib/download.js');
     const d = new Date().toISOString().slice(0, 10);
-    downloadJson(toBackup(state), `sao-luu-lich-bao-giang_${info.className || 'lop'}_${d}.json`);
+    downloadJson(toBackup(state), `sao-luu-ke-hoach-giang-day_${info.className || 'lop'}_${d}.json`);
     setMsg({ tone: 'ok', text: 'Đã tải file sao lưu.' });
   };
 

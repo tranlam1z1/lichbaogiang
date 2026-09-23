@@ -1,4 +1,4 @@
-// Dựng lịch báo giảng một tuần từ thời khóa biểu + PPCT. Không phụ thuộc React.
+// Dựng kế hoạch giảng dạy một tuần từ thời khóa biểu + PPCT. Không phụ thuộc React.
 
 import { normalizeSubject, SKIP_LOOKUP_SUBJECTS } from './text.js';
 import { lookupLesson, weeklyLoad } from './ppct.js';
@@ -34,7 +34,7 @@ export function iterateTimetable(timetable) {
 }
 
 /**
- * Dựng lịch báo giảng cho một tuần.
+ * Dựng kế hoạch giảng dạy cho một tuần.
  * @param {object} args
  * @param {object} args.week            dòng lịch tuần {num, start, end, ...}
  * @param {object} args.timetable       thời khóa biểu
