@@ -1,0 +1,134 @@
+{
+ "info": {
+  "agency": "UBND HUYỆN HOẰNG HÓA",
+  "school": "TRƯỜNG TIỂU HỌC HOẰNG HỢP",
+  "teacher": "Nguyễn Thị Gấm",
+  "schoolYear": "2026 - 2027",
+  "grade": 4,
+  "className": "4A"
+ },
+ "timetable": {
+  "morningCount": 4,
+  "afternoonCount": 3,
+  "saturday": false,
+  "days": {
+   "2": {
+    "morning": [
+     "HĐTN",
+     "TOÁN",
+     "GDTC",
+     "MĨ THUẬT",
+     ""
+    ],
+    "afternoon": [
+     "TIN HỌC",
+     "GDTC",
+     "TIẾNG ANH",
+     "",
+     ""
+    ]
+   },
+   "3": {
+    "morning": [
+     "TIẾNG VIỆT",
+     "TIẾNG VIỆT",
+     "LS&ĐL",
+     "ĐẠO ĐỨC",
+     ""
+    ],
+    "afternoon": [
+     "TIẾNG VIỆT",
+     "KHOA HỌC",
+     "KHOA HỌC",
+     "",
+     ""
+    ]
+   },
+   "4": {
+    "morning": [
+     "TIẾNG ANH",
+     "TIẾNG ANH",
+     "MĨ THUẬT",
+     "ÂM NHẠC",
+     ""
+    ],
+    "afternoon": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   },
+   "5": {
+    "morning": [
+     "TIẾNG VIỆT",
+     "TIẾNG VIỆT",
+     "LS&ĐL",
+     "CÔNG NGHỆ",
+     ""
+    ],
+    "afternoon": [
+     "TOÁN",
+     "TOÁN",
+     "HĐTN",
+     "",
+     ""
+    ]
+   },
+   "6": {
+    "morning": [
+     "TOÁN",
+     "TOÁN",
+     "TIẾNG ANH",
+     "TIẾNG ANH",
+     ""
+    ],
+    "afternoon": [
+     "TIẾNG VIỆT",
+     "TIẾNG VIỆT",
+     "HĐTN",
+     "",
+     ""
+    ]
+   },
+   "7": {
+    "morning": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "afternoon": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ]
+   }
+  }
+ },
+ "subjectCatalog": [
+  "CHÀO CỜ",
+  "ĐẠO ĐỨC",
+  "TOÁN",
+  "TIẾNG VIỆT",
+  "TN&XH",
+  "GDTC",
+  "MĨ THUẬT",
+  "ÂM NHẠC",
+  "HĐTN",
+  "KHOA HỌC",
+  "LS&ĐL",
+  "CÔNG NGHỆ",
+  "TIN HỌC",
+  "TIẾNG ANH",
+  "LUYỆN TOÁN",
+  "LUYỆN TV",
+  "HĐGD NGLL",
+  "HĐGDTT",
+  "LUYỆN TA"
+ ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "lich-bao-giang",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Ứng dụng lập Lịch báo giảng cho giáo viên tiểu học (thay thế file Excel).",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --import ./tests/register.mjs --test tests/logic.test.js tests/export.test.js"
+  },
+  "dependencies": {
+    "docx": "^9.5.1",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11"
+  },
+  "engines": {
+    "node": ">=18.19"
+  }
+}

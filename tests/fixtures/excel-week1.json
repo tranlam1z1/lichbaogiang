@@ -1,0 +1,212 @@
+[
+ {
+  "row": 5,
+  "subject": "HĐTN",
+  "ppct": 1,
+  "title": "Chào mừng năm học mới"
+ },
+ {
+  "row": 6,
+  "subject": "TOÁN",
+  "ppct": 1,
+  "title": "Bài 1: Ôn tập các số đến 100 000 (Tiết 1)"
+ },
+ {
+  "row": 7,
+  "subject": "GDTC",
+  "ppct": 1,
+  "title": "Động tác đi đều một hàng dọc vòng bên phải"
+ },
+ {
+  "row": 8,
+  "subject": "MĨ THUẬT",
+  "ppct": 1,
+  "title": "Bài 1: Tranh xé dán giấy màu (Tiết 1)"
+ },
+ {
+  "row": 9,
+  "subject": "TIN HỌC",
+  "ppct": 1,
+  "title": "Bài 1: Phần cứng và phần mềm máy tính (Tiết 1)"
+ },
+ {
+  "row": 10,
+  "subject": "GDTC",
+  "ppct": 2,
+  "title": "Ôn động tác đi đều một hàng dọc vòng bên phải"
+ },
+ {
+  "row": 11,
+  "subject": "TIẾNG ANH",
+  "ppct": 1,
+  "title": ""
+ },
+ {
+  "row": 12,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 1,
+  "title": "Đọc: Điều kì diệu"
+ },
+ {
+  "row": 13,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 2,
+  "title": "Luyện từ và câu: Danh từ"
+ },
+ {
+  "row": 14,
+  "subject": "LS&ĐL",
+  "ppct": 1,
+  "title": "Bài 1: Làm quen với phương tiện học tập môn Lịch sử và Địa lý (Tiết 1)"
+ },
+ {
+  "row": 15,
+  "subject": "ĐẠO ĐỨC",
+  "ppct": 1,
+  "title": "Bài 1: Biết ơn người lao động (Tiết 1)"
+ },
+ {
+  "row": 16,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 3,
+  "title": "Viết: Tìm hiểu đoạn văn và câu chủ đề"
+ },
+ {
+  "row": 17,
+  "subject": "KHOA HỌC",
+  "ppct": 1,
+  "title": "Bài 1: Tính chất của nước và nước với cuộc sống (Tiết 1)"
+ },
+ {
+  "row": 18,
+  "subject": "KHOA HỌC",
+  "ppct": 2,
+  "title": "Bài 1: Tính chất của nước và nước với cuộc sống (Tiết 2)"
+ },
+ {
+  "row": 19,
+  "subject": "TIẾNG ANH",
+  "ppct": 2,
+  "title": ""
+ },
+ {
+  "row": 20,
+  "subject": "TIẾNG ANH",
+  "ppct": 3,
+  "title": ""
+ },
+ {
+  "row": 21,
+  "subject": "MĨ THUẬT",
+  "ppct": "#N/A",
+  "title": "#N/A"
+ },
+ {
+  "row": 22,
+  "subject": "ÂM NHẠC",
+  "ppct": 1,
+  "title": "Hát: Em là bông hồng nhỏ"
+ },
+ {
+  "row": 23,
+  "subject": "",
+  "ppct": null,
+  "title": ""
+ },
+ {
+  "row": 24,
+  "subject": "",
+  "ppct": "#N/A",
+  "title": "#N/A"
+ },
+ {
+  "row": 25,
+  "subject": "",
+  "ppct": "#N/A",
+  "title": "#N/A"
+ },
+ {
+  "row": 26,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 4,
+  "title": "Đọc: Thi nhạc (Tiết 1)"
+ },
+ {
+  "row": 27,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 5,
+  "title": "Đọc: Thi nhạc (Tiết 2)"
+ },
+ {
+  "row": 28,
+  "subject": "LS&ĐL",
+  "ppct": 2,
+  "title": "Bài 1: Làm quen với phương tiện học tập môn Lịch sử và Địa lý (Tiết 2)"
+ },
+ {
+  "row": 29,
+  "subject": "CÔNG NGHỆ",
+  "ppct": 1,
+  "title": "Bài 1: Lợi ích của hoa, cây cảnh đối với đời sống (Tiết 1)"
+ },
+ {
+  "row": 30,
+  "subject": "TOÁN",
+  "ppct": 2,
+  "title": "Bài 1: Ôn tập các số đến 100 000 (Tiết 2)"
+ },
+ {
+  "row": 31,
+  "subject": "TOÁN",
+  "ppct": 3,
+  "title": "Bài 2: Ôn tập các phép tính trong phạm vi 100 000 (Tiết 1)"
+ },
+ {
+  "row": 32,
+  "subject": "HĐTN",
+  "ppct": 2,
+  "title": ""
+ },
+ {
+  "row": 33,
+  "subject": "TOÁN",
+  "ppct": 4,
+  "title": "Bài 2: Ôn tập các phép tính trong phạm vi 100 000 (Tiết 2)"
+ },
+ {
+  "row": 34,
+  "subject": "TOÁN",
+  "ppct": 5,
+  "title": "Bài 2: Ôn tập các phép tính trong phạm vi 100 000 (Tiết 3)"
+ },
+ {
+  "row": 35,
+  "subject": "TIẾNG ANH",
+  "ppct": 4,
+  "title": ""
+ },
+ {
+  "row": 36,
+  "subject": "TIẾNG ANH",
+  "ppct": "#N/A",
+  "title": "#N/A"
+ },
+ {
+  "row": 37,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 6,
+  "title": "Viết: Tìm hiểu cách viết đoạn văn nêu ý kiến"
+ },
+ {
+  "row": 38,
+  "subject": "TIẾNG VIỆT",
+  "ppct": 7,
+  "title": "Nói và nghe: Tôi và bạn"
+ },
+ {
+  "row": 39,
+  "subject": "HĐTN",
+  "ppct": 3,
+  "title": "Tuyên truyền phong trào Trường em xanh, sạch, đẹp"
+ }
+]
