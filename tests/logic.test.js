@@ -34,7 +34,12 @@ test('Tuần 1 khớp sheet LỊCH BÁO GIẢNG trong Excel', () => {
       assert.equal(r.title, '');
     } else {
       assert.equal(String(r.ppct), String(x.ppct), `PPCT dòng ${x.row}`);
-      if (x.title === '' && r.title) {
+      if (x.subject === 'HĐTN') {
+        // PPCT HĐTN lớp 4 đã được cập nhật theo danh mục mới, khác tên bài trong file Excel cũ.
+        const entry = ppctData[grade].find((e) => e[0] === 'HĐTN' && String(e[3]) === String(x.ppct));
+        assert.equal(r.title, entry[4], `tên bài dòng ${x.row}`);
+        diffs.push(`dòng ${x.row} HĐTN: PPCT mới → "${r.title}"`);
+      } else if (x.title === '' && r.title) {
         // Ô tên bài trong Excel đã bị xóa công thức (để trống) dù PPCT có tên bài.
         diffs.push(`dòng ${x.row} ${x.subject}: Excel để trống (mất công thức) → app: "${r.title}"`);
       } else {
@@ -141,4 +146,19 @@ test('Reducer: sửa ô tên bài chỉ áp dụng cho tuần đó và trả v�
   assert.ok(!r2[1].editedTitle);
   s = reducer(s, { type: 'RESET_LESSON', weekNum: 1, slotKey: '2-morning-2', subject: 'TOÁN', field: 'title', base: 'x' });
   assert.equal(s.lessonOverrides[1], undefined);
+});
+
+test('Đồ dùng dạy học mặc định: TOÁN → Vở thực hành, môn khác → Tranh, ảnh, PP', () => {
+  const rows = flattenWeek(buildWeekLessons({ week: week1, timetable: defaults.timetable, index, grade }));
+  for (const r of rows) {
+    const expected = !r.subject || r.subject === 'CHÀO CỜ' ? '' : r.subject === 'TOÁN' ? 'Vở thực hành' : 'Tranh, ảnh, PP';
+    assert.equal(r.equipment, expected, `${r.subject} tiết ${r.period}`);
+  }
+  const slot = rows.find((r) => r.subject === 'TOÁN').key;
+  const edited = flattenWeek(buildWeekLessons({
+    week: week1, timetable: defaults.timetable, index, grade,
+    lessonOverrides: { [slot]: { subject: 'TOÁN', equipment: '' } },
+  })).find((r) => r.key === slot);
+  assert.equal(edited.equipment, '');
+  assert.ok(edited.editedEquipment);
 });

@@ -27,7 +27,7 @@ export default function LessonSheet({ week }) {
       subject: row.subject,
       field,
       value,
-      base: field === 'title' ? row.baseTitle : '',
+      base: field === 'title' ? row.baseTitle : row.baseEquipment,
     });
 
   return (

@@ -55,16 +55,18 @@ function addWeekSheet(wb, info, week, rows) {
 
   // Đầu trang
   ws.mergeCells(1, 1, 1, last);
-  put(1, 1, 'KẾ HOẠCH GIẢNG DẠY', { bold: true, size: 16 }, { horizontal: 'center' });
+  put(1, 1, 'KẾ HOẠCH GIẢNG DẠY', { bold: true, size: 16, color: { argb: 'FFFF0000' } }, { horizontal: 'center' });
   ws.getRow(1).height = 24;
   ws.mergeCells(2, 1, 2, last);
-  put(2, 1, weekLine(info, week), { bold: true, size: 13 }, { horizontal: 'center' });
+  put(2, 1, weekLine(info, week), { bold: true, size: 13, color: { argb: 'FF00B050' } }, { horizontal: 'center' });
   ws.mergeCells(3, 1, 3, last);
   put(3, 1, `Từ ngày ${formatDMY(week.start)} đến ngày ${formatDMY(week.end)}`, { italic: true }, { horizontal: 'center' });
 
   // Tiêu đề bảng
   const headRow = 5;
-  XLSX_COLUMNS.forEach((c, i) => put(headRow, i + 1, c.header, { bold: true, size: 11 }, { horizontal: 'center' }));
+  XLSX_COLUMNS.forEach((c, i) => {
+    put(headRow, i + 1, c.header, { bold: true, size: 11 }, { horizontal: 'center' }).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF92D050' } };
+  });
   ws.getRow(headRow).height = 30;
 
   // Nội dung
@@ -72,11 +74,15 @@ function addWeekSheet(wb, info, week, rows) {
   const firstBody = r;
   for (const row of rows) {
     if (row.dayRowSpan > 0) {
-      put(r, 1, `${row.dayLabel}${row.date ? `\n${formatDM(row.date)}` : ''}`, { bold: true, size: 11 }, { horizontal: 'center' });
+      const dayFont = { name: FONT, size: 11, bold: true };
+      const dayText = row.date
+        ? { richText: [{ text: `${row.dayLabel}\n`, font: dayFont }, { text: formatDM(row.date), font: { ...dayFont, color: { argb: 'FFFF0000' } } }] }
+        : row.dayLabel;
+      put(r, 1, dayText, { bold: true, size: 11 }, { horizontal: 'center' });
       if (row.dayRowSpan > 1) ws.mergeCells(r, 1, r + row.dayRowSpan - 1, 1);
     }
     if (row.sessionRowSpan > 0) {
-      put(r, 2, row.sessionLabel, { size: 11 }, { horizontal: 'center' });
+      put(r, 2, row.sessionLabel, { bold: true, size: 11, color: { argb: 'FF8B4513' } }, { horizontal: 'center' });
       if (row.sessionRowSpan > 1) ws.mergeCells(r, 2, r + row.sessionRowSpan - 1, 2);
     }
     put(r, 3, row.period, { size: 11 }, { horizontal: 'center' });

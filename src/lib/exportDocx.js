@@ -5,6 +5,7 @@ import {
   Document,
   Packer,
   Paragraph,
+  ShadingType,
   Table,
   TableCell,
   TableLayoutType,
@@ -89,13 +90,13 @@ export function fitWeek(rows) {
 
 const size = (pt) => Math.round(pt * 2);
 
-function para(text, { bold, italics, pt = 12, align = AlignmentType.LEFT, after = 0, before = 0 } = {}) {
+function para(text, { bold, italics, color, lineColors, pt = 12, align = AlignmentType.LEFT, after = 0, before = 0 } = {}) {
   const parts = String(text ?? '').split('\n');
   return new Paragraph({
     alignment: align,
     spacing: { before, after, line: 240 },
     run: { size: size(pt), font: FONT },
-    children: parts.map((t, i) => new TextRun({ text: t, bold, italics, size: size(pt), font: FONT, break: i ? 1 : 0 })),
+    children: parts.map((t, i) => new TextRun({ text: t, bold, italics, color: lineColors?.[i] ?? color, size: size(pt), font: FONT, break: i ? 1 : 0 })),
   });
 }
 
@@ -108,8 +109,9 @@ function cell(text, col, opts = {}) {
     borders,
     verticalAlign: VerticalAlign.CENTER,
     verticalMerge: opts.merge,
+    shading: opts.fill ? { fill: opts.fill, type: ShadingType.CLEAR, color: 'auto' } : undefined,
     margins: { top: CELL_PAD_TW, bottom: CELL_PAD_TW, left: 70, right: 70 },
-    children: [para(text, { bold: opts.bold, pt: opts.pt, align: opts.align ?? AlignmentType.LEFT, italics: opts.italics })],
+    children: [para(text, { bold: opts.bold, pt: opts.pt, align: opts.align ?? AlignmentType.LEFT, italics: opts.italics, color: opts.color, lineColors: opts.lineColors })],
   });
 }
 
@@ -118,7 +120,7 @@ function weekTable(rows, pt) {
   const header = new TableRow({
     tableHeader: true,
     cantSplit: true,
-    children: DOCX_COLUMNS.map((c) => cell(c.title, c, { bold: true, pt: Math.min(pt + 0.5, 10), align: AlignmentType.CENTER })),
+    children: DOCX_COLUMNS.map((c) => cell(c.title, c, { bold: true, fill: '92D050', pt: Math.min(pt + 0.5, 10), align: AlignmentType.CENTER })),
   });
   const body = rows.map((r) => {
     const dayMerge = r.dayRowSpan > 0 ? VerticalMergeType.RESTART : VerticalMergeType.CONTINUE;
@@ -127,8 +129,8 @@ function weekTable(rows, pt) {
     return new TableRow({
       cantSplit: true,
       children: [
-        cell(dayText, C.day, { merge: dayMerge, bold: true, pt, align: AlignmentType.CENTER }),
-        cell(r.sessionRowSpan > 0 ? r.sessionLabel : '', C.session, { merge: sesMerge, pt, align: AlignmentType.CENTER }),
+        cell(dayText, C.day, { merge: dayMerge, bold: true, pt, align: AlignmentType.CENTER, lineColors: [undefined, 'FF0000'] }),
+        cell(r.sessionRowSpan > 0 ? r.sessionLabel : '', C.session, { merge: sesMerge, bold: true, color: '8B4513', pt, align: AlignmentType.CENTER }),
         cell(String(r.period), C.period, { pt, align: AlignmentType.CENTER }),
         cell(r.subject, C.subject, { pt, bold: !!r.subject }),
         cell(r.ppct === '' || r.ppct == null ? '' : String(r.ppct), C.ppct, { pt, align: AlignmentType.CENTER }),
@@ -147,8 +149,8 @@ function weekTable(rows, pt) {
 
 function headerBlock(info, week) {
   return [
-    para('KẾ HOẠCH GIẢNG DẠY', { bold: true, pt: 17, align: AlignmentType.CENTER }),
-    para(weekLine(info, week), { bold: true, pt: 13, align: AlignmentType.CENTER }),
+    para('KẾ HOẠCH GIẢNG DẠY', { bold: true, color: 'FF0000', pt: 17, align: AlignmentType.CENTER }),
+    para(weekLine(info, week), { bold: true, color: '00B050', pt: 13, align: AlignmentType.CENTER }),
     para(`Từ ngày ${formatDMY(week.start)} đến ngày ${formatDMY(week.end)}`, { italics: true, pt: 12, align: AlignmentType.CENTER, after: 120 }),
   ];
 }

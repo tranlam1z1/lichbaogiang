@@ -10,6 +10,12 @@ export const SESSIONS = [
 ];
 export const MAX_PERIODS = 5;
 
+/** Đồ dùng dạy học mặc định theo môn (khi giáo viên chưa sửa). */
+export function defaultEquipment(subject) {
+  if (!subject || SKIP_LOOKUP_SUBJECTS.has(subject)) return '';
+  return subject === 'TOÁN' ? 'Vở thực hành' : 'Tranh, ảnh, PP';
+}
+
 export function schoolDays(timetable) {
   return timetable.saturday ? [2, 3, 4, 5, 6, 7] : [2, 3, 4, 5, 6];
 }
@@ -66,6 +72,7 @@ export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides 
       ppct: '',
       baseTitle: '',
       title: '',
+      baseEquipment: defaultEquipment(slot.subject),
       equipment: '',
       warning: null,
       editedTitle: false,
@@ -83,6 +90,7 @@ export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides 
       }
     }
     row.title = row.baseTitle;
+    row.equipment = row.baseEquipment;
     const o = lessonOverrides[slot.key];
     // Phần sửa chỉ áp dụng khi môn ở ô đó không đổi.
     if (o && normalizeSubject(o.subject) === slot.subject) {
@@ -90,7 +98,7 @@ export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides 
         row.title = o.title;
         row.editedTitle = true;
       }
-      if (o.equipment != null && o.equipment !== '') {
+      if (o.equipment != null) {
         row.equipment = o.equipment;
         row.editedEquipment = true;
       }
