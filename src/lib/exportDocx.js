@@ -15,6 +15,7 @@ import {
   WidthType,
 } from 'docx';
 import { formatDM, formatDMY } from './calendar.js';
+import { weekLine } from './range.js';
 
 const CM = 567; // twip / cm
 const PAGE = { width: 21 * CM, height: 29.7 * CM };
@@ -66,8 +67,7 @@ function linesFor(text, cm, pt, em = 0.45) {
 export function fitWeek(rows) {
   const available = (PAGE.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
   const colCm = Object.fromEntries(DOCX_COLUMNS.map((c) => [c.key, c.cm]));
-  const headerH = 82; // tên trường, tiêu đề, tuần/lớp, từ ngày… đến ngày…
-  const footerH = 78; // chỗ ký giáo viên chủ nhiệm
+  const headerH = 58; // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày…
   const pad = (CELL_PAD_TW * 2) * PT_PER_TW + 0.75;
   for (const pt of [12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.5, 7]) {
     const lineH = pt * 1.16;
@@ -82,7 +82,7 @@ export function fitWeek(rows) {
       );
       tableH += lines * lineH + pad;
     }
-    if (headerH + tableH + footerH <= available * 0.96) return { bodyPt: pt };
+    if (headerH + tableH <= available * 0.96) return { bodyPt: pt };
   }
   return { bodyPt: 7 };
 }
@@ -101,8 +101,6 @@ function para(text, { bold, italics, pt = 12, align = AlignmentType.LEFT, after 
 
 const border = { style: BorderStyle.SINGLE, size: 6, color: '000000' };
 const borders = { top: border, bottom: border, left: border, right: border };
-const noBorder = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' };
-const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder, insideHorizontal: noBorder, insideVertical: noBorder };
 
 function cell(text, col, opts = {}) {
   return new TableCell({
@@ -148,70 +146,11 @@ function weekTable(rows, pt) {
 }
 
 function headerBlock(info, week) {
-  const leftW = 9.2 * CM;
-  const rightW = 9.2 * CM;
-  const top = new Table({
-    width: { size: leftW + rightW, type: WidthType.DXA },
-    columnWidths: [leftW, rightW],
-    layout: TableLayoutType.FIXED,
-    borders: noBorders,
-    rows: [
-      new TableRow({
-        children: [
-          new TableCell({
-            borders: noBorders,
-            width: { size: leftW, type: WidthType.DXA },
-            children: [
-              para((info.agency || '').toUpperCase(), { pt: 12, align: AlignmentType.CENTER }),
-              para((info.school || '').toUpperCase(), { pt: 12, bold: true, align: AlignmentType.CENTER }),
-            ],
-          }),
-          new TableCell({
-            borders: noBorders,
-            width: { size: rightW, type: WidthType.DXA },
-            children: [
-              para(`Năm học ${info.schoolYear || ''}`, { pt: 12, italics: true, align: AlignmentType.CENTER }),
-              para(`Học kì ${week.semester || ''}`, { pt: 12, italics: true, align: AlignmentType.CENTER }),
-            ],
-          }),
-        ],
-      }),
-    ],
-  });
   return [
-    top,
-    para('KẾ HOẠCH GIẢNG DẠY', { bold: true, pt: 17, align: AlignmentType.CENTER, before: 120 }),
-    para(`Tuần ${week.num}   –   Lớp ${info.className || ''}`, { bold: true, pt: 13, align: AlignmentType.CENTER }),
+    para('KẾ HOẠCH GIẢNG DẠY', { bold: true, pt: 17, align: AlignmentType.CENTER }),
+    para(weekLine(info, week), { bold: true, pt: 13, align: AlignmentType.CENTER }),
     para(`Từ ngày ${formatDMY(week.start)} đến ngày ${formatDMY(week.end)}`, { italics: true, pt: 12, align: AlignmentType.CENTER, after: 120 }),
   ];
-}
-
-function footerBlock(info) {
-  const leftW = 9.2 * CM;
-  const rightW = 9.2 * CM;
-  return new Table({
-    width: { size: leftW + rightW, type: WidthType.DXA },
-    columnWidths: [leftW, rightW],
-    layout: TableLayoutType.FIXED,
-    borders: noBorders,
-    rows: [
-      new TableRow({
-        cantSplit: true,
-        children: [
-          new TableCell({ borders: noBorders, width: { size: leftW, type: WidthType.DXA }, children: [para('')] }),
-          new TableCell({
-            borders: noBorders,
-            width: { size: rightW, type: WidthType.DXA },
-            children: [
-              para('Giáo viên chủ nhiệm', { bold: true, pt: 12, align: AlignmentType.CENTER, before: 120 }),
-              para('(Ký và ghi rõ họ tên)', { italics: true, pt: 11, align: AlignmentType.CENTER, after: 480 }),
-              para(info.teacher || '', { bold: true, pt: 12, align: AlignmentType.CENTER }),
-            ],
-          }),
-        ],
-      }),
-    ],
-  });
 }
 
 /** Tạo đối tượng Document từ dữ liệu các tuần (buildExportWeeks). */
@@ -225,7 +164,7 @@ export function buildDocx(weeks, info, { forcePt } = {}) {
           margin: { ...MARGIN, header: 300, footer: 300 },
         },
       },
-      children: [...headerBlock(info, week), weekTable(rows, bodyPt), footerBlock(info)],
+      children: [...headerBlock(info, week), weekTable(rows, bodyPt)],
     };
   });
   return new Document({

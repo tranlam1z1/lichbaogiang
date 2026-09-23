@@ -1,6 +1,7 @@
 // Xuất Kế hoạch giảng dạy ra Excel (.xlsx): mỗi tuần một sheet "Tuần N", in vừa khổ A4.
 import ExcelJS from 'exceljs';
 import { formatDM, formatDMY } from './calendar.js';
+import { weekLine } from './range.js';
 
 const FONT = 'Times New Roman';
 const thin = { style: 'thin', color: { argb: 'FF000000' } };
@@ -53,24 +54,16 @@ function addWeekSheet(wb, info, week, rows) {
   };
 
   // Đầu trang
-  ws.mergeCells(1, 1, 1, 4);
-  put(1, 1, (info.agency || '').toUpperCase(), {}, { horizontal: 'center' });
-  ws.mergeCells(2, 1, 2, 4);
-  put(2, 1, (info.school || '').toUpperCase(), { bold: true }, { horizontal: 'center' });
-  ws.mergeCells(1, 5, 1, last);
-  put(1, 5, `Năm học ${info.schoolYear || ''}`, { italic: true }, { horizontal: 'center' });
-  ws.mergeCells(2, 5, 2, last);
-  put(2, 5, `Học kì ${week.semester || ''}`, { italic: true }, { horizontal: 'center' });
-  ws.mergeCells(4, 1, 4, last);
-  put(4, 1, 'KẾ HOẠCH GIẢNG DẠY', { bold: true, size: 16 }, { horizontal: 'center' });
-  ws.getRow(4).height = 24;
-  ws.mergeCells(5, 1, 5, last);
-  put(5, 1, `Tuần ${week.num}   –   Lớp ${info.className || ''}`, { bold: true, size: 13 }, { horizontal: 'center' });
-  ws.mergeCells(6, 1, 6, last);
-  put(6, 1, `Từ ngày ${formatDMY(week.start)} đến ngày ${formatDMY(week.end)}`, { italic: true }, { horizontal: 'center' });
+  ws.mergeCells(1, 1, 1, last);
+  put(1, 1, 'KẾ HOẠCH GIẢNG DẠY', { bold: true, size: 16 }, { horizontal: 'center' });
+  ws.getRow(1).height = 24;
+  ws.mergeCells(2, 1, 2, last);
+  put(2, 1, weekLine(info, week), { bold: true, size: 13 }, { horizontal: 'center' });
+  ws.mergeCells(3, 1, 3, last);
+  put(3, 1, `Từ ngày ${formatDMY(week.start)} đến ngày ${formatDMY(week.end)}`, { italic: true }, { horizontal: 'center' });
 
   // Tiêu đề bảng
-  const headRow = 8;
+  const headRow = 5;
   XLSX_COLUMNS.forEach((c, i) => put(headRow, i + 1, c.header, { bold: true, size: 11 }, { horizontal: 'center' }));
   ws.getRow(headRow).height = 30;
 
@@ -100,16 +93,7 @@ function addWeekSheet(wb, info, week, rows) {
     if (!cell.alignment) cell.alignment = { vertical: 'middle', wrapText: true };
   });
 
-  // Chỗ ký
-  r += 1;
-  ws.mergeCells(r, 5, r, last);
-  put(r, 5, 'Giáo viên chủ nhiệm', { bold: true }, { horizontal: 'center' });
-  ws.mergeCells(r + 1, 5, r + 1, last);
-  put(r + 1, 5, '(Ký và ghi rõ họ tên)', { italic: true, size: 11 }, { horizontal: 'center' });
-  ws.mergeCells(r + 5, 5, r + 5, last);
-  put(r + 5, 5, info.teacher || '', { bold: true }, { horizontal: 'center' });
-
-  ws.pageSetup.printArea = `A1:G${r + 5}`;
+  ws.pageSetup.printArea = `A1:G${r - 1}`;
   ws.pageSetup.printTitlesRow = `${headRow}:${headRow}`;
   return firstBody;
 }

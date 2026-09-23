@@ -69,7 +69,7 @@ Script đổi cột tuần/tiết sang số, bỏ khoảng trắng thừa, và k
 
 ## Xuất file
 
-- **Word (.docx):** A4 đứng, Times New Roman, mỗi tuần một trang (mỗi tuần là một section). Đầu trang có cơ quan chủ quản, tên trường, năm học, học kì, "KẾ HOẠCH GIẢNG DẠY", tuần, lớp, từ ngày … đến ngày …; bảng có gộp ô Thứ/Buổi; cuối trang chỗ ký *Giáo viên chủ nhiệm* và họ tên. Cỡ chữ bảng tự chọn (12 → 7pt) theo số dòng và độ dài tên bài để vừa một trang.
+- **Word (.docx):** A4 đứng, Times New Roman, mỗi tuần một trang (mỗi tuần là một section). Đầu trang có "KẾ HOẠCH GIẢNG DẠY", tuần – lớp – tên giáo viên, từ ngày … đến ngày …; bảng có gộp ô Thứ/Buổi. Cỡ chữ bảng tự chọn (12 → 7pt) theo số dòng và độ dài tên bài để vừa một trang.
 - **Excel (.xlsx):** mỗi tuần một sheet "Tuần N", có viền, gộp ô, tự xuống dòng, in vừa 1 trang A4 đứng, lặp dòng tiêu đề.
 
 ## Kết quả kiểm tra trước khi giao

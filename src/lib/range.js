@@ -54,3 +54,10 @@ export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides
     return { week, rows: flattenWeek(built) };
   });
 }
+
+/** Dòng "Tuần N – Lớp X – Giáo viên: …" ở đầu mỗi trang khi xuất file. */
+export function weekLine(info, week) {
+  const parts = [`Tuần ${week.num}`, `Lớp ${info.className || ''}`];
+  if (info.teacher) parts.push(`Giáo viên: ${info.teacher}`);
+  return parts.join('   –   ');
+}
