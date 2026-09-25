@@ -13,7 +13,6 @@ process.env.BANK_ID = '970436';
 process.env.BANK_NAME = 'Vietcombank';
 process.env.BANK_ACCOUNT_NO = '0123456789';
 process.env.BANK_ACCOUNT_NAME = 'NGUYEN VAN A';
-process.env.SEPAY_WEBHOOK_API_KEY = 'test-sepay-key-'.padEnd(32, 'k');
 
 // Chỉ xóa database TEST (prisma/test.db), không bao giờ đụng tới dev.db.
 for (const f of ['test.db', 'test.db-journal']) rmSync(fileURLToPath(new URL(`../prisma/${f}`, import.meta.url)), { force: true });

@@ -1,12 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { formatVnd, pointsForAmount, validateTopUpAmount } from '../../../shared/validation.js';
 import AccountLayout, { TOPUP_STATUS, formatDateTime } from './AccountLayout.jsx';
 
 const QUICK_MULTIPLES = [1, 2, 5, 10, 20];
-/** Có yêu cầu chờ duyệt thì tự kiểm tra lại trạng thái: nhanh khi có webhook ngân hàng, chậm hơn khi admin duyệt tay. */
-const POLL_MS = { auto: 5_000, manual: 30_000 };
 
 function CopyButton({ text }) {
   const [done, setDone] = useState(false);
@@ -27,7 +25,7 @@ function CopyButton({ text }) {
 }
 
 /** Thông tin chuyển khoản + mã QR VietQR cho một yêu cầu đang chờ duyệt. */
-function TransferCard({ topUp, auto }) {
+function TransferCard({ topUp }) {
   const t = topUp.transfer;
   if (!t) return null;
   return (
@@ -48,11 +46,8 @@ function TransferCard({ topUp, auto }) {
         <dd>{topUp.points.toLocaleString('vi-VN')} điểm</dd>
       </dl>
       <p className="hint transfer-note">
-        Quét mã QR bằng app ngân hàng, hoặc chuyển khoản thủ công và ghi <strong>đúng nội dung {t.content}</strong>, đúng số tiền.{' '}
-        {auto
-          ? 'Điểm được cộng tự động trong khoảng 1 phút sau khi tiền về, trang này tự cập nhật — bạn không cần làm gì thêm.'
-          : 'Điểm được cộng sau khi quản trị viên xác nhận đã nhận tiền (trạng thái sẽ chuyển thành “Đã cộng điểm”).'}
-        {auto && ' Nếu sau 15 phút vẫn chưa được cộng (VD: ghi sai nội dung), quản trị viên sẽ kiểm tra và cộng tay — đừng hủy yêu cầu.'}
+        Quét mã QR bằng app ngân hàng, hoặc chuyển khoản thủ công và ghi <strong>đúng nội dung {t.content}</strong>. Điểm được
+        cộng sau khi quản trị viên xác nhận đã nhận tiền (trạng thái sẽ chuyển thành “Đã cộng điểm”).
       </p>
     </div>
   );
@@ -66,46 +61,23 @@ export default function TopUpPage() {
   const [pending, setPending] = useState([]);
   const [openId, setOpenId] = useState(null);
   const [loadError, setLoadError] = useState(null);
-  const [notice, setNotice] = useState(null);
-  const pendingRef = useRef(null);
 
   const loadPending = useCallback(async () => {
     try {
       const data = await api.get('/topups?status=PENDING&pageSize=10');
-      // Yêu cầu vừa rời khỏi danh sách chờ → kiểm tra xem có phải vừa được cộng điểm không.
-      const prev = pendingRef.current;
-      const gone = prev ? prev.filter((p) => !data.items.some((i) => i.id === p.id)).map((p) => p.id) : [];
-      pendingRef.current = data.items;
       setPending(data.items);
       setLoadError(null);
-      if (gone.length) {
-        const recent = await api.get('/topups?pageSize=20');
-        const approved = recent.items.filter((t) => gone.includes(t.id) && t.status === 'APPROVED');
-        if (approved.length) {
-          const pts = approved.reduce((s, t) => s + t.points, 0);
-          setNotice(`Đã nhận tiền, cộng ${pts.toLocaleString('vi-VN')} điểm vào tài khoản (mã ${approved.map((t) => t.code).join(', ')}). Cảm ơn bạn!`);
-          refresh().catch(() => {});
-        }
-      }
       return data.items;
     } catch (e) {
       setLoadError(e.message);
       return [];
     }
-  }, [refresh]);
+  }, []);
 
   useEffect(() => {
     loadPending().then((items) => setOpenId((id) => id ?? items[0]?.id ?? null));
     refresh().catch(() => {});
   }, [loadPending, refresh]);
-
-  const auto = Boolean(settings?.topupAuto);
-  const hasPending = pending.length > 0;
-  useEffect(() => {
-    if (!hasPending) return undefined;
-    const t = setInterval(() => document.visibilityState === 'visible' && loadPending(), auto ? POLL_MS.auto : POLL_MS.manual);
-    return () => clearInterval(t);
-  }, [hasPending, auto, loadPending]);
 
   if (!settings) return <AccountLayout title="Nạp điểm"><div className="empty">Đang tải…</div></AccountLayout>;
   const { topupUnitVnd: unit, pointsPerUnit, pointsPerExport, topupEnabled } = settings;
@@ -130,7 +102,7 @@ export default function TopUpPage() {
   };
 
   const cancel = async (id) => {
-    if (!window.confirm('Hủy yêu cầu nạp này? Nếu bạn đã chuyển khoản, đừng hủy — điểm sẽ được cộng khi tiền về.')) return;
+    if (!window.confirm('Hủy yêu cầu nạp này? Nếu bạn đã chuyển khoản, đừng hủy — hãy chờ quản trị viên duyệt.')) return;
     try {
       await api.post(`/topups/${id}/cancel`);
     } catch (e) {
@@ -141,7 +113,6 @@ export default function TopUpPage() {
 
   return (
     <AccountLayout title="Nạp điểm">
-      {notice && <div className="banner banner-note" role="status">{notice}</div>}
       <section className="card">
         <h2>Tạo yêu cầu nạp</h2>
         <p className="card-text">
@@ -226,7 +197,7 @@ export default function TopUpPage() {
                   </button>
                 </span>
               </div>
-              {openId === t.id && <TransferCard topUp={t} auto={auto} />}
+              {openId === t.id && <TransferCard topUp={t} />}
             </li>
           ))}
         </ul>

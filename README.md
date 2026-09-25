@@ -65,11 +65,13 @@ cd server && npx prisma studio   # xem/sửa database bằng giao diện web
 ### Triển khai
 
 - **Một cổng duy nhất (khuyên dùng):** `npm run build`, rồi trong `server/.env` đặt `SERVE_CLIENT=true`, `NODE_ENV=production` và chạy `npm start` trong `server/`. Backend phục vụ luôn thư mục `dist/`.
-- **Chuyển sang PostgreSQL:** trong `server/prisma/schema.prisma` đổi `provider = "sqlite"` thành `"postgresql"`, đặt `DATABASE_URL="postgresql://..."`, xóa thư mục `server/prisma/migrations/` rồi chạy `npx prisma migrate dev --name init` để tạo migration mới cho PostgreSQL. Trên server thật chỉ dùng `npm run db:deploy` (`prisma migrate deploy`).
+- **Render + Neon (PostgreSQL):** file `render.yaml` ở gốc repo cấu hình sẵn. Tạo database trên Neon, lấy chuỗi kết nối loại *direct* (host không có `-pooler`). Trên Render chọn **New → Blueprint** → repo này, điền `DATABASE_URL` và các biến còn lại. Mỗi lần build sẽ tự chạy migration và `db:seed`.
+- **PostgreSQL:** dev/test vẫn dùng SQLite (`prisma/schema.prisma`). Bản PostgreSQL nằm ở `server/prisma/postgres/`: `schema.prisma` sinh tự động bằng `npm run db:pg:schema`, migrations riêng trong `postgres/migrations/`. `npm run db:pg:deploy` = sinh schema + `prisma generate` + `prisma migrate deploy` cho PostgreSQL.
+  - Khi sửa `schema.prisma`: ngoài `npm run db:migrate` cho SQLite, chạy `npm run db:pg:schema` rồi `npx prisma migrate dev --create-only --schema prisma/postgres/schema.prisma --name <tên>` với `DATABASE_URL` trỏ tới một database PostgreSQL thử (ví dụ một branch Neon), để tạo migration PostgreSQL tương ứng. Sau đó chạy lại `npx prisma generate` để client local quay về SQLite.
 - **Frontend và API khác domain:** đặt `CLIENT_ORIGIN=https://domain-frontend`, `COOKIE_SAMESITE=none`, `COOKIE_SECURE=true` (bắt buộc HTTPS). Build frontend với `VITE_API_URL=https://domain-api/api`.
 - **Sau proxy (Nginx, Render, Railway…):** đặt `TRUST_PROXY=1` để rate limit nhận đúng IP người dùng.
 - Bộ đếm chống dò mật khẩu nằm trong bộ nhớ tiến trình. Nếu chạy nhiều instance backend, cần chuyển sang store dùng chung (Redis).
-- **GitHub Pages** chỉ phục vụ web tĩnh nên không chạy được backend. Workflow `.github/workflows/deploy.yml` vẫn giữ nguyên, nhưng bản trên Pages sẽ không đăng nhập được.
+- **GitHub Pages** chỉ phục vụ web tĩnh nên không chạy được backend. Workflow `.github/workflows/deploy.yml` vẫn giữ nguyên (build với `VITE_BASE=/lichbaogiang/`), nhưng bản trên Pages sẽ không đăng nhập được.
 
 Dữ liệu kế hoạch (TKB, lịch tuần, chỗ sửa tên bài…) vẫn **tự động lưu trong trình duyệt** (localStorage), không lưu lên server. Nên dùng nút *Tải file sao lưu* ở mục **Thông tin lớp** để giữ bản dự phòng hoặc chuyển sang máy khác.
 
@@ -140,31 +142,6 @@ Các giá trị trên được lưu trong database, lần chạy server đầu t
    Duyệt hai lần cũng chỉ cộng điểm một lần.
 4. Người dùng xem lịch sử nạp điểm và lịch sử xuất file ở `/lich-su`.
 
-**Nạp điểm tự động qua webhook ngân hàng (SePay, dùng được với MB Bank):**
-
-Khi bật, tiền về tài khoản là điểm được cộng ngay trong vài giây, admin không cần duyệt tay.
-
-1. Đăng ký [SePay](https://sepay.vn) và liên kết tài khoản MB Bank nhận tiền. Trong `server/.env`, đặt `BANK_ID=970422` và `BANK_NAME=MB Bank`.
-2. Tạo một chuỗi ngẫu nhiên dài từ 24 ký tự trở lên rồi đặt vào `SEPAY_WEBHOOK_API_KEY` (xem `.env.example`).
-3. Vào SePay → **Webhooks** → Thêm webhook:
-   - URL: `https://<domain>/api/webhooks/sepay`. Server phải truy cập được từ Internet qua HTTPS; chạy máy local thì dùng tạm ngrok hoặc cloudflared để thử.
-   - Sự kiện: *Có tiền vào*.
-   - Kiểu chứng thực: **API Key**, dán đúng chuỗi ở bước 2. SePay sẽ gửi header `Authorization: Apikey <key>`.
-4. Khởi động lại server. Trang nạp của người dùng sẽ ghi "cộng tự động" và tự cập nhật mỗi 5 giây.
-
-Cách server xử lý mỗi giao dịch (`server/src/services/bankTransactions.js`):
-
-| Tình huống | Kết quả |
-|---|---|
-| Nội dung có đúng một mã `KHBD…` đang *chờ duyệt* và số tiền khớp tuyệt đối | `AUTO_APPROVED`: cộng điểm ngay; sổ cái ghi "tự động xác nhận qua ngân hàng" |
-| Không có mã / mã không tồn tại / lệch số tiền / yêu cầu đã hủy hoặc bị từ chối | Giữ lại, **không** cộng điểm. Hiện ở trang **/admin/ngan-hang** (tab *Cần kiểm tra*, có badge); admin chọn *Gán & cộng điểm* (được gán cả vào yêu cầu đã hủy) hoặc *Bỏ qua* (bắt buộc ghi chú) |
-| Tiền vào một tài khoản khác đang liên kết SePay | `OTHER_ACCOUNT`: chỉ ghi lại |
-| Tiền ra | Bỏ qua, không ghi |
-
-SePay gửi lại webhook nếu không nhận được `{"success": true}`. Mỗi giao dịch được lưu theo `id` của SePay với ràng buộc unique, nên dù webhook đến trùng (kể cả nhiều bản cùng lúc) cũng chỉ cộng điểm một lần. Nội dung gốc của từng webhook được lưu trong bảng `BankTransaction` để đối chiếu sau này.
-
-Để trống `SEPAY_WEBHOOK_API_KEY` thì webhook bị tắt (trả 404) và mọi thứ quay về duyệt tay như trước.
-
 **Sổ cái `PointTransaction`:** mọi thay đổi điểm *và* lượt miễn phí đều ghi một dòng gồm: loại (`SIGNUP_BONUS`, `EXPORT`, `EXPORT_REFUND`, `TOPUP`, `ADMIN_ADJUST`, `FREE_RESET`), số điểm ±, số dư điểm sau giao dịch, số lượt ±, số lượt sau giao dịch, người thực hiện, thời gian và ghi chú. Toàn bộ logic nằm ở `server/src/services/points.js`.
 
 > Khi dùng SQLite, backend chỉ mở **1 kết nối** tới database (`server/src/db.js`) để các transaction xếp hàng lần lượt. SQLite không cho nhiều transaction ghi chạy song song; nếu mở nhiều kết nối, các request đồng thời sẽ bị timeout. PostgreSQL không bị giới hạn này.
@@ -201,8 +178,6 @@ API quản trị (tất cả yêu cầu role ADMIN):
 | POST | `/api/admin/users/:id/lock` `{ locked, reason }` · `/reset-password` `{ password? }` · `/role` `{ role }` · `/points` `{ delta, reason }` · `/free-exports` `{ value?, reason? }` |
 | GET | `/api/admin/topups?status=&q=&userId=&from=&to=` |
 | POST | `/api/admin/topups/:id/approve` · `/api/admin/topups/:id/reject` `{ reason }` |
-| GET | `/api/admin/bank-transactions?status=REVIEW|AUTO_APPROVED|RESOLVED|DISMISSED|ALL&q=&from=&to=` |
-| POST | `/api/admin/bank-transactions/:id/assign` `{ code }` · `/api/admin/bank-transactions/:id/dismiss` `{ note }` |
 | GET | `/api/admin/transactions?q=&userId=&type=&from=&to=` · `/api/admin/exports?q=&userId=&fileType=&chargeType=&status=&from=&to=` |
 | GET / PUT | `/api/admin/settings` (PUT `{ values: { pointsPerExport: 5, … } }`) |
 

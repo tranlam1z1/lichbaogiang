@@ -9,25 +9,19 @@ export const useRefreshPending = () => useContext(PendingContext);
 
 /** Khung trang quản trị: tab điều hướng + số yêu cầu nạp đang chờ. */
 export default function AdminLayout({ title, children }) {
-  const [pending, setPending] = useState({ count: 0, bankReview: 0 });
+  const [pending, setPending] = useState(0);
   const refreshPending = useCallback(() => {
     api
       .get('/admin/topups/pending-count')
-      .then((d) => setPending({ count: d.count, bankReview: d.bankReview || 0 }))
+      .then((d) => setPending(d.count))
       .catch(() => {});
   }, []);
-  // Tự cập nhật mỗi phút để admin thấy yêu cầu / giao dịch mới mà không phải tải lại trang.
-  useEffect(() => {
-    refreshPending();
-    const t = setInterval(() => document.visibilityState === 'visible' && refreshPending(), 60_000);
-    return () => clearInterval(t);
-  }, [refreshPending]);
+  useEffect(refreshPending, [refreshPending]);
 
   const links = [
     { to: '/admin', label: 'Tổng quan', icon: '▦', end: true },
     { to: '/admin/nguoi-dung', label: 'Người dùng', icon: '👤' },
-    { to: '/admin/nap-diem', label: 'Duyệt nạp điểm', icon: '＋', badge: pending.count },
-    { to: '/admin/ngan-hang', label: 'Tiền vào', icon: '₫', badge: pending.bankReview },
+    { to: '/admin/nap-diem', label: 'Duyệt nạp điểm', icon: '＋', badge: pending },
     { to: '/admin/giao-dich', label: 'Giao dịch', icon: '⇄' },
     { to: '/admin/xuat-file', label: 'Xuất file', icon: '⎙' },
     { to: '/admin/cai-dat', label: 'Cài đặt', icon: '⚙' },

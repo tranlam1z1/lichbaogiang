@@ -1,8 +1,8 @@
 import { Router } from 'express';
+import { randomInt } from 'node:crypto';
 import { prisma } from '../db.js';
 import { bankConfigured, transferInfo } from '../lib/bank.js';
 import { HttpError, validationError } from '../lib/errors.js';
-import { newTopUpCode } from '../lib/topupCode.js';
 import { pageResult, paging } from '../lib/paging.js';
 import { requireAuth } from '../middleware/auth.js';
 import { getSettings } from '../services/settings.js';
@@ -11,6 +11,14 @@ import { pointsForAmount, validateTopUpAmount } from '../../../shared/validation
 /** Số yêu cầu "Chờ duyệt" tối đa mỗi người, tránh tạo tràn lan. */
 export const MAX_PENDING_TOPUPS = 3;
 export const TOPUP_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+
+// Bỏ các ký tự dễ nhầm khi gõ tay nội dung chuyển khoản: 0/O, 1/I/L.
+const CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+function newCode() {
+  let s = 'KHBD';
+  for (let i = 0; i < 6; i++) s += CODE_CHARS[randomInt(CODE_CHARS.length)];
+  return s;
+}
 
 export function publicTopUp(t, { withTransfer = false } = {}) {
   return {
@@ -58,7 +66,7 @@ topupsRouter.post('/', async (req, res) => {
   // Mã trùng (rất hiếm) thì sinh mã khác.
   for (let attempt = 0; attempt < 5; attempt++) {
     try {
-      const topUp = await prisma.topUpRequest.create({ data: { ...data, code: newTopUpCode() } });
+      const topUp = await prisma.topUpRequest.create({ data: { ...data, code: newCode() } });
       return res.status(201).json({ topUp: publicTopUp(topUp, { withTransfer: true }) });
     } catch (e) {
       if (e.code !== 'P2002') throw e;

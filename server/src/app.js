@@ -12,7 +12,6 @@ import { authRouter } from './routes/auth.js';
 import { exportsRouter } from './routes/exports.js';
 import { settingsRouter } from './routes/settings.js';
 import { topupsRouter } from './routes/topups.js';
-import { webhooksRouter } from './routes/webhooks.js';
 
 const CLIENT_DIST = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../dist');
 
@@ -49,7 +48,6 @@ export function createApp() {
   api.use('/exports', exportsRouter);
   api.use('/topups', topupsRouter);
   api.use('/admin', adminRouter);
-  api.use('/webhooks', webhooksRouter);
   api.use(notFound);
   app.use('/api', api);
 

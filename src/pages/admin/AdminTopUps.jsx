@@ -111,9 +111,7 @@ function Inner() {
                             </button>
                           </span>
                         ) : (
-                          (t.reviewedBy || t.autoApproved) && (
-                            <span className="topup-date">{t.reviewedBy ? t.reviewedBy.username : 'Tự động (ngân hàng)'} · {formatDateTime(t.reviewedAt)}</span>
-                          )
+                          t.reviewedBy && <span className="topup-date">{t.reviewedBy.username} · {formatDateTime(t.reviewedAt)}</span>
                         )}
                       </td>
                     </tr>

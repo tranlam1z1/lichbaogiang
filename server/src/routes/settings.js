@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { config } from '../config.js';
 import { bank, bankConfigured } from '../lib/bank.js';
 import { getSettings } from '../services/settings.js';
 
@@ -14,8 +13,6 @@ settingsRouter.get('/public', async (req, res) => {
     topupUnitVnd: s.topupUnitVnd,
     pointsPerUnit: s.pointsPerUnit,
     topupEnabled: bankConfigured,
-    // Có webhook ngân hàng → điểm được cộng tự động sau khi chuyển khoản.
-    topupAuto: bankConfigured && Boolean(config.sepayWebhookKey),
     bankName: bankConfigured ? bank.bankName || bank.bankId : null,
   });
 });

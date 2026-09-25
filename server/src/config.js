@@ -58,10 +58,4 @@ export const config = {
     windowMinutes: int(env.LOGIN_WINDOW_MINUTES, 15),
   },
   registerMaxPerHour: int(env.REGISTER_MAX_PER_HOUR, 10),
-  // Để trống = tắt webhook tự duyệt nạp điểm (vẫn duyệt tay bình thường).
-  sepayWebhookKey: (env.SEPAY_WEBHOOK_API_KEY || '').trim(),
 };
-
-if (config.sepayWebhookKey && config.sepayWebhookKey.length < 24) {
-  throw new Error('SEPAY_WEBHOOK_API_KEY quá ngắn (cần tối thiểu 24 ký tự ngẫu nhiên).');
-}

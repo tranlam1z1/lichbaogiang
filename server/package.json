@@ -10,6 +10,8 @@
     "start": "node --env-file-if-exists=.env src/index.js",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:pg:schema": "node scripts/pg-schema.js",
+    "db:pg:deploy": "npm run db:pg:schema && prisma generate --schema prisma/postgres/schema.prisma && prisma migrate deploy --schema prisma/postgres/schema.prisma",
     "db:studio": "prisma studio",
     "test": "node --test --test-concurrency=1 tests/*.test.js",
     "topup": "node --env-file-if-exists=.env scripts/topup.js",

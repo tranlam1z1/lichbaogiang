@@ -1,0 +1,51 @@
+# Triển khai lên Render: một web service phục vụ cả API và frontend (SERVE_CLIENT=true), database PostgreSQL trên Neon.
+# Render → New → Blueprint → chọn repo này. Các biến sync: false sẽ được hỏi khi tạo, điền trong Dashboard → Environment.
+services:
+  - type: web
+    name: lichbaogiang
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: >-
+      npm ci --include=dev &&
+      npm run build &&
+      npm --prefix server ci --include=dev &&
+      npm --prefix server run db:pg:deploy &&
+      npm --prefix server run db:seed
+    startCommand: npm --prefix server start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: SERVE_CLIENT
+        value: "true"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: COOKIE_SAMESITE
+        value: lax
+      - key: JWT_SECRET
+        generateValue: true
+      # Chuỗi kết nối Neon loại "direct" (không có -pooler trong tên host), kèm ?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      - key: SEPAY_WEBHOOK_API_KEY
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PHONE
+        sync: false
+      - key: BANK_ID
+        sync: false
+      - key: BANK_NAME
+        sync: false
+      - key: BANK_ACCOUNT_NO
+        sync: false
+      - key: BANK_ACCOUNT_NAME
+        sync: false
