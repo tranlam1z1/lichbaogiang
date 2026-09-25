@@ -64,6 +64,8 @@ cd server && npx prisma studio   # xem/sửa database bằng giao diện web
 
 ### Triển khai
 
+Hướng dẫn từng bước cho người không chuyên (Render + Neon, tên miền, cập nhật, sao lưu): [docs/DEPLOY.md](docs/DEPLOY.md).
+
 - **Một cổng duy nhất (khuyên dùng):** `npm run build`, rồi trong `server/.env` đặt `SERVE_CLIENT=true`, `NODE_ENV=production` và chạy `npm start` trong `server/`. Backend phục vụ luôn thư mục `dist/`.
 - **Render + Neon (PostgreSQL):** file `render.yaml` ở gốc repo cấu hình sẵn. Tạo database trên Neon, lấy chuỗi kết nối loại *direct* (host không có `-pooler`). Trên Render chọn **New → Blueprint** → repo này, điền `DATABASE_URL` và các biến còn lại. Mỗi lần build sẽ tự chạy migration và `db:seed`.
 - **PostgreSQL:** dev/test vẫn dùng SQLite (`prisma/schema.prisma`). Bản PostgreSQL nằm ở `server/prisma/postgres/`: `schema.prisma` sinh tự động bằng `npm run db:pg:schema`, migrations riêng trong `postgres/migrations/`. `npm run db:pg:deploy` = sinh schema + `prisma generate` + `prisma migrate deploy` cho PostgreSQL.

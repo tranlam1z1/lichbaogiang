@@ -2,3 +2,7 @@ node_modules
 dist
 tests/out
 *.log
+# Bí mật: không bao giờ commit file .env thật (chỉ commit .env.example)
+.env
+.env.*
+!.env.example

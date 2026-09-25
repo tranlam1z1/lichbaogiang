@@ -33,7 +33,6 @@ model User {
   exports           ExportLog[]
   topUps            TopUpRequest[]     @relation("UserTopUps")
   reviewedTopUps    TopUpRequest[]     @relation("ReviewedTopUps")
-  resolvedBankTxs   BankTransaction[]  @relation("ResolvedBankTxs")
 
   @@index([createdAt])
 }
@@ -110,37 +109,7 @@ model TopUpRequest {
   updatedAt    DateTime  @updatedAt
 
   transactions PointTransaction[]
-  bankTxs      BankTransaction[]
 
   @@index([userId, createdAt])
-  @@index([status, createdAt])
-}
-
-/// Tiền vào tài khoản ngân hàng do webhook (SePay) báo về. Mỗi giao dịch ngân hàng chỉ ghi MỘT lần.
-model BankTransaction {
-  id              Int           @id @default(autoincrement())
-  provider        String // SEPAY
-  providerTxId    String // id giao dịch phía nhà cung cấp — chống xử lý trùng khi webhook gửi lại
-  gateway         String? // tên ngân hàng, VD: MBBank
-  accountNumber   String?
-  amountVnd       Int
-  content         String // nội dung chuyển khoản gốc
-  referenceCode   String? // mã tham chiếu của ngân hàng (FT...)
-  transactionDate String? // thời gian giao dịch theo ngân hàng, giữ nguyên chuỗi gốc
-  matchedCode     String? // mã KHBD… tìm thấy trong nội dung (nếu có)
-  // AUTO_APPROVED: đã tự cộng điểm
-  // NO_CODE | NOT_FOUND | AMOUNT_MISMATCH | NOT_PENDING: cần admin kiểm tra
-  // RESOLVED: admin đã gán cho yêu cầu nạp và cộng điểm | DISMISSED: admin đánh dấu bỏ qua
-  status          String
-  note            String?
-  topUpId         Int?
-  topUp           TopUpRequest? @relation(fields: [topUpId], references: [id])
-  resolvedById    Int?
-  resolvedBy      User?         @relation("ResolvedBankTxs", fields: [resolvedById], references: [id])
-  resolvedAt      DateTime?
-  raw             String // JSON gốc webhook gửi, để đối chiếu khi cần
-  createdAt       DateTime      @default(now())
-
-  @@unique([provider, providerTxId])
   @@index([status, createdAt])
 }

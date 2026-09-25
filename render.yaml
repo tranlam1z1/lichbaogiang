@@ -31,8 +31,6 @@ services:
       # Chuỗi kết nối Neon loại "direct" (không có -pooler trong tên host), kèm ?sslmode=require
       - key: DATABASE_URL
         sync: false
-      - key: SEPAY_WEBHOOK_API_KEY
-        sync: false
       - key: ADMIN_USERNAME
         sync: false
       - key: ADMIN_PASSWORD
