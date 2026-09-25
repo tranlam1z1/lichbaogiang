@@ -1,0 +1,145 @@
+// Dev: SQLite. Khi triển khai PostgreSQL: đổi provider = "postgresql",
+// đặt DATABASE_URL="postgresql://..." rồi tạo lại migration (xem README).
+// SQLite không có enum nên các trường trạng thái dùng String; giá trị hợp lệ ghi trong chú thích.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int       @id @default(autoincrement())
+  username        String    @unique // luôn lưu chữ thường
+  email           String    @unique // luôn lưu chữ thường
+  phone           String    @unique // dạng 0xxxxxxxxx
+  passwordHash    String
+  role            String    @default("USER") // USER | ADMIN
+  isLocked        Boolean   @default(false)
+  lockReason      String?
+  freeExportsLeft Int       @default(0) // giá trị ban đầu lấy từ Setting khi đăng ký
+  points          Int       @default(0)
+  // Tăng lên khi đổi/đặt lại mật khẩu hoặc khóa tài khoản để vô hiệu mọi phiên đăng nhập cũ.
+  tokenVersion    Int       @default(0)
+  lastLoginAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  transactions      PointTransaction[] @relation("UserTransactions")
+  actedTransactions PointTransaction[] @relation("ActorTransactions")
+  exports           ExportLog[]
+  topUps            TopUpRequest[]     @relation("UserTopUps")
+  reviewedTopUps    TopUpRequest[]     @relation("ReviewedTopUps")
+  resolvedBankTxs   BankTransaction[]  @relation("ResolvedBankTxs")
+
+  @@index([createdAt])
+}
+
+/// Cài đặt hệ thống dạng khóa – giá trị (số lượt miễn phí, điểm mỗi lần xuất, tỷ lệ nạp…).
+model Setting {
+  key         String   @id
+  value       String
+  updatedById Int?
+  updatedAt   DateTime @updatedAt
+}
+
+/// Sổ cái: MỌI thay đổi điểm hoặc lượt miễn phí đều có một dòng ở đây.
+model PointTransaction {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  user             User     @relation("UserTransactions", fields: [userId], references: [id])
+  // SIGNUP_BONUS | EXPORT | EXPORT_REFUND | TOPUP | ADMIN_ADJUST | FREE_RESET
+  type             String
+  points           Int      @default(0) // + cộng, − trừ
+  balanceAfter     Int // số điểm sau giao dịch
+  freeExports      Int      @default(0) // thay đổi lượt miễn phí (+/−)
+  freeExportsAfter Int // số lượt miễn phí sau giao dịch
+  // Người thực hiện: chính người dùng, admin, hoặc null nếu do hệ thống/script.
+  actorId          Int?
+  actor            User?    @relation("ActorTransactions", fields: [actorId], references: [id])
+  note             String?
+  exportId         String?
+  export           ExportLog?    @relation(fields: [exportId], references: [id])
+  topUpId          Int?
+  topUp            TopUpRequest? @relation(fields: [topUpId], references: [id])
+  createdAt        DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([type])
+}
+
+/// Một lần xuất file. id chính là exportId trả về cho frontend.
+model ExportLog {
+  id            String    @id @default(cuid())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id])
+  fileType      String // DOCX | XLSX
+  chargeType    String // FREE | POINTS
+  pointsCharged Int       @default(0)
+  status        String    @default("AUTHORIZED") // AUTHORIZED | COMPLETED | REFUNDED
+  description   String? // VD: "Tuần 1–35 (35 tuần)"
+  refundReason  String?
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+  refundedAt    DateTime?
+
+  transactions PointTransaction[]
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+}
+
+/// Yêu cầu nạp điểm bằng chuyển khoản, chờ admin duyệt.
+model TopUpRequest {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique // nội dung chuyển khoản, VD: KHBD7K3QPA
+  userId       Int
+  user         User      @relation("UserTopUps", fields: [userId], references: [id])
+  amountVnd    Int
+  points       Int // số điểm sẽ cộng, chốt theo tỷ lệ tại thời điểm tạo yêu cầu
+  status       String    @default("PENDING") // PENDING | APPROVED | REJECTED | CANCELLED
+  reviewedById Int?
+  reviewedBy   User?     @relation("ReviewedTopUps", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
+  rejectReason String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  transactions PointTransaction[]
+  bankTxs      BankTransaction[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+/// Tiền vào tài khoản ngân hàng do webhook (SePay) báo về. Mỗi giao dịch ngân hàng chỉ ghi MỘT lần.
+model BankTransaction {
+  id              Int           @id @default(autoincrement())
+  provider        String // SEPAY
+  providerTxId    String // id giao dịch phía nhà cung cấp — chống xử lý trùng khi webhook gửi lại
+  gateway         String? // tên ngân hàng, VD: MBBank
+  accountNumber   String?
+  amountVnd       Int
+  content         String // nội dung chuyển khoản gốc
+  referenceCode   String? // mã tham chiếu của ngân hàng (FT...)
+  transactionDate String? // thời gian giao dịch theo ngân hàng, giữ nguyên chuỗi gốc
+  matchedCode     String? // mã KHBD… tìm thấy trong nội dung (nếu có)
+  // AUTO_APPROVED: đã tự cộng điểm
+  // NO_CODE | NOT_FOUND | AMOUNT_MISMATCH | NOT_PENDING: cần admin kiểm tra
+  // RESOLVED: admin đã gán cho yêu cầu nạp và cộng điểm | DISMISSED: admin đánh dấu bỏ qua
+  status          String
+  note            String?
+  topUpId         Int?
+  topUp           TopUpRequest? @relation(fields: [topUpId], references: [id])
+  resolvedById    Int?
+  resolvedBy      User?         @relation("ResolvedBankTxs", fields: [resolvedById], references: [id])
+  resolvedAt      DateTime?
+  raw             String // JSON gốc webhook gửi, để đối chiếu khi cần
+  createdAt       DateTime      @default(now())
+
+  @@unique([provider, providerTxId])
+  @@index([status, createdAt])
+}

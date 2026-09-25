@@ -6,16 +6,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:api": "npm --prefix server run dev",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --import ./tests/register.mjs --test tests/logic.test.js tests/export.test.js"
+    "test": "node --import ./tests/register.mjs --test tests/logic.test.js tests/export.test.js tests/validation.test.js",
+    "test:api": "npm --prefix server test"
   },
   "dependencies": {
     "docx": "^9.5.1",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",

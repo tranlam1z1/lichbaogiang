@@ -4,6 +4,7 @@ import TimetableEditor from './components/TimetableEditor.jsx';
 import WeekCalendar from './components/WeekCalendar.jsx';
 import PpctTable from './components/PpctTable.jsx';
 import ClassInfo from './components/ClassInfo.jsx';
+import UserBar from './components/UserBar.jsx';
 
 const TABS = [
   { id: 'lessons', label: 'Báo giảng', short: 'Báo giảng', icon: '✎' },
@@ -29,6 +30,7 @@ export default function App() {
                 {info.school} · Năm học {info.schoolYear}
               </p>
             </div>
+            <UserBar />
           </div>
           <nav className="tabs" aria-label="Các mục">
             {TABS.map((t) => (

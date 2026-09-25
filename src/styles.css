@@ -159,6 +159,10 @@ h2 {
   color: var(--violet);
 }
 
+a.tab {
+  text-decoration: none;
+}
+
 .tab.is-active {
   color: var(--violet-deep);
   border-bottom-color: var(--violet);
@@ -182,6 +186,11 @@ h2 {
 .stack {
   display: grid;
   gap: 16px;
+}
+
+/* Phần tử con của grid mặc định không co nhỏ hơn nội dung → bảng rộng đẩy cả trang tràn ngang trên điện thoại. */
+.stack > * {
+  min-width: 0;
 }
 
 /* ---------- Thành phần chung ---------- */
@@ -1037,6 +1046,444 @@ td.is-unknown .tkb-input {
 }
 
 /* ---------- Màn hình nhỏ ---------- */
+/* ---------- Tài khoản ---------- */
+.userbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 8px;
+  margin-left: auto;
+}
+
+.userbar-name {
+  font-weight: 600;
+  color: var(--violet-deep);
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.auth-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(51, 36, 111, 0.08);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.auth-brand h1 {
+  font-size: 1.4rem;
+  color: var(--violet-deep);
+}
+
+.auth-app {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.auth-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-field input[aria-invalid='true'] {
+  border-color: var(--red);
+}
+
+.field-hint,
+.field-error {
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+.field-error {
+  color: var(--red);
+}
+
+.banner-alert {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.auth-footer {
+  margin: 16px 0 0;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.auth-footer a {
+  color: var(--violet);
+  font-weight: 600;
+}
+
+.pill-link {
+  text-decoration: none;
+}
+
+.pill-link:hover {
+  background: var(--violet);
+  color: #fff;
+}
+
+a.userbar-name {
+  text-decoration: none;
+}
+
+a.userbar-name:hover {
+  color: var(--violet);
+}
+
+/* ---------- Xuất file có tính điểm ---------- */
+.export-price {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* ---------- Nạp điểm ---------- */
+.topup-form {
+  display: grid;
+  gap: 12px;
+  max-width: 460px;
+}
+
+.topup-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.topup-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.topup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+
+.topup-row .head-actions {
+  margin-left: auto;
+}
+
+.topup-date {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.transfer-code {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--violet-deep);
+}
+
+.transfer {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px 24px;
+  align-items: start;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line-strong);
+}
+
+.transfer-qr {
+  width: 260px;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.transfer-info {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+  margin: 0;
+  align-items: center;
+}
+
+.transfer-info dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.transfer-info dd {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.transfer-note {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+/* ---------- Lịch sử ---------- */
+.seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  background: var(--violet-soft);
+}
+
+.seg-btn {
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--violet-deep);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seg-btn.is-active {
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(51, 36, 111, 0.15);
+}
+
+.history-table th {
+  white-space: nowrap;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.history-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.history-note {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--red);
+}
+
+/* ---------- Quản trị ---------- */
+.bank-content {
+  max-width: 320px;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+}
+
+a.btn {
+  text-decoration: none;
+  color: inherit;
+}
+
+a.btn-primary {
+  color: #fff;
+}
+
+.data-table a {
+  color: var(--violet);
+  font-weight: 600;
+}
+
+.tab-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.stat-tile {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.stat-tile.is-link:hover {
+  border-color: var(--violet);
+}
+
+.stat-tile.has-alert {
+  border-left: 4px solid var(--red);
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-detail {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.admin-filters .field input[type='date'] {
+  min-width: 150px;
+}
+
+.admin-table td {
+  white-space: nowrap;
+}
+
+.admin-table td:last-child {
+  white-space: normal;
+  min-width: 160px;
+}
+
+.admin-table a,
+.mini-list a,
+.breadcrumb a {
+  color: var(--violet);
+  font-weight: 600;
+}
+
+.admin-table .is-plus {
+  color: var(--green);
+}
+
+.admin-table .is-minus {
+  color: var(--red);
+}
+
+tr.is-clickable {
+  cursor: pointer;
+}
+
+tr.is-clickable:hover td {
+  background: var(--violet-soft);
+}
+
+.breadcrumb {
+  margin: 0;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, max-content) minmax(160px, 1fr));
+  gap: 8px 16px;
+  margin: 0 0 16px;
+}
+
+.info-grid dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.info-grid dd {
+  margin: 0;
+}
+
+.admin-actions {
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.mini-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+}
+
+.temp-password code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.modal-form .modal-body {
+  display: grid;
+  gap: 12px;
+  margin: 10px 0 16px;
+}
+
+.modal-form .modal-body p {
+  margin: 0;
+}
+
+.modal-form .seg {
+  margin-bottom: 0;
+  justify-self: start;
+}
+
+.settings-form {
+  display: grid;
+  gap: 16px;
+  max-width: 560px;
+}
+
+.settings-preview {
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: var(--violet-soft);
+  font-size: 0.9rem;
+}
+
+.settings-preview ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
 @media (max-width: 720px) {
   body {
     font-size: 14px;
@@ -1082,6 +1529,24 @@ td.is-unknown .tkb-input {
 
   .week-strip-bar .btn-icon {
     display: none;
+  }
+
+  .brand {
+    flex-wrap: wrap;
+  }
+
+  .userbar {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .transfer {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .transfer-info {
+    width: 100%;
   }
 }
 

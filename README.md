@@ -4,17 +4,207 @@
 
 ## Chạy ứng dụng
 
-Cần Node.js 18.19 trở lên.
+Ứng dụng gồm **frontend** (React + Vite, thư mục gốc) và **backend** (Node.js + Express + Prisma, thư mục `server/`). Phải đăng nhập mới dùng được trang lập kế hoạch, nên khi phát triển cần chạy cả hai.
+
+Cần **Node.js 22.9 trở lên**.
+
+### Cài đặt lần đầu
 
 ```bash
-npm install      # cài thư viện (lần đầu)
-npm run dev      # chạy thử, mở địa chỉ hiện ra (thường là http://localhost:5173)
-npm run build    # đóng gói vào thư mục dist/ (mở được trên mọi máy chủ web tĩnh)
-npm run preview  # xem thử bản đã đóng gói
-npm test         # chạy kiểm thử phần logic và xuất Word
+# 1. Frontend
+npm install
+
+# 2. Backend
+cd server
+npm install
+cp .env.example .env        # Windows PowerShell: Copy-Item .env.example .env
 ```
 
-Dữ liệu người dùng nhập được **tự động lưu trong trình duyệt** (localStorage). Nên dùng nút *Tải file sao lưu* ở mục **Thông tin lớp** để giữ bản dự phòng hoặc chuyển sang máy khác.
+Mở `server/.env` và điền **`JWT_SECRET`** (tối thiểu 32 ký tự ngẫu nhiên). Có thể tạo nhanh bằng lệnh:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+```
+
+Sau đó tạo database SQLite (`server/prisma/dev.db`) bằng lệnh:
+
+```bash
+npx prisma migrate dev      # vẫn trong thư mục server/
+```
+
+Tạo **tài khoản quản trị đầu tiên**: điền `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `ADMIN_EMAIL`, `ADMIN_PHONE` trong `server/.env` rồi chạy:
+
+```bash
+npm run db:seed             # vẫn trong thư mục server/
+```
+
+- Nếu `ADMIN_USERNAME` là tài khoản **đã có** (ví dụ tài khoản vừa tự đăng ký), script chỉ nâng quyền lên ADMIN và giữ nguyên mật khẩu, nên chỉ cần điền mỗi `ADMIN_USERNAME`.
+- Muốn đổi luôn mật khẩu thì đặt thêm `ADMIN_RESET_PASSWORD=true` và `ADMIN_PASSWORD`.
+- Chạy lại nhiều lần vẫn an toàn. Tạo xong nên xóa `ADMIN_PASSWORD` khỏi `.env`.
+
+> npm 11 chặn script cài đặt của thư viện ngoài. Các gói cần script (Prisma, bcrypt) đã được duyệt sẵn trong `server/package.json` (mục `allowScripts`). Nếu nâng cấp phiên bản các gói này, chạy `npm approve-scripts <tên gói>`.
+
+### Chạy khi phát triển (mở 2 cửa sổ terminal)
+
+```bash
+npm run dev:api   # backend: http://localhost:4000/api (tự khởi động lại khi sửa code)
+npm run dev       # frontend: http://localhost:5173
+```
+
+Vite chuyển mọi request `/api` sang `localhost:4000`. Nhờ vậy frontend và API cùng origin, cookie đăng nhập (httpOnly) hoạt động mà không cần cấu hình CORS.
+
+### Các lệnh khác
+
+```bash
+npm run build     # đóng gói frontend vào dist/
+npm test          # kiểm thử logic, xuất Word/Excel, validate form
+npm run test:api  # kiểm thử API (dùng database riêng server/prisma/test.db, không đụng dev.db)
+cd server && npx prisma studio   # xem/sửa database bằng giao diện web
+```
+
+### Triển khai
+
+- **Một cổng duy nhất (khuyên dùng):** `npm run build`, rồi trong `server/.env` đặt `SERVE_CLIENT=true`, `NODE_ENV=production` và chạy `npm start` trong `server/`. Backend phục vụ luôn thư mục `dist/`.
+- **Chuyển sang PostgreSQL:** trong `server/prisma/schema.prisma` đổi `provider = "sqlite"` thành `"postgresql"`, đặt `DATABASE_URL="postgresql://..."`, xóa thư mục `server/prisma/migrations/` rồi chạy `npx prisma migrate dev --name init` để tạo migration mới cho PostgreSQL. Trên server thật chỉ dùng `npm run db:deploy` (`prisma migrate deploy`).
+- **Frontend và API khác domain:** đặt `CLIENT_ORIGIN=https://domain-frontend`, `COOKIE_SAMESITE=none`, `COOKIE_SECURE=true` (bắt buộc HTTPS). Build frontend với `VITE_API_URL=https://domain-api/api`.
+- **Sau proxy (Nginx, Render, Railway…):** đặt `TRUST_PROXY=1` để rate limit nhận đúng IP người dùng.
+- Bộ đếm chống dò mật khẩu nằm trong bộ nhớ tiến trình. Nếu chạy nhiều instance backend, cần chuyển sang store dùng chung (Redis).
+- **GitHub Pages** chỉ phục vụ web tĩnh nên không chạy được backend. Workflow `.github/workflows/deploy.yml` vẫn giữ nguyên, nhưng bản trên Pages sẽ không đăng nhập được.
+
+Dữ liệu kế hoạch (TKB, lịch tuần, chỗ sửa tên bài…) vẫn **tự động lưu trong trình duyệt** (localStorage), không lưu lên server. Nên dùng nút *Tải file sao lưu* ở mục **Thông tin lớp** để giữ bản dự phòng hoặc chuyển sang máy khác.
+
+## Tài khoản
+
+- **Đăng ký** (`/dang-ky`) gồm các trường:
+  - Tên đăng nhập: 4–20 ký tự, chữ không dấu, số, `_`; không phân biệt hoa/thường
+  - Mật khẩu: ≥ 8 ký tự, có chữ và số, kèm ô nhập lại
+  - Email
+  - Số điện thoại di động Việt Nam: 10 số, đầu 03/05/07/08/09; chấp nhận nhập dạng `+84…` hoặc có dấu cách
+  
+  Tên đăng nhập, email và SĐT không được trùng với tài khoản khác. Luật kiểm tra nằm ở `shared/validation.js`, dùng chung cho frontend và backend.
+- **Đăng nhập** (`/dang-nhap`) bằng tên đăng nhập và mật khẩu. Phiên đăng nhập là JWT trong cookie httpOnly, hết hạn sau `SESSION_DAYS` ngày.
+- **Chống dò mật khẩu:** sai quá `LOGIN_MAX_FAILS_PER_ACCOUNT` lần với một tài khoản, hoặc `LOGIN_MAX_FAILS_PER_IP` lần từ một IP, trong `LOGIN_WINDOW_MINUTES` phút thì bị chặn tạm thời.
+- **Tài khoản bị khóa:** không đăng nhập được và thấy lý do khóa. Nếu đang đăng nhập thì bị đăng xuất ở lần gọi API tiếp theo.
+- Header hiển thị tên người dùng, số lượt xuất file miễn phí còn lại và số điểm.
+
+### API
+
+| Phương thức | Đường dẫn | Mô tả |
+|---|---|---|
+| POST | `/api/auth/register` | Đăng ký và đăng nhập luôn |
+| POST | `/api/auth/login` | Đăng nhập |
+| POST | `/api/auth/logout` | Đăng xuất |
+| GET | `/api/auth/me` | Người dùng hiện tại (`user: null` nếu chưa đăng nhập) |
+| GET | `/api/settings/public` | Giá xuất file, tỷ lệ nạp, nạp điểm đã bật chưa |
+| POST | `/api/exports/authorize` | `{ fileType: 'DOCX'\|'XLSX', confirmCost, description }` → trừ lượt/điểm, trả `exportId` |
+| POST | `/api/exports/:id/complete` | Báo đã tạo file thành công |
+| POST | `/api/exports/:id/refund` | Tạo file lỗi → hoàn lại lượt/điểm (chỉ một lần, trong 15 phút) |
+| GET | `/api/exports` | Lịch sử xuất file của mình (`?page=`) |
+| POST | `/api/topups` | `{ amountVnd }` → tạo yêu cầu nạp, trả mã chuyển khoản và link QR |
+| GET | `/api/topups` | Lịch sử nạp của mình (`?page=&status=PENDING`) |
+| POST | `/api/topups/:id/cancel` | Hủy yêu cầu đang chờ duyệt |
+
+Mọi request ghi dữ liệu phải gửi `Content-Type: application/json` (chống CSRF). Lỗi trả về dạng `{ message, code, errors?, details? }`, trong đó `errors` là lỗi theo từng trường của form, còn `details` là dữ liệu kèm theo (ví dụ `{ cost, points }` khi không đủ điểm).
+
+## Lượt xuất file và điểm
+
+| Quy tắc | Mặc định | Tên cài đặt trong bảng `Setting` |
+|---|---|---|
+| Lượt xuất miễn phí cho tài khoản mới (Word hay Excel đều tính 1 lượt) | 5 | `freeExportsForNewUser` |
+| Số điểm trừ mỗi lần xuất khi đã hết lượt miễn phí | 5 | `pointsPerExport` |
+| Mệnh giá nạp (vừa là mức tối thiểu, vừa là bước nhảy) | 10.000đ | `topupUnitVnd` |
+| Số điểm nhận được cho mỗi mệnh giá | 100 | `pointsPerUnit` |
+
+Các giá trị trên được lưu trong database, lần chạy server đầu tiên sẽ ghi giá trị mặc định. Quản trị viên sửa các giá trị này ở trang **/admin/cai-dat**; thay đổi có hiệu lực ngay.
+
+**Luồng xuất file:**
+
+1. Bấm *Tải Word* / *Tải Excel*. Còn lượt miễn phí thì dùng luôn. Hết lượt thì hiện hộp xác nhận *"Lần xuất này sẽ trừ 5 điểm, bạn còn X điểm. Tiếp tục?"*. Không đủ điểm thì hiện hộp thoại hướng dẫn nạp điểm.
+2. Frontend gọi `POST /api/exports/authorize`. Server trừ lượt/điểm trong một transaction bằng câu lệnh có điều kiện (`… WHERE points >= 5`), nên bấm nhiều lần hay mở nhiều tab cũng không trừ sai và số dư không bao giờ âm. `confirmCost` là số điểm người dùng đã đồng ý trả. Nếu thực tế phải trừ khác đi (ví dụ vừa dùng hết lượt miễn phí ở tab khác, hoặc admin vừa đổi giá), server trả lỗi 409 `CONFIRM_REQUIRED` để giao diện hỏi lại.
+3. Tạo file trên trình duyệt. Thành công thì gọi `/complete`; lỗi thì gọi `/refund` để hoàn lại đúng phần đã trừ.
+
+*Giới hạn đã biết:* file vẫn được tạo trên trình duyệt, nên người rành kỹ thuật có thể gọi thẳng hàm tạo file mà không qua bước trừ lượt. Muốn chặn tuyệt đối thì phải chuyển việc tạo file sang server.
+
+**Nạp điểm (duyệt thủ công):**
+
+1. Điền thông tin ngân hàng nhận tiền vào `server/.env`: `BANK_ID` (mã BIN hoặc tên viết tắt theo [danh sách VietQR](https://api.vietqr.io/v2/banks)), `BANK_NAME`, `BANK_ACCOUNT_NO`, `BANK_ACCOUNT_NAME`. Thiếu các biến này thì nút nạp bị tắt.
+2. Người dùng vào `/nap-diem` và chọn số tiền. Hệ thống sinh mã nội dung chuyển khoản riêng (`KHBD` + 6 ký tự, bỏ các ký tự dễ nhầm như 0/O, 1/I/L) và hiện mã QR VietQR có sẵn số tiền và nội dung. Yêu cầu ở trạng thái *Chờ duyệt*; mỗi người có tối đa 3 yêu cầu chờ cùng lúc.
+3. Quản trị viên duyệt hoặc từ chối yêu cầu ở trang **/admin/nap-diem**. Cũng có thể dùng script trong thư mục `server/`:
+
+   ```bash
+   npm run topup -- list                                  # các yêu cầu đang chờ
+   npm run topup -- approve KHBDXXXXXX                    # duyệt → cộng điểm
+   npm run topup -- reject KHBDXXXXXX "Chưa nhận được tiền"
+   ```
+
+   Duyệt hai lần cũng chỉ cộng điểm một lần.
+4. Người dùng xem lịch sử nạp điểm và lịch sử xuất file ở `/lich-su`.
+
+**Nạp điểm tự động qua webhook ngân hàng (SePay, dùng được với MB Bank):**
+
+Khi bật, tiền về tài khoản là điểm được cộng ngay trong vài giây, admin không cần duyệt tay.
+
+1. Đăng ký [SePay](https://sepay.vn) và liên kết tài khoản MB Bank nhận tiền. Trong `server/.env`, đặt `BANK_ID=970422` và `BANK_NAME=MB Bank`.
+2. Tạo một chuỗi ngẫu nhiên dài từ 24 ký tự trở lên rồi đặt vào `SEPAY_WEBHOOK_API_KEY` (xem `.env.example`).
+3. Vào SePay → **Webhooks** → Thêm webhook:
+   - URL: `https://<domain>/api/webhooks/sepay`. Server phải truy cập được từ Internet qua HTTPS; chạy máy local thì dùng tạm ngrok hoặc cloudflared để thử.
+   - Sự kiện: *Có tiền vào*.
+   - Kiểu chứng thực: **API Key**, dán đúng chuỗi ở bước 2. SePay sẽ gửi header `Authorization: Apikey <key>`.
+4. Khởi động lại server. Trang nạp của người dùng sẽ ghi "cộng tự động" và tự cập nhật mỗi 5 giây.
+
+Cách server xử lý mỗi giao dịch (`server/src/services/bankTransactions.js`):
+
+| Tình huống | Kết quả |
+|---|---|
+| Nội dung có đúng một mã `KHBD…` đang *chờ duyệt* và số tiền khớp tuyệt đối | `AUTO_APPROVED`: cộng điểm ngay; sổ cái ghi "tự động xác nhận qua ngân hàng" |
+| Không có mã / mã không tồn tại / lệch số tiền / yêu cầu đã hủy hoặc bị từ chối | Giữ lại, **không** cộng điểm. Hiện ở trang **/admin/ngan-hang** (tab *Cần kiểm tra*, có badge); admin chọn *Gán & cộng điểm* (được gán cả vào yêu cầu đã hủy) hoặc *Bỏ qua* (bắt buộc ghi chú) |
+| Tiền vào một tài khoản khác đang liên kết SePay | `OTHER_ACCOUNT`: chỉ ghi lại |
+| Tiền ra | Bỏ qua, không ghi |
+
+SePay gửi lại webhook nếu không nhận được `{"success": true}`. Mỗi giao dịch được lưu theo `id` của SePay với ràng buộc unique, nên dù webhook đến trùng (kể cả nhiều bản cùng lúc) cũng chỉ cộng điểm một lần. Nội dung gốc của từng webhook được lưu trong bảng `BankTransaction` để đối chiếu sau này.
+
+Để trống `SEPAY_WEBHOOK_API_KEY` thì webhook bị tắt (trả 404) và mọi thứ quay về duyệt tay như trước.
+
+**Sổ cái `PointTransaction`:** mọi thay đổi điểm *và* lượt miễn phí đều ghi một dòng gồm: loại (`SIGNUP_BONUS`, `EXPORT`, `EXPORT_REFUND`, `TOPUP`, `ADMIN_ADJUST`, `FREE_RESET`), số điểm ±, số dư điểm sau giao dịch, số lượt ±, số lượt sau giao dịch, người thực hiện, thời gian và ghi chú. Toàn bộ logic nằm ở `server/src/services/points.js`.
+
+> Khi dùng SQLite, backend chỉ mở **1 kết nối** tới database (`server/src/db.js`) để các transaction xếp hàng lần lượt. SQLite không cho nhiều transaction ghi chạy song song; nếu mở nhiều kết nối, các request đồng thời sẽ bị timeout. PostgreSQL không bị giới hạn này.
+
+## Trang quản trị (/admin)
+
+Chỉ tài khoản có role **ADMIN** mới vào được. Người thường vào `/admin` sẽ thấy trang "Không có quyền truy cập". Mọi API `/api/admin/*` cũng trả lỗi 403 (hoặc 401 nếu chưa đăng nhập), vì server tự kiểm tra quyền chứ không tin frontend. Code trang quản trị được tải riêng (lazy load), nên người dùng thường không phải tải phần này.
+
+| Trang | Chức năng |
+|---|---|
+| **Tổng quan** `/admin` | Tổng người dùng; người dùng mới hôm nay / tuần này (tính theo giờ Việt Nam, tuần bắt đầu từ thứ Hai); tổng lượt xuất file (Word/Excel, miễn phí/trả phí); tổng tiền đã nạp; số yêu cầu nạp đang chờ; tổng điểm đang lưu hành. |
+| **Người dùng** `/admin/nguoi-dung` | Tìm theo tên đăng nhập, email hoặc SĐT (gõ `0912 345` hay `84912…` đều được); lọc theo quyền và trạng thái; sắp xếp; phân trang. Bấm vào một dòng để xem chi tiết. |
+| **Chi tiết người dùng** | Thông tin tài khoản, giao dịch / nạp / xuất file gần đây và các thao tác: **cộng/trừ điểm** (bắt buộc lý do, không trừ quá số dư), **đặt lại lượt miễn phí**, **đặt lại mật khẩu** (tự nhập, hoặc để hệ thống tạo mật khẩu tạm hiện một lần), **cấp/bỏ quyền quản trị**, **khóa/mở khóa** (khóa bắt buộc lý do). |
+| **Duyệt nạp điểm** `/admin/nap-diem` | Mặc định hiện các yêu cầu chờ duyệt, cũ nhất lên trước. Nút **Duyệt** (hỏi xác nhận đã nhận tiền, rồi cộng điểm) và **Từ chối** (bắt buộc lý do, người dùng sẽ thấy lý do này). Tìm theo mã `KHBD…` hoặc người dùng. Số yêu cầu đang chờ hiện trên tab. |
+| **Giao dịch** `/admin/giao-dich` | Sổ cái toàn hệ thống: lọc theo người dùng, loại giao dịch, khoảng ngày; kèm tổng điểm và tổng lượt của kết quả lọc. |
+| **Xuất file** `/admin/xuat-file` | Lịch sử xuất file toàn hệ thống: lọc theo người dùng, loại file, hình thức (miễn phí/điểm), trạng thái, khoảng ngày. |
+| **Cài đặt** `/admin/cai-dat` | Sửa số lượt miễn phí cho tài khoản mới, số điểm mỗi lần xuất, mệnh giá nạp, số điểm mỗi mệnh giá. Có phần xem trước người dùng sẽ thấy gì. |
+
+Bộ lọc của các trang danh sách nằm trên URL (ví dụ `/admin/giao-dich?userId=5&from=2026-09-01`), nên có thể lưu hoặc gửi link cho nhau.
+
+**Các ràng buộc an toàn:**
+
+- Admin không tự khóa được mình và không tự bỏ quyền quản trị của mình. Hệ thống luôn còn ít nhất 1 admin.
+- Khóa tài khoản, hoặc đặt lại mật khẩu, sẽ đăng xuất người đó khỏi mọi thiết bị ngay lập tức.
+- Cộng/trừ điểm và đặt lại lượt miễn phí đều ghi vào sổ cái kèm tên admin thực hiện.
+- Chưa có nhật ký riêng cho các thao tác khóa, đổi quyền hay đặt lại mật khẩu. Hiện chỉ lưu trạng thái cuối cùng (ví dụ lý do khóa).
+
+API quản trị (tất cả yêu cầu role ADMIN):
+
+| Phương thức | Đường dẫn |
+|---|---|
+| GET | `/api/admin/stats` · `/api/admin/topups/pending-count` |
+| GET | `/api/admin/users?q=&role=&status=&sort=&page=` · `/api/admin/users/:id` |
+| POST | `/api/admin/users/:id/lock` `{ locked, reason }` · `/reset-password` `{ password? }` · `/role` `{ role }` · `/points` `{ delta, reason }` · `/free-exports` `{ value?, reason? }` |
+| GET | `/api/admin/topups?status=&q=&userId=&from=&to=` |
+| POST | `/api/admin/topups/:id/approve` · `/api/admin/topups/:id/reject` `{ reason }` |
+| GET | `/api/admin/bank-transactions?status=REVIEW|AUTO_APPROVED|RESOLVED|DISMISSED|ALL&q=&from=&to=` |
+| POST | `/api/admin/bank-transactions/:id/assign` `{ code }` · `/api/admin/bank-transactions/:id/dismiss` `{ note }` |
+| GET | `/api/admin/transactions?q=&userId=&type=&from=&to=` · `/api/admin/exports?q=&userId=&fileType=&chargeType=&status=&from=&to=` |
+| GET / PUT | `/api/admin/settings` (PUT `{ values: { pointsPerExport: 5, … } }`) |
 
 ## Các mục
 
@@ -52,7 +242,29 @@ src/
   state/
     reducer.js       reducer thuần + khởi tạo/khôi phục trạng thái
     AppContext.jsx   useReducer + Context, tự lưu localStorage
-  components/      WeekStrip, LessonSheet, ExportPanel, TimetableEditor, WeekCalendar, PpctTable, ClassInfo…
+  components/      WeekStrip, LessonSheet, ExportPanel, TimetableEditor, WeekCalendar, PpctTable, ClassInfo, UserBar…
+  api/client.js    gọi API: gửi cookie, parse lỗi tiếng Việt
+  auth/            AuthContext (người dùng đang đăng nhập, login/logout/register)
+  routes/guards.jsx  RequireAuth, GuestOnly
+  pages/           LoginPage, RegisterPage
+    account/         AccountLayout, TopUpPage (nạp điểm + QR), HistoryPage (lịch sử nạp / xuất)
+    admin/           AdminLayout (khung + bộ lọc dùng chung), Dashboard, Users, UserDetail, TopUps, Transactions, Exports, Settings
+  lib/exportCharge.js  authorize → tạo file → complete / refund
+shared/validation.js       luật kiểm tra form và số tiền nạp, dùng chung frontend + backend
+server/
+  prisma/schema.prisma     User, Setting, PointTransaction, ExportLog, TopUpRequest; migrations/ lưu lịch sử thay đổi
+  src/
+    config.js              đọc và kiểm tra .env
+    app.js, index.js       khởi tạo Express
+    middleware/            auth (đọc phiên), rateLimit, errors (lỗi JSON, chống CSRF)
+    routes/                auth, settings, exports, topups
+    routes/admin/          index (tổng quan, nạp, giao dịch, xuất file, cài đặt), users, shared
+    services/points.js     MỌI thay đổi điểm/lượt: transaction + ghi sổ cái
+    services/settings.js   đọc cài đặt từ bảng Setting
+    lib/                   session (JWT + cookie), users, errors, bank (VietQR), paging
+  prisma/seed.js           cài đặt mặc định + tài khoản admin đầu tiên (npm run db:seed)
+  scripts/topup.js         duyệt / từ chối nạp điểm từ dòng lệnh
+  tests/                   kiểm thử API (node:test + fetch)
 scripts/extract_excel.py   trích dữ liệu từ file Excel sang src/data/*.json
 tests/                     kiểm thử bằng node:test
 ```
