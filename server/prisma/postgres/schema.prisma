@@ -33,6 +33,7 @@ model User {
   exports           ExportLog[]
   topUps            TopUpRequest[]     @relation("UserTopUps")
   reviewedTopUps    TopUpRequest[]     @relation("ReviewedTopUps")
+  resolvedBankTxs   BankTransaction[]  @relation("ResolvedBankTxs")
 
   @@index([createdAt])
 }
@@ -92,7 +93,7 @@ model ExportLog {
   @@index([createdAt])
 }
 
-/// Yêu cầu nạp điểm bằng chuyển khoản, chờ admin duyệt.
+/// Yêu cầu nạp điểm bằng chuyển khoản: tự duyệt khi SePay báo tiền về, hoặc admin duyệt tay.
 model TopUpRequest {
   id           Int       @id @default(autoincrement())
   code         String    @unique // nội dung chuyển khoản, VD: KHBD7K3QPA
@@ -108,8 +109,36 @@ model TopUpRequest {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  transactions PointTransaction[]
+  transactions     PointTransaction[]
+  bankTransactions BankTransaction[]
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+/// Giao dịch tiền vào tài khoản ngân hàng do SePay báo qua webhook. Lưu hết để đối soát.
+model BankTransaction {
+  id              Int           @id @default(autoincrement())
+  provider        String        @default("SEPAY")
+  providerTxId    String // id giao dịch phía SePay — chống cộng điểm hai lần khi SePay gửi lại
+  gateway         String? // VD: MBBank
+  accountNumber   String?
+  amountVnd       Int
+  content         String        @default("")
+  referenceCode   String?
+  transactionDate String? // giờ ngân hàng, giữ nguyên chuỗi SePay gửi
+  // MATCHED: đã cộng điểm cho topUpId | UNMATCHED: cần admin xử lý | IGNORED: không liên quan | RESOLVED: admin đã xử lý tay
+  status          String
+  note            String? // lý do không khớp / ghi chú của admin
+  topUpId         Int?
+  topUp           TopUpRequest? @relation(fields: [topUpId], references: [id])
+  resolvedById    Int?
+  resolvedBy      User?         @relation("ResolvedBankTxs", fields: [resolvedById], references: [id])
+  resolvedAt      DateTime?
+  raw             String // JSON gốc SePay gửi
+  createdAt       DateTime      @default(now())
+
+  @@unique([provider, providerTxId])
+  @@index([status, createdAt])
+  @@index([topUpId])
 }

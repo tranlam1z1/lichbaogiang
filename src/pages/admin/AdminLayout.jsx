@@ -4,16 +4,20 @@ import { api } from '../../api/client.js';
 import AccountLayout from '../account/AccountLayout.jsx';
 
 const PendingContext = createContext(() => {});
-/** Gọi sau khi duyệt / từ chối để cập nhật số trên tab "Duyệt nạp điểm". */
+/** Gọi sau khi duyệt / từ chối / đối soát để cập nhật số trên tab "Duyệt nạp điểm" và "Đối soát ngân hàng". */
 export const useRefreshPending = () => useContext(PendingContext);
 
 /** Khung trang quản trị: tab điều hướng + số yêu cầu nạp đang chờ. */
 export default function AdminLayout({ title, children }) {
   const [pending, setPending] = useState(0);
+  const [unmatched, setUnmatched] = useState(0);
   const refreshPending = useCallback(() => {
     api
       .get('/admin/topups/pending-count')
-      .then((d) => setPending(d.count))
+      .then((d) => {
+        setPending(d.count);
+        setUnmatched(d.unmatchedBank || 0);
+      })
       .catch(() => {});
   }, []);
   useEffect(refreshPending, [refreshPending]);
@@ -22,6 +26,7 @@ export default function AdminLayout({ title, children }) {
     { to: '/admin', label: 'Tổng quan', icon: '▦', end: true },
     { to: '/admin/nguoi-dung', label: 'Người dùng', icon: '👤' },
     { to: '/admin/nap-diem', label: 'Duyệt nạp điểm', icon: '＋', badge: pending },
+    { to: '/admin/doi-soat', label: 'Đối soát ngân hàng', icon: '₫', badge: unmatched },
     { to: '/admin/giao-dich', label: 'Giao dịch', icon: '⇄' },
     { to: '/admin/xuat-file', label: 'Xuất file', icon: '⎙' },
     { to: '/admin/cai-dat', label: 'Cài đặt', icon: '⚙' },

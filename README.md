@@ -107,6 +107,7 @@ Dữ liệu kế hoạch (TKB, lịch tuần, chỗ sửa tên bài…) vẫn **
 | POST | `/api/topups` | `{ amountVnd }` → tạo yêu cầu nạp, trả mã chuyển khoản và link QR |
 | GET | `/api/topups` | Lịch sử nạp của mình (`?page=&status=PENDING`) |
 | POST | `/api/topups/:id/cancel` | Hủy yêu cầu đang chờ duyệt |
+| POST | `/api/webhooks/sepay` | Webhook SePay báo tiền vào (xác thực `Authorization: Apikey <SEPAY_WEBHOOK_API_KEY>`), tự cộng điểm khi khớp mã + số tiền |
 
 Mọi request ghi dữ liệu phải gửi `Content-Type: application/json` (chống CSRF). Lỗi trả về dạng `{ message, code, errors?, details? }`, trong đó `errors` là lỗi theo từng trường của form, còn `details` là dữ liệu kèm theo (ví dụ `{ cost, points }` khi không đủ điểm).
 
@@ -129,11 +130,12 @@ Các giá trị trên được lưu trong database, lần chạy server đầu t
 
 *Giới hạn đã biết:* file vẫn được tạo trên trình duyệt, nên người rành kỹ thuật có thể gọi thẳng hàm tạo file mà không qua bước trừ lượt. Muốn chặn tuyệt đối thì phải chuyển việc tạo file sang server.
 
-**Nạp điểm (duyệt thủ công):**
+**Nạp điểm (tự động qua SePay, hoặc duyệt thủ công):**
 
 1. Điền thông tin ngân hàng nhận tiền vào `server/.env`: `BANK_ID` (mã BIN hoặc tên viết tắt theo [danh sách VietQR](https://api.vietqr.io/v2/banks)), `BANK_NAME`, `BANK_ACCOUNT_NO`, `BANK_ACCOUNT_NAME`. Thiếu các biến này thì nút nạp bị tắt.
 2. Người dùng vào `/nap-diem` và chọn số tiền. Hệ thống sinh mã nội dung chuyển khoản riêng (`KHBD` + 6 ký tự, bỏ các ký tự dễ nhầm như 0/O, 1/I/L) và hiện mã QR VietQR có sẵn số tiền và nội dung. Yêu cầu ở trạng thái *Chờ duyệt*; mỗi người có tối đa 3 yêu cầu chờ cùng lúc.
-3. Quản trị viên duyệt hoặc từ chối yêu cầu ở trang **/admin/nap-diem**. Cũng có thể dùng script trong thư mục `server/`:
+3. **Tự động:** đặt `SEPAY_WEBHOOK_API_KEY` và tạo webhook SePay trỏ tới `POST /api/webhooks/sepay` (header `Authorization: Apikey <key>`, hướng dẫn chi tiết ở [docs/DEPLOY.md mục 5](docs/DEPLOY.md#5-tự-cộng-điểm-khi-tiền-về-sepay--mb-bank)). Mỗi giao dịch SePay báo về được lưu vào bảng `BankTransaction`: đúng mã + đúng số tiền thì tự duyệt yêu cầu (kể cả yêu cầu người dùng đã hủy); sai nội dung / sai số tiền / chuyển trùng thì vào trang **/admin/doi-soat** để admin gán vào mã nạp hoặc đánh dấu đã xử lý. Cùng một id giao dịch SePay chỉ được cộng một lần. Trang Nạp điểm tự kiểm tra lại mỗi 8 giây khi còn yêu cầu chờ.
+4. **Thủ công:** quản trị viên duyệt hoặc từ chối yêu cầu ở trang **/admin/nap-diem**. Cũng có thể dùng script trong thư mục `server/`:
 
    ```bash
    npm run topup -- list                                  # các yêu cầu đang chờ
@@ -142,7 +144,7 @@ Các giá trị trên được lưu trong database, lần chạy server đầu t
    ```
 
    Duyệt hai lần cũng chỉ cộng điểm một lần.
-4. Người dùng xem lịch sử nạp điểm và lịch sử xuất file ở `/lich-su`.
+5. Người dùng xem lịch sử nạp điểm và lịch sử xuất file ở `/lich-su`.
 
 **Sổ cái `PointTransaction`:** mọi thay đổi điểm *và* lượt miễn phí đều ghi một dòng gồm: loại (`SIGNUP_BONUS`, `EXPORT`, `EXPORT_REFUND`, `TOPUP`, `ADMIN_ADJUST`, `FREE_RESET`), số điểm ±, số dư điểm sau giao dịch, số lượt ±, số lượt sau giao dịch, người thực hiện, thời gian và ghi chú. Toàn bộ logic nằm ở `server/src/services/points.js`.
 
@@ -157,7 +159,8 @@ Chỉ tài khoản có role **ADMIN** mới vào được. Người thường v�
 | **Tổng quan** `/admin` | Tổng người dùng; người dùng mới hôm nay / tuần này (tính theo giờ Việt Nam, tuần bắt đầu từ thứ Hai); tổng lượt xuất file (Word/Excel, miễn phí/trả phí); tổng tiền đã nạp; số yêu cầu nạp đang chờ; tổng điểm đang lưu hành. |
 | **Người dùng** `/admin/nguoi-dung` | Tìm theo tên đăng nhập, email hoặc SĐT (gõ `0912 345` hay `84912…` đều được); lọc theo quyền và trạng thái; sắp xếp; phân trang. Bấm vào một dòng để xem chi tiết. |
 | **Chi tiết người dùng** | Thông tin tài khoản, giao dịch / nạp / xuất file gần đây và các thao tác: **cộng/trừ điểm** (bắt buộc lý do, không trừ quá số dư), **đặt lại lượt miễn phí**, **đặt lại mật khẩu** (tự nhập, hoặc để hệ thống tạo mật khẩu tạm hiện một lần), **cấp/bỏ quyền quản trị**, **khóa/mở khóa** (khóa bắt buộc lý do). |
-| **Duyệt nạp điểm** `/admin/nap-diem` | Mặc định hiện các yêu cầu chờ duyệt, cũ nhất lên trước. Nút **Duyệt** (hỏi xác nhận đã nhận tiền, rồi cộng điểm) và **Từ chối** (bắt buộc lý do, người dùng sẽ thấy lý do này). Tìm theo mã `KHBD…` hoặc người dùng. Số yêu cầu đang chờ hiện trên tab. |
+| **Duyệt nạp điểm** `/admin/nap-diem` | Mặc định hiện các yêu cầu chờ duyệt, cũ nhất lên trước. Nút **Duyệt** (hỏi xác nhận đã nhận tiền, rồi cộng điểm) và **Từ chối** (bắt buộc lý do, người dùng sẽ thấy lý do này). Tìm theo mã `KHBD…` hoặc người dùng. Số yêu cầu đang chờ hiện trên tab. Yêu cầu SePay tự duyệt ghi người duyệt là *Tự động (SePay)*. |
+| **Đối soát ngân hàng** `/admin/doi-soat` | Mọi khoản tiền vào SePay báo về. Tab *Cần xử lý* (số hiện trên tab) là khoản không tự cộng được kèm lý do: **Gán vào mã nạp** (duyệt yêu cầu đó) hoặc **Đã xử lý** (bắt buộc ghi chú). |
 | **Giao dịch** `/admin/giao-dich` | Sổ cái toàn hệ thống: lọc theo người dùng, loại giao dịch, khoảng ngày; kèm tổng điểm và tổng lượt của kết quả lọc. |
 | **Xuất file** `/admin/xuat-file` | Lịch sử xuất file toàn hệ thống: lọc theo người dùng, loại file, hình thức (miễn phí/điểm), trạng thái, khoảng ngày. |
 | **Cài đặt** `/admin/cai-dat` | Sửa số lượt miễn phí cho tài khoản mới, số điểm mỗi lần xuất, mệnh giá nạp, số điểm mỗi mệnh giá. Có phần xem trước người dùng sẽ thấy gì. |
@@ -229,14 +232,15 @@ src/
   lib/exportCharge.js  authorize → tạo file → complete / refund
 shared/validation.js       luật kiểm tra form và số tiền nạp, dùng chung frontend + backend
 server/
-  prisma/schema.prisma     User, Setting, PointTransaction, ExportLog, TopUpRequest; migrations/ lưu lịch sử thay đổi
+  prisma/schema.prisma     User, Setting, PointTransaction, ExportLog, TopUpRequest, BankTransaction; migrations/ lưu lịch sử thay đổi
   src/
     config.js              đọc và kiểm tra .env
     app.js, index.js       khởi tạo Express
     middleware/            auth (đọc phiên), rateLimit, errors (lỗi JSON, chống CSRF)
-    routes/                auth, settings, exports, topups
-    routes/admin/          index (tổng quan, nạp, giao dịch, xuất file, cài đặt), users, shared
+    routes/                auth, settings, exports, topups, webhooks (SePay)
+    routes/admin/          index (tổng quan, nạp, đối soát ngân hàng, giao dịch, xuất file, cài đặt), users, shared
     services/points.js     MỌI thay đổi điểm/lượt: transaction + ghi sổ cái
+    services/bankTransfers.js  đối soát tiền vào (SePay) với yêu cầu nạp
     services/settings.js   đọc cài đặt từ bảng Setting
     lib/                   session (JWT + cookie), users, errors, bank (VietQR), paging
   prisma/seed.js           cài đặt mặc định + tài khoản admin đầu tiên (npm run db:seed)

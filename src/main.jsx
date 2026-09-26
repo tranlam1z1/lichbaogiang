@@ -16,6 +16,7 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.jsx'));
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers.jsx'));
 const AdminUserDetail = lazy(() => import('./pages/admin/AdminUserDetail.jsx'));
 const AdminTopUps = lazy(() => import('./pages/admin/AdminTopUps.jsx'));
+const AdminBankTransactions = lazy(() => import('./pages/admin/AdminBankTransactions.jsx'));
 const AdminTransactions = lazy(() => import('./pages/admin/AdminTransactions.jsx'));
 const AdminExports = lazy(() => import('./pages/admin/AdminExports.jsx'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings.jsx'));
@@ -51,6 +52,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/admin/nguoi-dung" element={admin(AdminUsers)} />
           <Route path="/admin/nguoi-dung/:id" element={admin(AdminUserDetail)} />
           <Route path="/admin/nap-diem" element={admin(AdminTopUps)} />
+          <Route path="/admin/doi-soat" element={admin(AdminBankTransactions)} />
           <Route path="/admin/giao-dich" element={admin(AdminTransactions)} />
           <Route path="/admin/xuat-file" element={admin(AdminExports)} />
           <Route path="/admin/cai-dat" element={admin(AdminSettings)} />

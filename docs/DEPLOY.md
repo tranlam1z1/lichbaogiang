@@ -23,12 +23,13 @@ Người dùng ──HTTPS──▶  Render (1 dịch vụ: giao diện + API)  
 2. [Tạo database trên Neon](#2-tạo-database-trên-neon)
 3. [Tạo web trên Render](#3-tạo-web-trên-render)
 4. [Kiểm tra web đã chạy](#4-kiểm-tra-web-đã-chạy)
-5. [Gắn tên miền riêng (tùy chọn)](#5-gắn-tên-miền-riêng-tùy-chọn)
-6. [Cập nhật khi sửa code](#6-cập-nhật-khi-sửa-code)
-7. [Sao lưu và khôi phục database](#7-sao-lưu-và-khôi-phục-database)
-8. [Lưu ý về gói miễn phí](#8-lưu-ý-về-gói-miễn-phí)
-9. [Xử lý sự cố thường gặp](#9-xử-lý-sự-cố-thường-gặp)
-10. [Phụ lục: bảng biến môi trường](#10-phụ-lục-bảng-biến-môi-trường)
+5. [Tự cộng điểm khi tiền về (SePay + MB Bank)](#5-tự-cộng-điểm-khi-tiền-về-sepay--mb-bank)
+6. [Gắn tên miền riêng (tùy chọn)](#6-gắn-tên-miền-riêng-tùy-chọn)
+7. [Cập nhật khi sửa code](#7-cập-nhật-khi-sửa-code)
+8. [Sao lưu và khôi phục database](#8-sao-lưu-và-khôi-phục-database)
+9. [Lưu ý về gói miễn phí](#9-lưu-ý-về-gói-miễn-phí)
+10. [Xử lý sự cố thường gặp](#10-xử-lý-sự-cố-thường-gặp)
+11. [Phụ lục: bảng biến môi trường](#11-phụ-lục-bảng-biến-môi-trường)
 
 ---
 
@@ -44,7 +45,7 @@ Cần có:
   - Mật khẩu: ít nhất 8 ký tự, có cả chữ và số.
   - Email và số điện thoại (10 số, bắt đầu 03/05/07/08/09) — **không được trùng** với tài khoản khác.
 - [ ] Thông tin **tài khoản ngân hàng nhận tiền nạp điểm** (nếu dùng tính năng nạp điểm):
-  - Mã ngân hàng: xem tại <https://api.vietqr.io/v2/banks> (cột `bin` hoặc `shortName`), VD `970436` hoặc `vietcombank`.
+  - Mã ngân hàng: xem tại <https://api.vietqr.io/v2/banks> (cột `bin` hoặc `shortName`). MB Bank: `970422` hoặc `mbbank`.
   - Số tài khoản, tên chủ tài khoản **VIẾT HOA KHÔNG DẤU** như trên app ngân hàng.
 
 ---
@@ -88,10 +89,11 @@ Repo đã có sẵn file `render.yaml` mô tả cách build/chạy, nên Render 
    | `ADMIN_PASSWORD` | Mật khẩu admin | 🔒 |
    | `ADMIN_EMAIL` | Email admin | |
    | `ADMIN_PHONE` | SĐT admin, VD `0912345678` | |
-   | `BANK_ID` | Mã ngân hàng, VD `970436` | |
-   | `BANK_NAME` | Tên hiển thị, VD `Vietcombank` | |
+   | `BANK_ID` | Mã ngân hàng, MB Bank là `970422` | |
+   | `BANK_NAME` | Tên hiển thị, VD `MB Bank` | |
    | `BANK_ACCOUNT_NO` | Số tài khoản nhận tiền | |
    | `BANK_ACCOUNT_NAME` | Tên chủ TK viết hoa không dấu | |
+   | `SEPAY_WEBHOOK_API_KEY` | Để trống lúc này, điền ở [mục 5](#5-tự-cộng-điểm-khi-tiền-về-sepay--mb-bank) | 🔒 |
 
    Các biến khác (`JWT_SECRET`, `NODE_ENV`, `SERVE_CLIENT`…) Render **tự điền** — không cần đụng. `JWT_SECRET` được Render tự sinh ngẫu nhiên.
 
@@ -125,13 +127,77 @@ Thay `https://lichbaogiang.onrender.com` bằng địa chỉ thật của bạn:
 5. (Nếu dùng nạp điểm) vào trang **Nạp điểm** → mã QR hiện đúng tên ngân hàng, số tài khoản.
 6. Thử trên **điện thoại** (cả Safari trên iPhone) — đăng nhập, tải lại trang vẫn còn đăng nhập.
 
-> Lần đầu mở sau một lúc lâu không ai dùng, web có thể **chờ 30–60 giây** mới hiện — đó là gói miễn phí "thức dậy", không phải lỗi (xem [mục 8](#8-lưu-ý-về-gói-miễn-phí)).
+> Lần đầu mở sau một lúc lâu không ai dùng, web có thể **chờ 30–60 giây** mới hiện — đó là gói miễn phí "thức dậy", không phải lỗi (xem [mục 9](#9-lưu-ý-về-gói-miễn-phí)).
 
 **Theo dõi tự động (khuyên dùng, miễn phí):** đăng ký <https://uptimerobot.com>, thêm monitor kiểu **HTTP(s)** trỏ tới `.../api/health`, chu kỳ 5 phút → web sập sẽ có email báo.
 
 ---
 
-## 5. Gắn tên miền riêng (tùy chọn)
+## 5. Tự cộng điểm khi tiền về (SePay + MB Bank)
+
+Chưa làm mục này thì admin vẫn duyệt tay ở `/admin/nap-diem` như cũ. Làm xong thì người dùng chuyển khoản đúng mã là **được cộng điểm sau vài giây**, không cần chờ admin.
+
+**Cách hoạt động:** SePay theo dõi tài khoản MB Bank. Có tiền vào, SePay gọi `https://<địa chỉ web>/api/webhooks/sepay`. Hệ thống tìm mã `KHBD…` trong nội dung chuyển khoản:
+
+- Đúng mã và **đúng số tiền** → tự cộng điểm (kể cả khi người dùng lỡ bấm Hủy sau khi đã chuyển).
+- Sai nội dung, sai số tiền, chuyển trùng lần hai… → **không tự cộng**, đưa vào trang **Đối soát ngân hàng** (`/admin/doi-soat`) để admin xử lý.
+- SePay gửi lại cùng một giao dịch nhiều lần cũng chỉ cộng một lần.
+
+### 5.1. Tạo API Key
+
+Tự tạo một chuỗi bí mật ngẫu nhiên, VD chạy lệnh sau trong terminal rồi copy kết quả:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
+```
+
+Render → dịch vụ `lichbaogiang` → **Environment** → **Add Environment Variable**: `SEPAY_WEBHOOK_API_KEY` = chuỗi vừa tạo → **Save Changes**. Kiểm tra lại `BANK_ACCOUNT_NO` đúng số tài khoản MB Bank sẽ liên kết với SePay (giao dịch vào tài khoản khác sẽ bị bỏ qua).
+
+### 5.2. Liên kết MB Bank với SePay
+
+1. Đăng ký tại <https://my.sepay.vn> (có gói miễn phí, giới hạn số giao dịch mỗi tháng — xem bảng giá trên SePay).
+2. Vào **Ngân hàng** → **Kết nối tài khoản** → chọn **MBBank** → nhập số tài khoản, tên, số điện thoại đăng ký MB, xác nhận OTP theo hướng dẫn trên màn hình.
+3. Chuyển thử 2.000đ vào tài khoản → thấy giao dịch hiện ở mục **Giao dịch** trên SePay là liên kết xong.
+
+> Tên menu trên SePay có thể thay đổi theo thời gian; làm theo hướng dẫn hiện trên trang của SePay nếu khác với mô tả ở đây.
+
+### 5.3. Tạo webhook
+
+SePay → **Tích hợp WebHooks** → **Thêm webhooks**:
+
+| Ô | Điền |
+|---|---|
+| Tên | `Nạp điểm KHBD` |
+| Chọn sự kiện | **Có tiền vào** |
+| Chọn điều kiện | Tài khoản MB Bank vừa liên kết; **Bỏ qua nếu nội dung giao dịch không có Code thanh toán: Không** (để các khoản ghi sai nội dung vẫn về trang Đối soát) |
+| Gọi đến URL | `https://lichbaogiang.onrender.com/api/webhooks/sepay` (thay bằng địa chỉ thật / tên miền riêng) |
+| Kiểu chứng thực | **API Key** → dán đúng chuỗi `SEPAY_WEBHOOK_API_KEY` ở bước 5.1 |
+| Request Content type | `application/json` |
+| Trạng thái | **Kích hoạt** |
+
+*(Tùy chọn)* SePay → **Cấu hình công ty** → **Cấu trúc mã thanh toán**: tiền tố `KHBD`, hậu tố 6 ký tự chữ + số. Không bắt buộc — hệ thống tự tìm mã trong nội dung.
+
+### 5.4. Thử
+
+1. Đăng nhập bằng tài khoản thường → **Nạp điểm** → tạo yêu cầu 10.000đ.
+2. Quét QR bằng app MB (hoặc app ngân hàng khác) và chuyển.
+3. Để nguyên trang Nạp điểm: trong khoảng 10–60 giây sẽ hiện *"Đã nhận tiền … cộng X điểm"* và yêu cầu biến khỏi danh sách chờ.
+4. Admin → **Duyệt nạp điểm** → tab *Đã duyệt*: cột người duyệt ghi **Tự động (SePay)**.
+5. Nếu không thấy: SePay → **Tích hợp WebHooks** → **Nhật ký** xem phản hồi. `401` = API Key không khớp; `503` = chưa đặt `SEPAY_WEBHOOK_API_KEY` trên Render; lỗi kết nối / timeout = web đang "ngủ" (xem lưu ý dưới).
+
+> **Gói Render Free "ngủ" sau 15 phút.** Webhook đầu tiên có thể bị timeout trong lúc web thức dậy; SePay sẽ gọi lại, nhưng để chắc chắn nên bật **UptimeRobot** gọi `/api/health` mỗi 5 phút ([mục 4](#4-kiểm-tra-web-đã-chạy)) để web luôn thức, hoặc nâng Render lên Starter. Khoản nào lỡ không vào, bấm **Gửi lại** trong nhật ký webhook của SePay.
+
+### 5.5. Việc hằng ngày của admin
+
+- Tab **Đối soát ngân hàng** có số màu đỏ = có khoản tiền hệ thống không dám tự cộng. Mở ra xem cột *Trạng thái* để biết lý do:
+  - Người dùng ghi sai nội dung → bấm **Gán vào mã nạp**, nhập mã `KHBD…` của người đó (tìm ở trang Duyệt nạp điểm).
+  - Chuyển sai số tiền → gán vào mã nạp (người dùng nhận điểm theo yêu cầu), rồi cộng/trừ chênh lệch ở trang chi tiết người dùng; hoặc hoàn tiền.
+  - Khoản không liên quan / đã hoàn tiền → bấm **Đã xử lý**, ghi chú lại.
+- Trang **Duyệt nạp điểm** vẫn dùng được để duyệt tay nếu SePay gặp sự cố.
+
+---
+
+## 6. Gắn tên miền riêng (tùy chọn)
 
 Ví dụ muốn dùng `khbd.vn` và `www.khbd.vn`.
 
@@ -150,7 +216,7 @@ Ví dụ muốn dùng `khbd.vn` và `www.khbd.vn`.
 
 ---
 
-## 6. Cập nhật khi sửa code
+## 7. Cập nhật khi sửa code
 
 Render đã bật **tự động deploy**: mỗi lần code mới được đẩy lên nhánh `main` trên GitHub, Render tự build và chạy bản mới.
 
@@ -168,7 +234,7 @@ Render đã bật **tự động deploy**: mỗi lần code mới được đẩ
 
 ---
 
-## 7. Sao lưu và khôi phục database
+## 8. Sao lưu và khôi phục database
 
 Dữ liệu có **tiền** (điểm, nạp tiền) nên cần sao lưu định kỳ. Có 2 cách, nên dùng cả hai.
 
@@ -210,7 +276,7 @@ Sẽ ra file `khbd-2026-10-01.dump`. Cất vào nơi an toàn (Google Drive, One
 
 ---
 
-## 8. Lưu ý về gói miễn phí
+## 9. Lưu ý về gói miễn phí
 
 | Dịch vụ | Giới hạn | Dữ liệu có bị xóa? |
 |---|---|---|
@@ -223,7 +289,7 @@ Sẽ ra file `khbd-2026-10-01.dump`. Cất vào nơi an toàn (Google Drive, One
 
 ---
 
-## 9. Xử lý sự cố thường gặp
+## 10. Xử lý sự cố thường gặp
 
 | Hiện tượng | Nguyên nhân / cách xử lý |
 |---|---|
@@ -233,11 +299,12 @@ Sẽ ra file `khbd-2026-10-01.dump`. Cất vào nơi an toàn (Google Drive, One
 | Trang tải rất lâu lần đầu | Gói free đang "thức dậy" — chờ 1 phút. |
 | Đăng nhập xong bị văng ra | Đang mở bản GitHub Pages hoặc địa chỉ khác Render. Dùng đúng địa chỉ Render / tên miền riêng. |
 | Mã QR nạp tiền không hiện | Thiếu `BANK_ID`, `BANK_ACCOUNT_NO` hoặc `BANK_ACCOUNT_NAME`. |
+| Chuyển khoản rồi mà không tự cộng điểm | Xem [mục 5.4](#54-thử) bước 5. Nếu giao dịch nằm ở **Đối soát ngân hàng** thì đọc lý do và xử lý theo [mục 5.5](#55-việc-hằng-ngày-của-admin). |
 | Báo "Đăng nhập sai quá nhiều lần" | Cơ chế chống dò mật khẩu — chờ 15 phút, hoặc admin mở khóa. |
 
 ---
 
-## 10. Phụ lục: bảng biến môi trường
+## 11. Phụ lục: bảng biến môi trường
 
 **Backend** — điền trên Render → Environment (mẫu đầy đủ: `server/.env.example`):
 
@@ -254,6 +321,7 @@ Sẽ ra file `khbd-2026-10-01.dump`. Cất vào nơi an toàn (Google Drive, One
 | `ADMIN_PASSWORD` 🔒 | mật khẩu admin | xóa sau khi tạo admin xong |
 | `ADMIN_RESET_PASSWORD` | `false` | `true` chỉ khi cần đặt lại mật khẩu admin |
 | `BANK_ID`, `BANK_NAME`, `BANK_ACCOUNT_NO`, `BANK_ACCOUNT_NAME` | TK nhận tiền | cho mã QR nạp điểm |
+| `SEPAY_WEBHOOK_API_KEY` 🔒 | chuỗi ngẫu nhiên tự đặt | trùng API Key của webhook SePay. Để trống = duyệt nạp tay |
 | `SESSION_DAYS`, `LOGIN_MAX_FAILS_*`, `LOGIN_WINDOW_MINUTES`, `REGISTER_MAX_PER_HOUR`, `VIETQR_TEMPLATE` | không cần điền | đã có giá trị mặc định hợp lý |
 
 **Frontend** — trên Render **không cần điền gì** (mẫu: `.env.example` ở thư mục gốc). `VITE_API_URL` để trống vì giao diện và API chung địa chỉ.

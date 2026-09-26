@@ -47,3 +47,6 @@ services:
         sync: false
       - key: BANK_ACCOUNT_NAME
         sync: false
+      # API Key tự đặt, trùng với ô API Key khi tạo webhook trên SePay. Để trống = duyệt nạp điểm thủ công.
+      - key: SEPAY_WEBHOOK_API_KEY
+        sync: false

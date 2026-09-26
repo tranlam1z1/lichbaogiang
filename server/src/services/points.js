@@ -9,7 +9,7 @@ import { formatVnd } from '../../../shared/validation.js';
 import { getSettings } from './settings.js';
 
 // SQLite chỉ cho một transaction ghi tại một thời điểm; cho phép chờ lâu hơn mặc định (2s) khi đông request.
-const TX_OPTS = { maxWait: 10_000, timeout: 15_000 };
+export const TX_OPTS = { maxWait: 10_000, timeout: 15_000 };
 
 /** Chỉ hoàn lại lượt/điểm cho lần xuất vừa cấp phép trong khoảng thời gian này. */
 export const REFUND_WINDOW_MS = 15 * 60 * 1000;
@@ -173,26 +173,34 @@ export async function refundExport(userId, exportId, reason) {
 // Nạp điểm
 // ---------------------------------------------------------------------------
 
+/**
+ * Chuyển yêu cầu nạp sang APPROVED và cộng điểm, trong transaction tx có sẵn.
+ * Trả về null nếu yêu cầu không còn ở một trong fromStatuses (đã có người/tiến trình khác xử lý).
+ */
+export async function approveTopUpInTx(tx, topUpId, actorId, { fromStatuses = ['PENDING'], via = '' } = {}) {
+  const marked = await tx.topUpRequest.updateMany({
+    where: { id: topUpId, status: { in: fromStatuses } },
+    data: { status: 'APPROVED', reviewedById: actorId, reviewedAt: new Date() },
+  });
+  if (marked.count !== 1) return null;
+  const topUp = await tx.topUpRequest.findUniqueOrThrow({ where: { id: topUpId } });
+  const user = await tx.user.update({ where: { id: topUp.userId }, data: { points: { increment: topUp.points } } });
+  await writeLedger(tx, user, {
+    type: 'TOPUP',
+    points: topUp.points,
+    actorId,
+    topUpId,
+    note: `Nạp ${formatVnd(topUp.amountVnd)} (mã ${topUp.code})${via}`,
+  });
+  return { topUp, user };
+}
+
 /** Admin (hoặc script) duyệt yêu cầu nạp → cộng điểm. Duyệt hai lần cũng chỉ cộng một lần. */
 export async function approveTopUp(topUpId, actorId) {
   return prisma.$transaction(async (tx) => {
-    const marked = await tx.topUpRequest.updateMany({
-      where: { id: topUpId, status: 'PENDING' },
-      data: { status: 'APPROVED', reviewedById: actorId, reviewedAt: new Date() },
-    });
-    if (marked.count !== 1) {
-      throw new HttpError(409, 'Yêu cầu nạp không tồn tại hoặc đã được xử lý.', { code: 'ALREADY_PROCESSED' });
-    }
-    const topUp = await tx.topUpRequest.findUniqueOrThrow({ where: { id: topUpId } });
-    const user = await tx.user.update({ where: { id: topUp.userId }, data: { points: { increment: topUp.points } } });
-    await writeLedger(tx, user, {
-      type: 'TOPUP',
-      points: topUp.points,
-      actorId,
-      topUpId,
-      note: `Nạp ${formatVnd(topUp.amountVnd)} (mã ${topUp.code})`,
-    });
-    return { topUp, user };
+    const done = await approveTopUpInTx(tx, topUpId, actorId);
+    if (!done) throw new HttpError(409, 'Yêu cầu nạp không tồn tại hoặc đã được xử lý.', { code: 'ALREADY_PROCESSED' });
+    return done;
   }, TX_OPTS);
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { formatVnd, pointsForAmount, validateTopUpAmount } from '../../../shared/validation.js';
@@ -25,7 +25,7 @@ function CopyButton({ text }) {
 }
 
 /** Thông tin chuyển khoản + mã QR VietQR cho một yêu cầu đang chờ duyệt. */
-function TransferCard({ topUp }) {
+function TransferCard({ topUp, auto }) {
   const t = topUp.transfer;
   if (!t) return null;
   return (
@@ -46,8 +46,10 @@ function TransferCard({ topUp }) {
         <dd>{topUp.points.toLocaleString('vi-VN')} điểm</dd>
       </dl>
       <p className="hint transfer-note">
-        Quét mã QR bằng app ngân hàng, hoặc chuyển khoản thủ công và ghi <strong>đúng nội dung {t.content}</strong>. Điểm được
-        cộng sau khi quản trị viên xác nhận đã nhận tiền (trạng thái sẽ chuyển thành “Đã cộng điểm”).
+        Quét mã QR bằng app ngân hàng, hoặc chuyển khoản thủ công và ghi <strong>đúng số tiền và nội dung {t.content}</strong>.{' '}
+        {auto
+          ? 'Điểm được cộng tự động trong khoảng 1 phút sau khi tiền về, trang này tự cập nhật. Nếu ghi sai nội dung hoặc số tiền, quản trị viên sẽ đối soát và cộng tay.'
+          : 'Điểm được cộng sau khi quản trị viên xác nhận đã nhận tiền (trạng thái sẽ chuyển thành “Đã cộng điểm”).'}
       </p>
     </div>
   );
@@ -61,6 +63,9 @@ export default function TopUpPage() {
   const [pending, setPending] = useState([]);
   const [openId, setOpenId] = useState(null);
   const [loadError, setLoadError] = useState(null);
+  const [approvedNotice, setApprovedNotice] = useState(null);
+  const pendingIds = useRef(new Set());
+  const cancelledIds = useRef(new Set());
 
   const loadPending = useCallback(async () => {
     try {
@@ -70,14 +75,54 @@ export default function TopUpPage() {
       return data.items;
     } catch (e) {
       setLoadError(e.message);
-      return [];
+      return null;
     }
   }, []);
 
-  useEffect(() => {
-    loadPending().then((items) => setOpenId((id) => id ?? items[0]?.id ?? null));
+  /** Tải lại danh sách chờ; yêu cầu nào vừa biến mất mà không phải do mình hủy → xem có phải vừa được cộng điểm không. */
+  const check = useCallback(async () => {
+    const items = await loadPending();
+    if (!items) return;
+    const now = new Set(items.map((t) => t.id));
+    const gone = [...pendingIds.current].filter((id) => !now.has(id) && !cancelledIds.current.has(id));
+    pendingIds.current = now;
+    if (!gone.length) return;
+    try {
+      const recent = await api.get('/topups?status=APPROVED&pageSize=20');
+      const approved = recent.items.filter((t) => gone.includes(t.id));
+      if (approved.length) {
+        const pts = approved.reduce((s, t) => s + t.points, 0);
+        setApprovedNotice(`Đã nhận tiền (${approved.map((t) => t.code).join(', ')}) — cộng ${pts.toLocaleString('vi-VN')} điểm vào tài khoản.`);
+      }
+    } catch {
+      // Chỉ là thông báo, bỏ qua lỗi mạng.
+    }
     refresh().catch(() => {});
   }, [loadPending, refresh]);
+
+  useEffect(() => {
+    loadPending().then((items) => {
+      pendingIds.current = new Set((items || []).map((t) => t.id));
+      setOpenId((id) => id ?? items?.[0]?.id ?? null);
+    });
+    refresh().catch(() => {});
+  }, [loadPending, refresh]);
+
+  // Còn yêu cầu chờ thì tự kiểm tra định kỳ (chỉ khi tab đang mở), để người dùng không phải bấm "Làm mới".
+  const auto = Boolean(settings?.topupAuto);
+  const hasPending = pending.length > 0;
+  useEffect(() => {
+    if (!hasPending) return undefined;
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') check();
+    }, auto ? 8000 : 30000);
+    const onVisible = () => document.visibilityState === 'visible' && check();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [hasPending, auto, check]);
 
   if (!settings) return <AccountLayout title="Nạp điểm"><div className="empty">Đang tải…</div></AccountLayout>;
   const { topupUnitVnd: unit, pointsPerUnit, pointsPerExport, topupEnabled } = settings;
@@ -92,7 +137,8 @@ export default function TopUpPage() {
     try {
       const { topUp } = await api.post('/topups', { amountVnd: Number(amount) });
       setAmount('');
-      await loadPending();
+      setApprovedNotice(null);
+      await check();
       setOpenId(topUp.id);
     } catch (e2) {
       setError(e2.errors?.amountVnd || e2.message);
@@ -103,12 +149,13 @@ export default function TopUpPage() {
 
   const cancel = async (id) => {
     if (!window.confirm('Hủy yêu cầu nạp này? Nếu bạn đã chuyển khoản, đừng hủy — hãy chờ quản trị viên duyệt.')) return;
+    cancelledIds.current.add(id);
     try {
       await api.post(`/topups/${id}/cancel`);
     } catch (e) {
       window.alert(e.message);
     }
-    loadPending();
+    check();
   };
 
   return (
@@ -174,10 +221,11 @@ export default function TopUpPage() {
       <section className="card">
         <div className="card-head">
           <h2>Yêu cầu đang chờ duyệt</h2>
-          <button type="button" className="btn btn-small" onClick={() => { loadPending(); refresh().catch(() => {}); }}>
+          <button type="button" className="btn btn-small" onClick={() => { check(); refresh().catch(() => {}); }}>
             Làm mới
           </button>
         </div>
+        {approvedNotice && <div className="banner banner-note" role="status">✓ {approvedNotice}</div>}
         {loadError && <div className="banner banner-alert" role="alert">{loadError}</div>}
         {!pending.length && !loadError && <p className="card-text">Không có yêu cầu nào đang chờ duyệt.</p>}
         <ul className="topup-list">
@@ -197,7 +245,7 @@ export default function TopUpPage() {
                   </button>
                 </span>
               </div>
-              {openId === t.id && <TransferCard topUp={t} />}
+              {openId === t.id && <TransferCard topUp={t} auto={auto} />}
             </li>
           ))}
         </ul>

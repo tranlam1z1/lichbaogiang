@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { bank, bankConfigured } from '../lib/bank.js';
+import { autoTopUpEnabled, bank, bankConfigured } from '../lib/bank.js';
 import { getSettings } from '../services/settings.js';
 
 export const settingsRouter = Router();
@@ -13,6 +13,7 @@ settingsRouter.get('/public', async (req, res) => {
     topupUnitVnd: s.topupUnitVnd,
     pointsPerUnit: s.pointsPerUnit,
     topupEnabled: bankConfigured,
+    topupAuto: autoTopUpEnabled,
     bankName: bankConfigured ? bank.bankName || bank.bankId : null,
   });
 });

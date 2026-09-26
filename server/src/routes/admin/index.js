@@ -5,6 +5,7 @@ import { dateRangeWhere, startOfTodayVN, startOfWeekVN } from '../../lib/dates.j
 import { validationError } from '../../lib/errors.js';
 import { pageResult, paging } from '../../lib/paging.js';
 import { requireAdmin } from '../../middleware/auth.js';
+import { BANK_TX_STATUSES, assignBankTransaction, resolveBankTransaction } from '../../services/bankTransfers.js';
 import { approveTopUp, rejectTopUp } from '../../services/points.js';
 import { SETTING_DEFS, getSettings, updateSettings } from '../../services/settings.js';
 import { publicExport } from '../exports.js';
@@ -70,7 +71,11 @@ adminRouter.use('/users', usersRouter);
 // ---------- Duyệt nạp điểm ----------
 /** Số yêu cầu chờ duyệt — hiện trên tab điều hướng của mọi trang quản trị. */
 adminRouter.get('/topups/pending-count', async (req, res) => {
-  res.json({ count: await prisma.topUpRequest.count({ where: { status: 'PENDING' } }) });
+  const [count, unmatchedBank] = await Promise.all([
+    prisma.topUpRequest.count({ where: { status: 'PENDING' } }),
+    prisma.bankTransaction.count({ where: { status: 'UNMATCHED' } }),
+  ]);
+  res.json({ count, unmatchedBank });
 });
 
 adminRouter.get('/topups', async (req, res) => {
@@ -90,7 +95,11 @@ adminRouter.get('/topups', async (req, res) => {
       orderBy: { createdAt: where.status === 'PENDING' ? 'asc' : 'desc' },
       skip: p.skip,
       take: p.take,
-      include: { user: userBrief, reviewedBy: { select: { id: true, username: true } } },
+      include: {
+        user: userBrief,
+        reviewedBy: { select: { id: true, username: true } },
+        bankTransactions: { where: { status: 'MATCHED' }, select: { id: true } },
+      },
     }),
     prisma.topUpRequest.count({ where }),
   ]);
@@ -100,6 +109,8 @@ adminRouter.get('/topups', async (req, res) => {
         ...publicTopUp(t),
         user: t.user,
         reviewedBy: t.reviewedBy,
+        // Duyệt không có người duyệt + có giao dịch ngân hàng khớp = SePay tự duyệt.
+        autoApproved: t.status === 'APPROVED' && !t.reviewedBy && t.bankTransactions.length > 0,
       })),
       total,
       p,
@@ -115,6 +126,56 @@ adminRouter.post('/topups/:id/approve', async (req, res) => {
 adminRouter.post('/topups/:id/reject', async (req, res) => {
   const topUp = await rejectTopUp(Number(req.params.id) || -1, req.user.id, req.body?.reason);
   res.json({ topUp: publicTopUp(topUp) });
+});
+
+// ---------- Đối soát ngân hàng (SePay) ----------
+function publicBankTx(b) {
+  return {
+    id: b.id,
+    gateway: b.gateway,
+    accountNumber: b.accountNumber,
+    amountVnd: b.amountVnd,
+    content: b.content,
+    referenceCode: b.referenceCode,
+    transactionDate: b.transactionDate,
+    status: b.status,
+    note: b.note,
+    createdAt: b.createdAt,
+    resolvedAt: b.resolvedAt,
+    resolvedBy: b.resolvedBy ?? null,
+    topUp: b.topUp ? { id: b.topUp.id, code: b.topUp.code, amountVnd: b.topUp.amountVnd, points: b.topUp.points, status: b.topUp.status, user: b.topUp.user } : null,
+  };
+}
+
+adminRouter.get('/bank-transactions', async (req, res) => {
+  const p = paging(req.query);
+  const where = {};
+  if (BANK_TX_STATUSES.includes(req.query.status)) where.status = req.query.status;
+  const q = String(req.query.q || '').trim();
+  if (q) where.OR = [{ content: { contains: q } }, { referenceCode: { contains: q } }];
+  const createdAt = dateRangeWhere(req.query.from, req.query.to);
+  if (createdAt) where.createdAt = createdAt;
+  const [items, total] = await Promise.all([
+    prisma.bankTransaction.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip: p.skip,
+      take: p.take,
+      include: { topUp: { include: { user: userBrief } }, resolvedBy: { select: { id: true, username: true } } },
+    }),
+    prisma.bankTransaction.count({ where }),
+  ]);
+  res.json(pageResult(items.map(publicBankTx), total, p));
+});
+
+adminRouter.post('/bank-transactions/:id/assign', async (req, res) => {
+  const { topUp, user } = await assignBankTransaction(Number(req.params.id) || -1, req.body?.code, req.user.id);
+  res.json({ topUp: publicTopUp(topUp), user: { id: user.id, username: user.username, points: user.points } });
+});
+
+adminRouter.post('/bank-transactions/:id/resolve', async (req, res) => {
+  await resolveBankTransaction(Number(req.params.id) || -1, req.user.id, req.body?.note);
+  res.json({ ok: true });
 });
 
 // ---------- Lịch sử giao dịch ----------

@@ -178,6 +178,7 @@ test('cài đặt công khai', async () => {
     topupUnitVnd: 10000,
     pointsPerUnit: 100,
     topupEnabled: true,
+    topupAuto: true,
     bankName: 'Vietcombank',
   });
 });

@@ -12,6 +12,10 @@ export const bank = {
 
 export const bankConfigured = Boolean(bank.bankId && bank.accountNo && bank.accountName);
 
+// API Key đặt ở SePay → Webhooks (kiểu chứng thực "API Key"). Có key thì bật tự cộng điểm khi tiền về.
+export const sepayApiKey = (env.SEPAY_WEBHOOK_API_KEY || '').trim();
+export const autoTopUpEnabled = bankConfigured && Boolean(sepayApiKey);
+
 export function vietQrUrl(amountVnd, content) {
   const params = new URLSearchParams({ amount: String(amountVnd), addInfo: content, accountName: bank.accountName });
   const path = [bank.bankId, bank.accountNo, bank.qrTemplate].map(encodeURIComponent).join('-');
