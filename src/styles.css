@@ -364,6 +364,27 @@ a.tab {
   color: var(--green);
 }
 
+.pill-muted {
+  margin-left: 8px;
+  padding: 1px 8px;
+  background: #eef0f4;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.taught-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.taught-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
 .banner {
   margin: 0 0 12px;
   padding: 10px 14px;
@@ -445,6 +466,47 @@ a.tab {
   width: 18px;
   height: 18px;
   accent-color: var(--violet);
+}
+
+/* ---------- Chữ ký ---------- */
+.sig-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.sig-item {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.sig-item h3 {
+  margin: 0;
+}
+
+.sig-item .hint,
+.sig-item .export-msg {
+  margin: 0;
+}
+
+.sig-preview {
+  display: grid;
+  place-items: center;
+  height: 96px;
+  padding: 8px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.sig-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
 
 .form-grid {
@@ -599,13 +661,10 @@ a.tab {
 }
 
 .range-custom {
-  display: inline-flex;
-  gap: 10px;
-}
-
-.export-count {
-  font-size: 0.85rem;
-  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 8px;
 }
 
 .export-actions {
@@ -761,6 +820,17 @@ a.tab {
 
 .lesson-table tr.is-empty td {
   background: #fcfcfe;
+}
+
+.lesson-table tr.is-not-taught .cell-subject {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.cell-not-taught {
+  display: block;
+  min-height: 1.4em;
+  cursor: help;
 }
 
 .cell-title,
@@ -1118,6 +1188,117 @@ td.is-unknown .tkb-input {
 
 .orient-text small {
   color: var(--muted);
+}
+
+/* Chọn phạm vi tuần khi xuất file: mỗi dòng kèm giá */
+.export-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.export-fieldset legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.range-options {
+  display: grid;
+  gap: 6px;
+}
+
+.range-option {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.range-option:hover {
+  border-color: var(--line-strong);
+}
+
+.range-option.is-active {
+  border-color: var(--violet);
+  background: var(--violet-soft);
+}
+
+.range-option.is-empty {
+  color: var(--muted);
+}
+
+.range-option input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--violet);
+}
+
+.range-text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.range-text small {
+  color: var(--muted);
+}
+
+.range-price {
+  flex: none;
+  font-weight: 700;
+  color: var(--violet-deep);
+  white-space: nowrap;
+}
+
+.range-price.is-free {
+  color: var(--green);
+}
+
+.range-custom .field-inline input {
+  width: 72px;
+}
+
+.export-total {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--green-soft);
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.export-total.is-short {
+  background: var(--red-soft);
+}
+
+.modal-form .export-total p {
+  margin: 0;
+  color: inherit;
+}
+
+.modal-form .export-total p + p {
+  margin-top: 4px;
+}
+
+.export-total.is-short strong {
+  color: var(--red);
+}
+
+.export-breakdown,
+.modal-form .export-total .export-note {
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 /* ---------- Màn hình nhỏ ---------- */
@@ -2181,4 +2362,11 @@ body:has(.imp-toast) .zalo-support {
   .zalo-tip {
     transition: none;
   }
+}
+
+/* Hộp thoại có form dài (VD: xuất file) cuộn được trên màn hình thấp */
+.modal-form {
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
 }

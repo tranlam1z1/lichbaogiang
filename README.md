@@ -193,10 +193,10 @@ API quản trị (tất cả yêu cầu role ADMIN):
 | Mục | Chức năng |
 |---|---|
 | Báo giảng | Chọn tuần (mặc định tuần hiện tại, tuần nghỉ hiện riêng, không chọn được), bảng báo giảng gộp ô Thứ/Buổi, sửa trực tiếp Tên bài và Đồ dùng (chỉ cho tuần đó, có vạch đỏ đánh dấu và nút *↺ Theo PPCT*), xuất Word/Excel theo phạm vi. |
-| Thời khóa biểu | Lưới nhập môn có gợi ý từ PPCT, chọn số tiết sáng/chiều, học thứ 7; bảng đối chiếu số tiết mỗi môn với PPCT. |
+| Thời khóa biểu | Lưới nhập môn có gợi ý từ PPCT, chọn số tiết sáng/chiều, học thứ 7; mục *Môn tôi dạy* (bỏ chọn môn do giáo viên khác dạy); bảng đối chiếu số tiết mỗi môn với PPCT. |
 | Lịch tuần | Sửa từng dòng (số tuần, ghi chú, học kì, từ ngày, đến ngày), thêm/xóa dòng, công cụ tạo lại cả năm. |
 | Phân phối chương trình | Lọc theo khối, môn, tuần, tìm tên bài (không cần gõ dấu). Sửa tên bài thì mọi tuần đổi theo; có nút trả về bản gốc. |
-| Thông tin lớp | Cơ quan chủ quản, trường, GVCN, năm học, khối, tên lớp; sao lưu / khôi phục .json; đặt lại như file gốc (có xác nhận). |
+| Thông tin lớp | Cơ quan chủ quản, trường, GVCN, tổ trưởng chuyên môn, năm học, khối, tên lớp; ảnh chữ ký của giáo viên và tổ trưởng (bật/tắt chèn vào file xuất); sao lưu / khôi phục .json; đặt lại như file gốc (có xác nhận). |
 
 ### Nút hỗ trợ qua Zalo
 
@@ -217,6 +217,8 @@ Nút tròn ở góc dưới bên phải trang lập kế hoạch. Bấm vào th�
 
 Môn "CHÀO CỜ" không tra PPCT (giống file Excel). Ô thời khóa biểu chỉ chứa dấu cách được coi là ô trống.
 
+**Môn không dạy:** trong mục *Môn tôi dạy* (thẻ Thời khóa biểu), bỏ chọn môn do giáo viên khác phụ trách. Tiết của môn đó vẫn hiện ở bảng báo giảng và trong file Word/Excel (có Thứ, Buổi, Tiết, tên môn) nhưng để trống cột PPCT, Tên bài, Đồ dùng, không cảnh báo và không sửa được. Phần đã sửa trước đó vẫn được giữ, chọn lại môn thì hiện lại. Dữ liệu lưu ở `notTaught` (danh sách môn *không* dạy), nên môn mới thêm vào TKB mặc định là đang dạy. Bản sao lưu cũ không có trường này thì coi như dạy tất cả.
+
 ## Cấu trúc mã nguồn
 
 ```
@@ -230,6 +232,7 @@ src/
     range.js         phạm vi xuất (tuần đang xem, HK I, HK II, cả năm, từ… đến…)
     exportDocx.js    tạo file Word (thư viện docx)
     exportXlsx.js    tạo file Excel (thư viện exceljs)
+    signature.js     ảnh chữ ký: đọc data URL để chèn vào file xuất, thu nhỏ ảnh tải lên (canvas)
     download.js      tải file (file-saver) — được nạp khi cần để trang mở nhanh
   state/
     reducer.js       reducer thuần + khởi tạo/khôi phục trạng thái
@@ -274,8 +277,11 @@ Script đổi cột tuần/tiết sang số, bỏ khoảng trắng thừa, và k
 
 ## Xuất file
 
-- **Word (.docx):** A4 đứng, Times New Roman, mỗi tuần một trang (mỗi tuần là một section). Đầu trang có "KẾ HOẠCH GIẢNG DẠY", tuần – lớp – tên giáo viên, từ ngày … đến ngày …; bảng có gộp ô Thứ/Buổi. Cỡ chữ bảng tự chọn (12 → 7pt) theo số dòng và độ dài tên bài để vừa một trang.
-- **Excel (.xlsx):** mỗi tuần một sheet "Tuần N", có viền, gộp ô, tự xuống dòng, in vừa 1 trang A4 đứng, lặp dòng tiêu đề.
+- **Word (.docx):** A4 đứng, Times New Roman, mỗi tuần một trang (mỗi tuần là một section). Đầu trang có "KẾ HOẠCH GIẢNG DẠY", tuần – lớp – tên giáo viên, từ ngày … đến ngày …; bảng có gộp ô Thứ/Buổi; cuối trang là khối chữ ký. Cỡ chữ bảng tự chọn (12 → 7pt) theo số dòng và độ dài tên bài để cả bảng lẫn khối chữ ký vừa một trang.
+- **Excel (.xlsx):** mỗi tuần một sheet "Tuần N", có viền, gộp ô, tự xuống dòng, in vừa 1 trang A4 (đứng hoặc ngang), lặp dòng tiêu đề. Khối chữ ký nằm ngay dưới bảng và nằm trong vùng in.
+- **Khối chữ ký** (ngay dưới bảng của từng tuần): hai cột ngang hàng, trái **GIÁO VIÊN**, phải **TỔ TRƯỞNG CHUYÊN MÔN** (Excel: gộp cột A–E và F–G). Mỗi cột có tiêu đề in đậm, dòng *(Ký, ghi rõ họ tên)* in nghiêng, vùng ký cao khoảng 1,8 cm, rồi họ tên in đậm (lấy từ *Giáo viên chủ nhiệm* và *Tổ trưởng chuyên môn* ở thẻ Thông tin lớp; tên để trống thì bỏ dòng tên). Vùng ký chỉ có ảnh khi giáo viên bật *Chèn chữ ký vào file xuất* **và** đã tải ảnh; còn lại để trống để ký tay sau khi in. Ảnh giữ đúng tỉ lệ, căn giữa, cao tối đa 1,8 cm, rộng tối đa 6 cm.
+- **Ảnh chữ ký** (thẻ *Thông tin lớp* → *Chữ ký*): nhận PNG/JPG tối đa 300 KB. Trình duyệt tự làm nền trắng thành trong suốt, cắt sát nét chữ ký, thu nhỏ còn tối đa 400px chiều rộng rồi lưu dạng data URL PNG trong `info.signatures = { teacher: { enabled, image }, leader: { enabled, image } }`, nên đi theo tài khoản và file sao lưu. Bản sao lưu cũ không có `signatures` vẫn khôi phục bình thường (chữ ký tắt, chưa có ảnh).
+- **Dữ liệu mẫu để demo** (`demo/chu-ky-mau/`): `chu-ky-giao-vien.png`, `chu-ky-to-truong.png` là ảnh "chụp" nền giấy trắng (khoảng 850px, 22–25 KB) để thử nút *Tải ảnh chữ ký…*; `sao-luu-demo-chu-ky.json` là file sao lưu có sẵn tổ trưởng "Lê Thị Hồng Nhung" và cả hai chữ ký đã bật, *Khôi phục từ file…* xong là xuất Word/Excel được ngay.
 
 ## Kết quả kiểm tra trước khi giao
 

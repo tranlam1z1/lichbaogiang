@@ -3,9 +3,14 @@
   "agency": "UBND HUYỆN HOẰNG HÓA",
   "school": "TRƯỜNG TIỂU HỌC HOẰNG HỢP",
   "teacher": "Nguyễn Thị Gấm",
+  "leader": "",
   "schoolYear": "2026 - 2027",
   "grade": 4,
-  "className": "4A"
+  "className": "4A",
+  "signatures": {
+   "teacher": { "enabled": false, "image": "" },
+   "leader": { "enabled": false, "image": "" }
+  }
  },
  "timetable": {
   "morningCount": 4,

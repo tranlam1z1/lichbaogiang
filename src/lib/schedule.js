@@ -48,9 +48,11 @@ export function iterateTimetable(timetable) {
  * @param {number} args.grade           khối lớp (để ghi cảnh báo)
  * @param {object} [args.ppctOverrides] {key: tên bài đã sửa} của khối
  * @param {object} [args.lessonOverrides] {slotKey: {subject, title?, equipment?}} của tuần này
+ * @param {string[]} [args.notTaught]  các môn giáo viên không dạy: vẫn hiện tiết nhưng để trống tên bài
  */
-export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides = {}, lessonOverrides = {} }) {
+export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides = {}, lessonOverrides = {}, notTaught = [] }) {
   const counts = new Map();
+  const skip = new Set(notTaught);
   const days = schoolDays(timetable);
   const byDay = new Map(days.map((d, i) => {
     const date = dayDate(week, i);
@@ -77,7 +79,16 @@ export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides 
       warning: null,
       editedTitle: false,
       editedEquipment: false,
+      notTaught: !!slot.subject && skip.has(slot.subject),
     };
+    // Môn không dạy: giữ tiết và tên môn, bỏ tra PPCT và bỏ phần đã sửa (phần sửa vẫn lưu, bật lại là hiện).
+    if (row.notTaught) {
+      row.tiet = (counts.get(slot.subject) || 0) + 1;
+      counts.set(slot.subject, row.tiet);
+      row.baseEquipment = '';
+      current.rows.push(row);
+      continue;
+    }
     if (slot.subject) {
       const n = (counts.get(slot.subject) || 0) + 1;
       counts.set(slot.subject, n);

@@ -3,11 +3,14 @@ import {
   AlignmentType,
   BorderStyle,
   Document,
+  ImageRun,
+  LineRuleType,
   Packer,
   PageOrientation,
   Paragraph,
   ShadingType,
   Table,
+  TableBorders,
   TableCell,
   TableLayoutType,
   TableRow,
@@ -18,6 +21,7 @@ import {
 } from 'docx';
 import { formatDM, formatDMY } from './calendar.js';
 import { weekLine } from './range.js';
+import { fitBox, signatureImage } from './signature.js';
 
 const CM = 567; // twip / cm
 const PAGE = { width: 21 * CM, height: 29.7 * CM };
@@ -92,7 +96,7 @@ export function fitWeek(rows, orientation = 'portrait') {
   const { page, columns } = layoutFor(orientation);
   const available = (page.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
   const colCm = Object.fromEntries(columns.map((c) => [c.key, c.cm]));
-  const headerH = 58; // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày…
+  const headerH = 58 + SIGN_BLOCK_PT; // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày… + khối chữ ký cuối trang
   const pad = (CELL_PAD_TW * 2) * PT_PER_TW + 0.75;
   for (const pt of [12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.5, 7]) {
     const lineH = pt * 1.16;
@@ -171,6 +175,63 @@ function weekTable(rows, pt, columns) {
   });
 }
 
+// Khối chữ ký: tiêu đề + "(Ký, ghi rõ họ tên)" + vùng ký cao SIGN_CM + họ tên, cách bảng SIGN_GAP_PT.
+const SIGN_CM = 1.8;
+const SIGN_MAX_W_CM = 6;
+const SIGN_GAP_PT = 6;
+const SIGN_PT = 12;
+export const SIGN_BLOCK_PT = SIGN_GAP_PT + 3 * SIGN_PT * 1.16 + SIGN_CM * 28.35 + 2;
+const PX_PER_CM = 96 / 2.54;
+const noBorder = { style: BorderStyle.NONE, size: 0, color: 'auto' };
+const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+function signatureCell(title, name, sig, widthTw) {
+  const img = signatureImage(sig);
+  const box = img && fitBox(img, SIGN_MAX_W_CM * PX_PER_CM, SIGN_CM * PX_PER_CM);
+  const children = [
+    para(title, { bold: true, pt: SIGN_PT, align: AlignmentType.CENTER }),
+    para('(Ký, ghi rõ họ tên)', { italics: true, pt: SIGN_PT, align: AlignmentType.CENTER }),
+    // Vùng ký luôn cao ít nhất SIGN_CM, có ảnh hay để trống ký tay đều như nhau.
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 0, after: 0, line: Math.round(SIGN_CM * CM), lineRule: LineRuleType.AT_LEAST },
+      children: box ? [new ImageRun({ type: img.type, data: img.data, transformation: box, altText: { name: 'Chữ ký', description: `Chữ ký ${title.toLowerCase()}`, title: 'Chữ ký' } })] : [],
+    }),
+  ];
+  if (name?.trim()) children.push(para(name.trim(), { bold: true, pt: SIGN_PT, align: AlignmentType.CENTER }));
+  return new TableCell({
+    width: { size: widthTw, type: WidthType.DXA },
+    borders: noBorders,
+    margins: { top: 0, bottom: 0, left: 70, right: 70 },
+    children,
+  });
+}
+
+/** Hai cột ngang hàng dưới bảng: GIÁO VIÊN (trái) và TỔ TRƯỞNG CHUYÊN MÔN (phải). */
+function signatureBlock(info, columns) {
+  const total = Math.round(columns.reduce((s, c) => s + c.cm, 0) * CM);
+  const half = Math.round(total / 2);
+  const sigs = info.signatures || {};
+  return [
+    new Paragraph({ spacing: { before: 0, after: 0, line: SIGN_GAP_PT * 20, lineRule: LineRuleType.EXACT }, children: [] }),
+    new Table({
+      width: { size: total, type: WidthType.DXA },
+      columnWidths: [half, total - half],
+      layout: TableLayoutType.FIXED,
+      borders: TableBorders.NONE,
+      rows: [
+        new TableRow({
+          cantSplit: true,
+          children: [
+            signatureCell('GIÁO VIÊN', info.teacher, sigs.teacher, half),
+            signatureCell('TỔ TRƯỞNG CHUYÊN MÔN', info.leader, sigs.leader, total - half),
+          ],
+        }),
+      ],
+    }),
+  ];
+}
+
 function headerBlock(info, week) {
   return [
     para('KẾ HOẠCH GIẢNG DẠY', { bold: true, color: 'FF0000', pt: 17, align: AlignmentType.CENTER }),
@@ -199,7 +260,7 @@ export function buildDocx(weeks, info, { forcePt, orientation = 'portrait' } = {
           margin: { ...MARGIN, header: 300, footer: 300 },
         },
       },
-      children: [...headerBlock(info, week), weekTable(rows, bodyPt, columns)],
+      children: [...headerBlock(info, week), weekTable(rows, bodyPt, columns), ...signatureBlock(info, columns)],
     };
   });
   return new Document({

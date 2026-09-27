@@ -10,6 +10,7 @@ settingsRouter.get('/public', async (req, res) => {
   res.json({
     freeExportsForNewUser: s.freeExportsForNewUser,
     pointsPerExport: s.pointsPerExport,
+    pointsPerExtraWeek: s.pointsPerExtraWeek,
     topupUnitVnd: s.topupUnitVnd,
     pointsPerUnit: s.pointsPerUnit,
     topupEnabled: bankConfigured,

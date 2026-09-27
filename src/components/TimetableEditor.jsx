@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppContext.jsx';
-import { MAX_PERIODS, SESSIONS, checkTimetable, describeCheck, schoolDays } from '../lib/schedule.js';
+import { MAX_PERIODS, SESSIONS, checkTimetable, describeCheck, iterateTimetable, schoolDays } from '../lib/schedule.js';
 import { dayName } from '../lib/calendar.js';
-import { normalizeSubject } from '../lib/text.js';
+import { SKIP_LOOKUP_SUBJECTS, normalizeSubject } from '../lib/text.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import TimetableImport from './TimetableImport.jsx';
 
@@ -37,6 +37,15 @@ export default function TimetableEditor() {
   const hidden = Object.keys(rules).filter((s) => rules[s].hidden);
   const problems = check.filter((c) => c.status !== 'ok' && c.status !== 'skip');
   const known = new Set([...index.subjects, 'CHÀO CỜ']);
+  const notTaught = useMemo(() => new Set(state.notTaught), [state.notTaught]);
+  const tkbSubjects = useMemo(() => {
+    const seen = new Set();
+    for (const s of iterateTimetable(timetable)) {
+      if (s.subject && !SKIP_LOOKUP_SUBJECTS.has(s.subject)) seen.add(s.subject);
+    }
+    return [...seen];
+  }, [timetable]);
+  const setTaught = (subjects, taught) => dispatch({ type: 'SET_TAUGHT', subjects, taught });
 
   const setOption = (patch) => dispatch({ type: 'SET_TIMETABLE_OPTION', patch });
   const setPerWeek = (subject, raw) => dispatch({
@@ -137,6 +146,31 @@ export default function TimetableEditor() {
 
       <section className="card">
         <div className="card-head">
+          <h2>Môn tôi dạy</h2>
+          {tkbSubjects.length > 0 && (
+            <span className="head-actions">
+              <button type="button" className="link-btn" onClick={() => setTaught(tkbSubjects, true)}>Chọn tất cả</button>
+              <button type="button" className="link-btn" onClick={() => setTaught(tkbSubjects, false)}>Bỏ chọn tất cả</button>
+            </span>
+          )}
+        </div>
+        {tkbSubjects.length ? (
+          <div className="taught-list">
+            {tkbSubjects.map((s) => (
+              <label key={s} className="taught-item">
+                <input type="checkbox" checked={!notTaught.has(s)} onChange={(e) => setTaught([s], e.target.checked)} />
+                <span>{s}</span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="card-text">Thời khóa biểu chưa có môn nào.</p>
+        )}
+        <p className="hint">Bỏ chọn các môn do giáo viên khác dạy. Tiết của môn đó vẫn hiện trong kế hoạch nhưng để trống tên bài.</p>
+      </section>
+
+      <section className="card">
+        <div className="card-head">
           <h2>Đối chiếu với PPCT lớp {grade}</h2>
           <span className="head-actions">
             <span className={`pill ${problems.length ? 'pill-warn' : 'pill-ok'}`}>
@@ -171,7 +205,10 @@ export default function TimetableEditor() {
             <tbody>
               {check.map((c) => (
                 <tr key={c.subject} className={`status-${c.status}${c.custom ? ' is-custom' : ''}`}>
-                  <td>{c.subject}</td>
+                  <td>
+                    {c.subject}
+                    {notTaught.has(c.subject) && <span className="pill pill-muted">Không dạy</span>}
+                  </td>
                   <td className="num">{c.inTkb}</td>
                   <td className="num">
                     <input

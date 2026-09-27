@@ -5,6 +5,7 @@ import { pageResult, paging } from '../lib/paging.js';
 import { publicUser } from '../lib/users.js';
 import { requireAuth } from '../middleware/auth.js';
 import { FILE_TYPES, authorizeExport, completeExport, refundExport } from '../services/points.js';
+import { MAX_EXPORT_WEEKS } from '../../../shared/pricing.js';
 
 export function publicExport(e) {
   return {
@@ -23,12 +24,18 @@ export function publicExport(e) {
 export const exportsRouter = Router();
 exportsRouter.use(requireAuth);
 
-/** Bước 1: kiểm tra & trừ lượt/điểm, trả exportId. Frontend chỉ tạo file sau khi có exportId. */
+/** Bước 1: kiểm tra & trừ lượt/điểm theo số tuần, trả exportId. Frontend chỉ tạo file sau khi có exportId. */
 exportsRouter.post('/authorize', async (req, res) => {
   const fileType = String(req.body?.fileType || '').toUpperCase();
   if (!FILE_TYPES[fileType]) throw validationError({ fileType: 'Loại file phải là DOCX (Word) hoặc XLSX (Excel).' });
+  // Không gửi số tuần (bản giao diện cũ) → tính như 1 tuần.
+  const weeks = req.body?.weeks === undefined ? 1 : Number(req.body.weeks);
+  if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_EXPORT_WEEKS) {
+    throw validationError({ weeks: `Số tuần phải từ 1 đến ${MAX_EXPORT_WEEKS}.` });
+  }
   const { exportLog, user } = await authorizeExport(req.user.id, {
     fileType,
+    weeks,
     confirmCost: req.body?.confirmCost ?? 0,
     description: String(req.body?.description || '').slice(0, 120),
   });

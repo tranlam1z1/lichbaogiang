@@ -5,6 +5,8 @@ import { formatDM, formatDMY } from '../lib/calendar.js';
 import EditableText from './EditableText.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
+const NOT_TAUGHT_TIP = 'Môn này bạn không dạy. Bật lại ở mục "Môn tôi dạy" trong thẻ Thời khóa biểu.';
+
 /** Bảng kế hoạch giảng dạy của một tuần. */
 export default function LessonSheet({ week }) {
   const { state, dispatch, grade, index, ppctOverrides } = useApp();
@@ -12,8 +14,8 @@ export default function LessonSheet({ week }) {
   const weekOverrides = state.lessonOverrides[week.num] || {};
 
   const built = useMemo(
-    () => buildWeekLessons({ week, timetable: state.timetable, index, grade, ppctOverrides, lessonOverrides: weekOverrides }),
-    [week, state.timetable, index, grade, ppctOverrides, weekOverrides],
+    () => buildWeekLessons({ week, timetable: state.timetable, index, grade, ppctOverrides, lessonOverrides: weekOverrides, notTaught: state.notTaught }),
+    [week, state.timetable, index, grade, ppctOverrides, weekOverrides, state.notTaught],
   );
   const rows = useMemo(() => flattenWeek(built), [built]);
   const editedCount = rows.filter((r) => r.editedTitle || r.editedEquipment).length;
@@ -76,7 +78,7 @@ export default function LessonSheet({ week }) {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.key} className={`${r.dayRowSpan ? 'day-start' : ''}${r.subject ? '' : ' is-empty'}`}>
+              <tr key={r.key} className={`${r.dayRowSpan ? 'day-start' : ''}${r.subject ? '' : ' is-empty'}${r.notTaught ? ' is-not-taught' : ''}`}>
                 {r.dayRowSpan > 0 && (
                   <th scope="rowgroup" rowSpan={r.dayRowSpan} className="cell-day">
                     <span className="day-name">{r.dayLabel}</span>
@@ -87,10 +89,12 @@ export default function LessonSheet({ week }) {
                   <td rowSpan={r.sessionRowSpan} className="cell-session">{r.sessionLabel}</td>
                 )}
                 <td className="cell-num">{r.period}</td>
-                <td className="cell-subject">{r.subject}</td>
+                <td className="cell-subject" title={r.notTaught ? NOT_TAUGHT_TIP : undefined}>{r.subject}</td>
                 <td className="cell-num cell-ppct">{r.ppct}</td>
                 <td className={`cell-title${r.editedTitle ? ' is-edited' : ''}`}>
-                  {r.subject ? (
+                  {r.notTaught ? (
+                    <span className="cell-not-taught" title={NOT_TAUGHT_TIP} aria-label={NOT_TAUGHT_TIP} />
+                  ) : r.subject ? (
                     <>
                       <EditableText
                         value={r.title}
@@ -113,7 +117,7 @@ export default function LessonSheet({ week }) {
                   ) : null}
                 </td>
                 <td className={`cell-equip${r.editedEquipment ? ' is-edited' : ''}`}>
-                  {r.subject ? (
+                  {r.subject && !r.notTaught ? (
                     <EditableText
                       value={r.equipment}
                       onCommit={(v) => setField(r, 'equipment', v)}

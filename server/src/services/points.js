@@ -6,6 +6,7 @@
 import { prisma } from '../db.js';
 import { HttpError } from '../lib/errors.js';
 import { formatVnd } from '../../../shared/validation.js';
+import { canUseFreeExport, exportCost } from '../../../shared/pricing.js';
 import { getSettings } from './settings.js';
 
 // SQLite chỉ cho một transaction ghi tại một thời điểm; cho phép chờ lâu hơn mặc định (2s) khi đông request.
@@ -64,27 +65,32 @@ export async function createUserWithBonus(data) {
 // ---------------------------------------------------------------------------
 
 /**
- * Cấp phép một lần xuất file: ưu tiên dùng lượt miễn phí, hết thì trừ điểm.
- * confirmCost = số điểm người dùng đã đồng ý trả (0 nếu họ nghĩ còn lượt miễn phí).
+ * Cấp phép một lần xuất file `weeks` tuần. Tải 1 tuần: ưu tiên dùng lượt miễn phí, hết thì trừ điểm.
+ * Tải từ 2 tuần: luôn trừ điểm theo số tuần (lượt miễn phí giữ nguyên), xem shared/pricing.js.
+ * confirmCost = số điểm người dùng đã đồng ý trả (0 nếu họ nghĩ được dùng lượt miễn phí).
  * Nếu thực tế phải trừ điểm mà con số này không khớp giá hiện tại → 409 để frontend hỏi lại.
  */
-export async function authorizeExport(userId, { fileType, confirmCost, description }) {
+export async function authorizeExport(userId, { fileType, weeks = 1, confirmCost, description }) {
   return prisma.$transaction(async (tx) => {
-    const { pointsPerExport: cost } = await getSettings(tx);
+    const cost = exportCost(weeks, await getSettings(tx));
 
-    const free = await tx.user.updateMany({
-      where: { id: userId, freeExportsLeft: { gt: 0 } },
-      data: { freeExportsLeft: { decrement: 1 } },
-    });
+    // Điều kiện nằm trong câu lệnh cập nhật: hai tab cùng dùng lượt cuối thì chỉ một tab được.
+    const free = canUseFreeExport(weeks, 1)
+      ? await tx.user.updateMany({
+        where: { id: userId, freeExportsLeft: { gt: 0 } },
+        data: { freeExportsLeft: { decrement: 1 } },
+      })
+      : { count: 0 };
 
     let chargeType = 'FREE';
     let pointsCharged = 0;
     if (free.count !== 1) {
       if (Number(confirmCost) !== cost) {
         const u = await balances(tx, userId);
-        throw new HttpError(409, `Bạn đã hết lượt miễn phí. Lần xuất này sẽ trừ ${cost} điểm, vui lòng xác nhận lại.`, {
+        const why = weeks > 1 ? `Tải ${weeks} tuần cần ${cost} điểm` : `Bạn đã hết lượt miễn phí. Lần xuất này sẽ trừ ${cost} điểm`;
+        throw new HttpError(409, `${why}, vui lòng xác nhận lại.`, {
           code: 'CONFIRM_REQUIRED',
-          details: { cost, points: u.points, freeExportsLeft: u.freeExportsLeft },
+          details: { cost, weeks, points: u.points, freeExportsLeft: u.freeExportsLeft },
         });
       }
       if (cost > 0) {
@@ -96,7 +102,7 @@ export async function authorizeExport(userId, { fileType, confirmCost, descripti
           const u = await balances(tx, userId);
           throw new HttpError(402, `Bạn không đủ điểm để xuất file (cần ${cost} điểm, hiện có ${u.points} điểm).`, {
             code: 'INSUFFICIENT_POINTS',
-            details: { cost, points: u.points, freeExportsLeft: u.freeExportsLeft },
+            details: { cost, weeks, points: u.points, freeExportsLeft: u.freeExportsLeft },
           });
         }
       }
@@ -114,7 +120,7 @@ export async function authorizeExport(userId, { fileType, confirmCost, descripti
       freeExports: chargeType === 'FREE' ? -1 : 0,
       actorId: userId,
       exportId: exportLog.id,
-      note: `Xuất file ${FILE_TYPES[fileType]}${chargeType === 'FREE' ? ' (lượt miễn phí)' : ''}`,
+      note: `Xuất file ${FILE_TYPES[fileType]} ${weeks} tuần${chargeType === 'FREE' ? ' (lượt miễn phí)' : ''}`,
     });
     return { exportLog, user };
   }, TX_OPTS);

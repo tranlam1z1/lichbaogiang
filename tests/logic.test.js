@@ -162,3 +162,36 @@ test('Đồ dùng dạy học mặc định: TOÁN → Vở thực hành, môn k
   assert.equal(edited.equipment, '');
   assert.ok(edited.editedEquipment);
 });
+
+test('Môn không dạy: giữ tiết và tên môn, để trống tên bài; bật lại thì phần đã sửa hiện lại', () => {
+  let s = createInitialState();
+  const first = flattenWeek(buildWeekLessons({ week: week1, timetable: s.timetable, index, grade })).find((r) => r.subject === 'TIẾNG ANH');
+  s = reducer(s, { type: 'SET_LESSON', weekNum: 1, slotKey: first.key, subject: 'TIẾNG ANH', field: 'title', value: 'Bài tự sửa', base: first.baseTitle });
+  s = reducer(s, { type: 'SET_TAUGHT', subjects: ['Tiếng Anh'], taught: false });
+  assert.deepEqual(s.notTaught, ['TIẾNG ANH']);
+
+  const build = () => flattenWeek(buildWeekLessons({ week: week1, timetable: s.timetable, index, grade, lessonOverrides: s.lessonOverrides[1], notTaught: s.notTaught }));
+  const off = build();
+  const eng = off.filter((r) => r.subject === 'TIẾNG ANH');
+  assert.ok(eng.length > 0);
+  for (const r of eng) {
+    assert.equal(r.notTaught, true);
+    assert.equal(r.title, '');
+    assert.equal(r.ppct, '');
+    assert.equal(r.equipment, '');
+    assert.equal(r.warning, null);
+  }
+  assert.equal(off.length, flattenWeek(buildWeekLessons({ week: week1, timetable: s.timetable, index, grade })).length);
+  assert.ok(off.some((r) => r.subject === 'TOÁN' && r.title && !r.notTaught));
+
+  s = reducer(s, { type: 'SET_TAUGHT', subjects: ['TIẾNG ANH'], taught: true });
+  assert.deepEqual(s.notTaught, []);
+  assert.equal(build().find((r) => r.key === first.key).title, 'Bài tự sửa');
+});
+
+test('Môn không dạy: sao lưu cũ không có notTaught thì dạy tất cả', () => {
+  const s = reducer(createInitialState(), { type: 'RESTORE', data: { info: { grade: 4 } } });
+  assert.deepEqual(s.notTaught, []);
+  const t = reducer(createInitialState(), { type: 'RESTORE', data: { notTaught: ['tiếng anh', 'TIẾNG ANH', ''] } });
+  assert.deepEqual(t.notTaught, ['TIẾNG ANH']);
+});

@@ -2,9 +2,9 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Hộp thoại có form (nhập lý do, số điểm…). Enter để gửi, Esc để đóng.
- * error: thông báo lỗi chung hiện phía trên nút.
+ * error: thông báo lỗi chung hiện phía trên nút. submitDisabled: khóa nút gửi (VD: chưa chọn đủ).
  */
-export default function FormDialog({ open, title, children, submitLabel = 'Lưu', danger, busy, error, onSubmit, onCancel }) {
+export default function FormDialog({ open, title, children, submitLabel = 'Lưu', danger, busy, error, submitDisabled, onSubmit, onCancel }) {
   const formRef = useRef(null);
   useEffect(() => {
     if (!open) return undefined;
@@ -25,7 +25,7 @@ export default function FormDialog({ open, title, children, submitLabel = 'Lưu'
         onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault();
-          if (!busy) onSubmit();
+          if (!busy && !submitDisabled) onSubmit();
         }}
         noValidate
       >
@@ -34,7 +34,7 @@ export default function FormDialog({ open, title, children, submitLabel = 'Lưu'
         {error && <div className="banner banner-alert" role="alert">{error}</div>}
         <div className="modal-actions">
           <button type="button" className="btn" onClick={onCancel} disabled={busy}>Hủy</button>
-          <button type="submit" className={`btn ${danger ? 'btn-danger' : 'btn-primary'}`} disabled={busy}>
+          <button type="submit" className={`btn ${danger ? 'btn-danger' : 'btn-primary'}`} disabled={busy || submitDisabled}>
             {busy ? 'Đang xử lý…' : submitLabel}
           </button>
         </div>

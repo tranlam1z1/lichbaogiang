@@ -56,7 +56,7 @@ export function exportFileName(className, range, weeks) {
 }
 
 /** Dữ liệu từng tuần đã dựng sẵn cho Word/Excel. */
-export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides, lessonOverrides }) {
+export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides, lessonOverrides, notTaught }) {
   return weeks.map((week) => {
     const built = buildWeekLessons({
       week,
@@ -65,6 +65,7 @@ export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides
       grade,
       ppctOverrides,
       lessonOverrides: lessonOverrides?.[week.num] || {},
+      notTaught,
     });
     return { week, rows: flattenWeek(built) };
   });

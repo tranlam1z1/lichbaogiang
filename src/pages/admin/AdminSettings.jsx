@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { formatVnd } from '../../../shared/validation.js';
+import { exportCost } from '../../../shared/pricing.js';
 import { formatDateTime } from '../account/AccountLayout.jsx';
 import AdminLayout from './AdminLayout.jsx';
 
-const ORDER = ['freeExportsForNewUser', 'pointsPerExport', 'topupUnitVnd', 'pointsPerUnit'];
+const ORDER = ['freeExportsForNewUser', 'pointsPerExport', 'pointsPerExtraWeek', 'topupUnitVnd', 'pointsPerUnit'];
 
 /** Sửa số lượt miễn phí, điểm mỗi lần xuất, tỷ lệ quy đổi — lưu trong database. */
 export default function AdminSettings() {
@@ -50,6 +51,7 @@ export default function AdminSettings() {
   };
 
   const n = (k) => Number(values[k]) || 0;
+  const cost = (weeks) => exportCost(weeks, { pointsPerExport: n('pointsPerExport'), pointsPerExtraWeek: n('pointsPerExtraWeek') });
 
   return (
     <AdminLayout title="Cài đặt">
@@ -84,12 +86,15 @@ export default function AdminSettings() {
               <strong>Người dùng sẽ thấy:</strong>
               <ul>
                 <li>Tài khoản mới được <strong>{n('freeExportsForNewUser')}</strong> lượt xuất miễn phí (tài khoản đã có không bị ảnh hưởng).</li>
-                <li>Hết lượt miễn phí: mỗi lần xuất trừ <strong>{n('pointsPerExport')}</strong> điểm.</li>
+                <li>
+                  Lượt miễn phí chỉ dùng khi tải 1 tuần. Điểm trừ theo số tuần: 1 tuần <strong>{cost(1)}</strong> điểm,
+                  18 tuần (một học kì) <strong>{cost(18)}</strong> điểm, 35 tuần (cả năm) <strong>{cost(35)}</strong> điểm.
+                </li>
                 <li>
                   Nạp <strong>{formatVnd(n('topupUnitVnd'))}</strong> = <strong>{n('pointsPerUnit')}</strong> điểm; nạp tối thiểu{' '}
                   {formatVnd(n('topupUnitVnd'))}, là bội số của {formatVnd(n('topupUnitVnd'))}.
                   {n('pointsPerExport') > 0 && n('pointsPerUnit') > 0 && (
-                    <> Mỗi lần xuất tương đương khoảng {formatVnd(Math.round((n('topupUnitVnd') * n('pointsPerExport')) / n('pointsPerUnit')))}.</>
+                    <> Tải 1 tuần tương đương khoảng {formatVnd(Math.round((n('topupUnitVnd') * cost(1)) / n('pointsPerUnit')))}, cả năm khoảng {formatVnd(Math.round((n('topupUnitVnd') * cost(35)) / n('pointsPerUnit')))}.</>
                   )}
                 </li>
                 <li>Yêu cầu nạp đã tạo trước đó giữ nguyên số điểm đã chốt lúc tạo.</li>

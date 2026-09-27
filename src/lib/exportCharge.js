@@ -8,14 +8,15 @@ import { api } from '../api/client.js';
 /**
  * @param {object} p
  * @param {'DOCX'|'XLSX'} p.fileType
+ * @param {number} p.weeks  số tuần xuất — server tính điểm theo số tuần
  * @param {number} p.confirmCost  số điểm người dùng đã đồng ý trả (0 nếu còn lượt miễn phí)
  * @param {string} p.description  mô tả ngắn cho lịch sử, VD "Tuần 1–35"
  * @param {() => Promise<void>} p.generate  hàm tạo và tải file
  * @param {(user: object) => void} p.onUser  nhận số dư mới sau mỗi bước
  * Lỗi khi tạo file được ném lại với e.refunded = true/false để giao diện báo đúng.
  */
-export async function runChargedExport({ fileType, confirmCost, description, generate, onUser }) {
-  const auth = await api.post('/exports/authorize', { fileType, confirmCost, description });
+export async function runChargedExport({ fileType, weeks, confirmCost, description, generate, onUser }) {
+  const auth = await api.post('/exports/authorize', { fileType, weeks, confirmCost, description });
   onUser(auth.user);
   try {
     await generate();

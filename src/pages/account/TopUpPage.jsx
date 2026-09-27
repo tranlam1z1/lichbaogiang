@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client.js';
 import { useAuth } from '../../auth/AuthContext.jsx';
 import { formatVnd, pointsForAmount, validateTopUpAmount } from '../../../shared/validation.js';
+import { priceText } from '../../../shared/pricing.js';
 import AccountLayout, { TOPUP_STATUS, formatDateTime } from './AccountLayout.jsx';
 
 const QUICK_MULTIPLES = [1, 2, 5, 10, 20];
@@ -125,7 +126,7 @@ export default function TopUpPage() {
   }, [hasPending, auto, check]);
 
   if (!settings) return <AccountLayout title="Nạp điểm"><div className="empty">Đang tải…</div></AccountLayout>;
-  const { topupUnitVnd: unit, pointsPerUnit, pointsPerExport, topupEnabled } = settings;
+  const { topupUnitVnd: unit, pointsPerUnit, topupEnabled } = settings;
   const amountError = amount === '' ? null : validateTopUpAmount(amount, unit);
 
   const submit = async (e) => {
@@ -163,8 +164,8 @@ export default function TopUpPage() {
       <section className="card">
         <h2>Tạo yêu cầu nạp</h2>
         <p className="card-text">
-          Tỷ lệ quy đổi: <strong>{formatVnd(unit)} = {pointsPerUnit} điểm</strong>. Mỗi lần xuất file Word/Excel (sau khi hết lượt
-          miễn phí) trừ <strong>{pointsPerExport} điểm</strong>. Nạp tối thiểu {formatVnd(unit)}, số tiền là bội số của {formatVnd(unit)}.
+          Tỷ lệ quy đổi: <strong>{formatVnd(unit)} = {pointsPerUnit} điểm</strong>. Xuất file Word/Excel trừ điểm theo số tuần:{' '}
+          <strong>{priceText(settings)}</strong> (lượt miễn phí dùng cho tải 1 tuần). Nạp tối thiểu {formatVnd(unit)}, số tiền là bội số của {formatVnd(unit)}.
         </p>
         {!topupEnabled && (
           <div className="banner banner-alert" role="alert">

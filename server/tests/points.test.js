@@ -47,7 +47,7 @@ test('xuất file: dùng hết 5 lượt miễn phí rồi mới trừ điểm',
   const ask = await call('POST', '/exports/authorize', { fileType: 'DOCX', confirmCost: 0 });
   assert.equal(ask.status, 409);
   assert.equal(ask.body.code, 'CONFIRM_REQUIRED');
-  assert.deepEqual(ask.body.details, { cost: 5, points: 12, freeExportsLeft: 0 });
+  assert.deepEqual(ask.body.details, { cost: 5, weeks: 1, points: 12, freeExportsLeft: 0 });
 
   const paid = await call('POST', '/exports/authorize', { fileType: 'DOCX', confirmCost: 5 });
   assert.equal(paid.status, 201);
@@ -175,10 +175,52 @@ test('cài đặt công khai', async () => {
   assert.deepEqual(r.body, {
     freeExportsForNewUser: 5,
     pointsPerExport: 5,
+    pointsPerExtraWeek: 2,
     topupUnitVnd: 10000,
     pointsPerUnit: 100,
     topupEnabled: true,
     topupAuto: true,
     bankName: 'Vietcombank',
   });
+});
+
+test('xuất nhiều tuần: trừ điểm theo số tuần, không dùng lượt miễn phí', async () => {
+  // Mặc định: tuần đầu 5 điểm, mỗi tuần thêm 2 điểm.
+  const { call, id } = await newUser(60, { points: 100, free: 2 });
+  const ask = await call('POST', '/exports/authorize', { fileType: 'DOCX', weeks: 18, confirmCost: 0 });
+  assert.equal(ask.status, 409);
+  assert.equal(ask.body.code, 'CONFIRM_REQUIRED');
+  assert.deepEqual(ask.body.details, { cost: 39, weeks: 18, points: 100, freeExportsLeft: 2 });
+
+  const hk1 = await call('POST', '/exports/authorize', { fileType: 'DOCX', weeks: 18, confirmCost: 39 });
+  assert.equal(hk1.status, 201);
+  assert.equal(hk1.body.export.chargeType, 'POINTS');
+  assert.equal(hk1.body.export.pointsCharged, 39);
+  assert.equal(hk1.body.user.points, 61);
+  assert.equal(hk1.body.user.freeExportsLeft, 2, 'giữ nguyên lượt miễn phí');
+
+  // 1 tuần vẫn dùng lượt miễn phí.
+  const one = await call('POST', '/exports/authorize', { fileType: 'XLSX', weeks: 1, confirmCost: 0 });
+  assert.equal(one.body.export.chargeType, 'FREE');
+  assert.equal(one.body.user.freeExportsLeft, 1);
+
+  // Không đủ điểm cho cả năm (35 tuần = 73 điểm).
+  const year = await call('POST', '/exports/authorize', { fileType: 'DOCX', weeks: 35, confirmCost: 73 });
+  assert.equal(year.status, 402);
+  assert.equal(year.body.details.cost, 73);
+
+  // Hoàn lại đúng số điểm đã trừ.
+  const back = await call('POST', `/exports/${hk1.body.exportId}/refund`, {});
+  assert.equal(back.body.user.points, 100);
+
+  const rows = await ledger(id);
+  assert.ok(rows.some((r) => r.type === 'EXPORT' && r.points === -39 && /18 tuần/.test(r.note)));
+});
+
+test('số tuần không hợp lệ bị từ chối', async () => {
+  const { call } = await newUser(61, { points: 1000 });
+  for (const weeks of [0, -1, 1.5, 'abc', 61]) {
+    const r = await call('POST', '/exports/authorize', { fileType: 'DOCX', weeks, confirmCost: 5 });
+    assert.equal(r.status, 400, `weeks=${weeks}`);
+  }
 });

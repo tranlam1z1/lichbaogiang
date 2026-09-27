@@ -21,9 +21,23 @@ export function createInitialState() {
     lessonOverrides: {},
     ppctOverrides: {},
     checkRules: {},
+    notTaught: [],
     selectedWeekId: findCurrentWeek(calendar)?.id ?? null,
     tab: 'lessons',
   };
+}
+
+/** Chữ ký giáo viên / tổ trưởng; bản sao lưu cũ không có (hoặc thiếu một phần) thì dùng mặc định (tắt, chưa có ảnh). */
+function normalizeSignatures(saved, base) {
+  const out = {};
+  for (const role of Object.keys(base)) {
+    const s = saved?.[role];
+    out[role] = {
+      enabled: s?.enabled === true,
+      image: typeof s?.image === 'string' && s.image.startsWith('data:image/') ? s.image : '',
+    };
+  }
+  return out;
 }
 
 /** Ghép dữ liệu đã lưu / file sao lưu với cấu trúc mặc định để tránh thiếu trường. */
@@ -39,9 +53,11 @@ export function hydrate(saved) {
     lessonOverrides: s.lessonOverrides && typeof s.lessonOverrides === 'object' ? s.lessonOverrides : {},
     ppctOverrides: s.ppctOverrides && typeof s.ppctOverrides === 'object' ? s.ppctOverrides : {},
     checkRules: s.checkRules && typeof s.checkRules === 'object' ? s.checkRules : {},
+    notTaught: Array.isArray(s.notTaught) ? [...new Set(s.notTaught.map(normalizeSubject).filter(Boolean))] : [],
     tab: s.tab || base.tab,
   };
   state.info.grade = Number(state.info.grade) || base.info.grade;
+  state.info.signatures = normalizeSignatures(s.info?.signatures, base.info.signatures);
   const stillExists = state.calendar.some((w) => w.id === s.selectedWeekId);
   state.selectedWeekId = stillExists ? s.selectedWeekId : findCurrentWeek(state.calendar)?.id ?? null;
   return state;
@@ -186,6 +202,15 @@ export function reducer(state, action) {
     }
     case 'RESET_CHECK_RULES':
       return { ...state, checkRules: { ...state.checkRules, [action.grade]: {} } };
+
+    // ---------- Môn giáo viên dạy ----------
+    case 'SET_TAUGHT': {
+      // Lưu các môn KHÔNG dạy, để môn mới trong TKB mặc định là đang dạy.
+      const subjects = (action.subjects || [action.subject]).map(normalizeSubject).filter(Boolean);
+      const set = new Set(state.notTaught);
+      subjects.forEach((x) => (action.taught ? set.delete(x) : set.add(x)));
+      return { ...state, notTaught: [...set] };
+    }
 
     // ---------- Sao lưu ----------
     case 'RESTORE':

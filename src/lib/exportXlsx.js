@@ -2,6 +2,7 @@
 import ExcelJS from 'exceljs';
 import { formatDM, formatDMY } from './calendar.js';
 import { weekLine } from './range.js';
+import { fitBox, signatureImage } from './signature.js';
 
 const FONT = 'Times New Roman';
 const thin = { style: 'thin', color: { argb: 'FF000000' } };
@@ -49,8 +50,8 @@ function addWeekSheet(wb, info, week, rows, orientation) {
       orientation: landscape ? 'landscape' : 'portrait',
       fitToPage: true,
       fitToWidth: 1,
-      // Dọc: cả tuần vừa 1 trang như trước. Ngang: vừa 1 trang theo bề ngang, chiều dọc tự sang trang.
-      fitToHeight: landscape ? 0 : 1,
+      // Cả tuần (kể cả khối chữ ký cuối trang) vừa đúng 1 trang, dọc hay ngang đều vậy.
+      fitToHeight: 1,
       horizontalCentered: true,
       margins: { left: 0.5, right: 0.4, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 },
     },
@@ -113,9 +114,73 @@ function addWeekSheet(wb, info, week, rows, orientation) {
     if (!cell.alignment) cell.alignment = { vertical: 'middle', wrapText: true };
   });
 
-  ws.pageSetup.printArea = `A1:G${r - 1}`;
+  const lastRow = addSignatureBlock(wb, ws, info, r, columns);
+  ws.pageSetup.printArea = `A1:G${lastRow}`;
   ws.pageSetup.printTitlesRow = `${headRow}:${headRow}`;
   return firstBody;
+}
+
+// Khối chữ ký: GIÁO VIÊN gộp cột A–E, TỔ TRƯỞNG CHUYÊN MÔN gộp cột F–G.
+const SIGN_SPLIT = 5;
+const SIGN_ROW_PT = 54; // vùng ký ≈ 1,9 cm
+const SIGN_IMG_PX = { width: 227, height: 68 }; // tối đa 6 × 1,8 cm
+const EMU_PER_PX = 9525;
+const colPx = (w) => Math.floor(w * 7 + 5); // độ rộng cột (kí tự) → pixel, font mặc định Calibri 11
+
+/** Neo ảnh `box` (px) vào giữa vùng cột c1..c2 (1-based) của dòng `row`. */
+function centeredAnchor(columns, c1, c2, row, box) {
+  const widths = columns.slice(c1 - 1, c2).map((c) => colPx(c.width));
+  let left = Math.max(0, (widths.reduce((s, w) => s + w, 0) - box.width) / 2);
+  let col = c1 - 1;
+  for (const w of widths) {
+    if (left < w) break;
+    left -= w;
+    col += 1;
+  }
+  const top = Math.max(0, ((SIGN_ROW_PT * 4) / 3 - box.height) / 2);
+  return {
+    nativeCol: col,
+    nativeColOff: Math.round(left * EMU_PER_PX),
+    nativeRow: row - 1,
+    nativeRowOff: Math.round(top * EMU_PER_PX),
+  };
+}
+
+function addSignatureBlock(wb, ws, info, startRow, columns) {
+  const last = columns.length;
+  const sigs = info.signatures || {};
+  const parts = [
+    { title: 'GIÁO VIÊN', name: info.teacher, sig: sigs.teacher, c1: 1, c2: SIGN_SPLIT },
+    { title: 'TỔ TRƯỞNG CHUYÊN MÔN', name: info.leader, sig: sigs.leader, c1: SIGN_SPLIT + 1, c2: last },
+  ];
+  const r = startRow + 1; // chừa một dòng trống sau bảng
+  ws.getRow(startRow).height = 8;
+  const hasName = parts.some((p) => p.name?.trim());
+  const rows = [
+    { at: r, height: 18, text: (p) => p.title, font: { bold: true } },
+    { at: r + 1, height: 17, text: () => '(Ký, ghi rõ họ tên)', font: { italic: true } },
+    { at: r + 2, height: SIGN_ROW_PT, text: () => '' },
+    ...(hasName ? [{ at: r + 3, height: 18, text: (p) => p.name?.trim() || '', font: { bold: true } }] : []),
+  ];
+  for (const row of rows) {
+    ws.getRow(row.at).height = row.height;
+    for (const p of parts) {
+      ws.mergeCells(row.at, p.c1, row.at, p.c2);
+      const cell = ws.getCell(row.at, p.c1);
+      cell.value = row.text(p);
+      cell.font = { name: FONT, size: 12, ...row.font };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+    }
+  }
+  for (const p of parts) {
+    const img = signatureImage(p.sig);
+    if (!img) continue;
+    const blockPx = columns.slice(p.c1 - 1, p.c2).reduce((s, c) => s + colPx(c.width), 0);
+    const box = fitBox(img, Math.min(SIGN_IMG_PX.width, blockPx - 10), SIGN_IMG_PX.height);
+    const imageId = wb.addImage({ base64: img.dataUrl, extension: img.type === 'png' ? 'png' : 'jpeg' });
+    ws.addImage(imageId, { tl: centeredAnchor(columns, p.c1, p.c2, r + 2, box), ext: box, editAs: 'oneCell' });
+  }
+  return rows[rows.length - 1].at;
 }
 
 /**

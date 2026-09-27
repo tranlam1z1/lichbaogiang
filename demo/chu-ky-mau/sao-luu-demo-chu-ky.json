@@ -1,0 +1,449 @@
+{
+  "app": "lich-bao-giang",
+  "version": 1,
+  "savedAt": "2026-09-27T10:40:40.665Z",
+  "data": {
+    "version": 1,
+    "info": {
+      "agency": "UBND HUYỆN HOẰNG HÓA",
+      "school": "TRƯỜNG TIỂU HỌC HOẰNG HỢP",
+      "teacher": "Nguyễn Thị Gấm",
+      "leader": "Lê Thị Hồng Nhung",
+      "schoolYear": "2026 - 2027",
+      "grade": 4,
+      "className": "4A",
+      "signatures": {
+        "teacher": {
+          "enabled": true,
+          "image": "data:image/png;base64,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"
+        },
+        "leader": {
+          "enabled": true,
+          "image": "data:image/png;base64,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"
+        }
+      }
+    },
+    "timetable": {
+      "morningCount": 4,
+      "afternoonCount": 3,
+      "saturday": false,
+      "days": {
+        "2": {
+          "morning": [
+            "HĐTN",
+            "TOÁN",
+            "GDTC",
+            "MĨ THUẬT",
+            ""
+          ],
+          "afternoon": [
+            "TIN HỌC",
+            "GDTC",
+            "TIẾNG ANH",
+            "",
+            ""
+          ]
+        },
+        "3": {
+          "morning": [
+            "TIẾNG VIỆT",
+            "TIẾNG VIỆT",
+            "LS&ĐL",
+            "ĐẠO ĐỨC",
+            ""
+          ],
+          "afternoon": [
+            "TIẾNG VIỆT",
+            "KHOA HỌC",
+            "KHOA HỌC",
+            "",
+            ""
+          ]
+        },
+        "4": {
+          "morning": [
+            "TIẾNG ANH",
+            "TIẾNG ANH",
+            "MĨ THUẬT",
+            "ÂM NHẠC",
+            ""
+          ],
+          "afternoon": [
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
+        },
+        "5": {
+          "morning": [
+            "TIẾNG VIỆT",
+            "TIẾNG VIỆT",
+            "LS&ĐL",
+            "CÔNG NGHỆ",
+            ""
+          ],
+          "afternoon": [
+            "TOÁN",
+            "TOÁN",
+            "HĐTN",
+            "",
+            ""
+          ]
+        },
+        "6": {
+          "morning": [
+            "TOÁN",
+            "TOÁN",
+            "TIẾNG ANH",
+            "TIẾNG ANH",
+            ""
+          ],
+          "afternoon": [
+            "TIẾNG VIỆT",
+            "TIẾNG VIỆT",
+            "HĐTN",
+            "",
+            ""
+          ]
+        },
+        "7": {
+          "morning": [
+            "",
+            "",
+            "",
+            "",
+            ""
+          ],
+          "afternoon": [
+            "",
+            "",
+            "",
+            "",
+            ""
+          ]
+        }
+      }
+    },
+    "calendar": [
+      {
+        "id": "w1",
+        "num": 1,
+        "note": "",
+        "semester": "I",
+        "start": "2026-09-07",
+        "end": "2026-09-11"
+      },
+      {
+        "id": "w2",
+        "num": 2,
+        "note": "",
+        "semester": "I",
+        "start": "2026-09-14",
+        "end": "2026-09-18"
+      },
+      {
+        "id": "w3",
+        "num": 3,
+        "note": "",
+        "semester": "I",
+        "start": "2026-09-21",
+        "end": "2026-09-25"
+      },
+      {
+        "id": "w4",
+        "num": 4,
+        "note": "",
+        "semester": "I",
+        "start": "2026-09-28",
+        "end": "2026-10-02"
+      },
+      {
+        "id": "w5",
+        "num": 5,
+        "note": "",
+        "semester": "I",
+        "start": "2026-10-05",
+        "end": "2026-10-09"
+      },
+      {
+        "id": "w6",
+        "num": 6,
+        "note": "",
+        "semester": "I",
+        "start": "2026-10-12",
+        "end": "2026-10-16"
+      },
+      {
+        "id": "w7",
+        "num": 7,
+        "note": "",
+        "semester": "I",
+        "start": "2026-10-19",
+        "end": "2026-10-23"
+      },
+      {
+        "id": "w8",
+        "num": 8,
+        "note": "",
+        "semester": "I",
+        "start": "2026-10-26",
+        "end": "2026-10-30"
+      },
+      {
+        "id": "w9",
+        "num": 9,
+        "note": "",
+        "semester": "I",
+        "start": "2026-11-02",
+        "end": "2026-11-06"
+      },
+      {
+        "id": "w10",
+        "num": 10,
+        "note": "",
+        "semester": "I",
+        "start": "2026-11-09",
+        "end": "2026-11-13"
+      },
+      {
+        "id": "w11",
+        "num": 11,
+        "note": "",
+        "semester": "I",
+        "start": "2026-11-16",
+        "end": "2026-11-20"
+      },
+      {
+        "id": "w12",
+        "num": 12,
+        "note": "",
+        "semester": "I",
+        "start": "2026-11-23",
+        "end": "2026-11-27"
+      },
+      {
+        "id": "w13",
+        "num": 13,
+        "note": "",
+        "semester": "I",
+        "start": "2026-11-30",
+        "end": "2026-12-04"
+      },
+      {
+        "id": "w14",
+        "num": 14,
+        "note": "",
+        "semester": "I",
+        "start": "2026-12-07",
+        "end": "2026-12-11"
+      },
+      {
+        "id": "w15",
+        "num": 15,
+        "note": "",
+        "semester": "I",
+        "start": "2026-12-14",
+        "end": "2026-12-18"
+      },
+      {
+        "id": "w16",
+        "num": 16,
+        "note": "",
+        "semester": "I",
+        "start": "2026-12-21",
+        "end": "2026-12-25"
+      },
+      {
+        "id": "w17",
+        "num": 17,
+        "note": "",
+        "semester": "I",
+        "start": "2026-12-28",
+        "end": "2027-01-01"
+      },
+      {
+        "id": "w18",
+        "num": 18,
+        "note": "",
+        "semester": "I",
+        "start": "2027-01-04",
+        "end": "2027-01-08"
+      },
+      {
+        "id": "w19",
+        "num": null,
+        "note": "",
+        "semester": "I",
+        "start": "2027-01-11",
+        "end": "2027-01-15"
+      },
+      {
+        "id": "w20",
+        "num": 19,
+        "note": "",
+        "semester": "II",
+        "start": "2027-01-18",
+        "end": "2027-01-22"
+      },
+      {
+        "id": "w21",
+        "num": 20,
+        "note": "",
+        "semester": "II",
+        "start": "2027-01-25",
+        "end": "2027-01-29"
+      },
+      {
+        "id": "w22",
+        "num": 21,
+        "note": "",
+        "semester": "II",
+        "start": "2027-02-01",
+        "end": "2027-02-05"
+      },
+      {
+        "id": "w23",
+        "num": 22,
+        "note": "",
+        "semester": "II",
+        "start": "2027-02-08",
+        "end": "2027-02-12"
+      },
+      {
+        "id": "w24",
+        "num": 23,
+        "note": "",
+        "semester": "II",
+        "start": "2027-02-15",
+        "end": "2027-02-19"
+      },
+      {
+        "id": "w25",
+        "num": null,
+        "note": "Nghỉ tết",
+        "semester": "II",
+        "start": "2027-02-22",
+        "end": "2027-02-26"
+      },
+      {
+        "id": "w26",
+        "num": null,
+        "note": "Nghỉ tết",
+        "semester": "II",
+        "start": "2027-03-01",
+        "end": "2027-03-05"
+      },
+      {
+        "id": "w27",
+        "num": 24,
+        "note": "",
+        "semester": "II",
+        "start": "2027-03-08",
+        "end": "2027-03-12"
+      },
+      {
+        "id": "w28",
+        "num": 25,
+        "note": "",
+        "semester": "II",
+        "start": "2027-03-15",
+        "end": "2027-03-19"
+      },
+      {
+        "id": "w29",
+        "num": 26,
+        "note": "",
+        "semester": "II",
+        "start": "2027-03-22",
+        "end": "2027-03-26"
+      },
+      {
+        "id": "w30",
+        "num": 27,
+        "note": "",
+        "semester": "II",
+        "start": "2027-03-29",
+        "end": "2027-04-02"
+      },
+      {
+        "id": "w31",
+        "num": 28,
+        "note": "",
+        "semester": "II",
+        "start": "2027-04-05",
+        "end": "2027-04-09"
+      },
+      {
+        "id": "w32",
+        "num": 29,
+        "note": "",
+        "semester": "II",
+        "start": "2027-04-12",
+        "end": "2027-04-16"
+      },
+      {
+        "id": "w33",
+        "num": 30,
+        "note": "",
+        "semester": "II",
+        "start": "2027-04-19",
+        "end": "2027-04-23"
+      },
+      {
+        "id": "w34",
+        "num": 31,
+        "note": "",
+        "semester": "II",
+        "start": "2027-04-26",
+        "end": "2027-04-30"
+      },
+      {
+        "id": "w35",
+        "num": 32,
+        "note": "",
+        "semester": "II",
+        "start": "2027-05-03",
+        "end": "2027-05-07"
+      },
+      {
+        "id": "w36",
+        "num": 33,
+        "note": "",
+        "semester": "II",
+        "start": "2027-05-10",
+        "end": "2027-05-12"
+      },
+      {
+        "id": "w37",
+        "num": 34,
+        "note": "",
+        "semester": "II",
+        "start": "2027-05-13",
+        "end": "2027-05-15"
+      },
+      {
+        "id": "w38",
+        "num": 35,
+        "note": "",
+        "semester": "II",
+        "start": "2027-05-17",
+        "end": "2027-05-21"
+      },
+      {
+        "id": "w39",
+        "num": null,
+        "note": "",
+        "semester": "II",
+        "start": "2027-05-24",
+        "end": "2027-05-28"
+      }
+    ],
+    "lessonOverrides": {},
+    "ppctOverrides": {},
+    "checkRules": {},
+    "notTaught": [],
+    "selectedWeekId": "w3"
+  }
+}
