@@ -33,8 +33,22 @@ model User {
   topUps            TopUpRequest[]     @relation("UserTopUps")
   reviewedTopUps    TopUpRequest[]     @relation("ReviewedTopUps")
   resolvedBankTxs   BankTransaction[]  @relation("ResolvedBankTxs")
+  plan              Plan?
 
   @@index([createdAt])
+}
+
+/// Kế hoạch giảng dạy (toàn bộ dữ liệu soạn trên web) của một tài khoản.
+/// Bảng riêng để sau này bỏ @unique ở userId là mở rộng được thành nhiều lớp mỗi tài khoản.
+model Plan {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  data      String // JSON text
+  // Khóa lạc quan: mỗi lần lưu tăng 1; client gửi baseVersion, lệch thì trả 409.
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 }
 
 /// Cài đặt hệ thống dạng khóa – giá trị (số lượt miễn phí, điểm mỗi lần xuất, tỷ lệ nạp…).

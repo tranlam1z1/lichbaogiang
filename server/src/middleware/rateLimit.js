@@ -47,3 +47,13 @@ export const registerLimiter = rateLimit({
   keyGenerator: (req) => `reg:${ipKeyGenerator(req.ip)}`,
   message: { message: 'Bạn đã tạo quá nhiều tài khoản. Vui lòng thử lại sau 1 giờ.', code: 'TOO_MANY_REGISTRATIONS' },
 });
+
+/** Giới hạn số lần lưu kế hoạch của một tài khoản (tự động lưu ~1,5 giây một lần là tối đa ~40 lần/phút). */
+export const planWriteLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 120,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  keyGenerator: (req) => `plan:${req.user.id}`,
+  message: { message: 'Lưu quá nhiều lần trong thời gian ngắn. Ứng dụng sẽ tự lưu lại sau ít phút.', code: 'TOO_MANY_SAVES' },
+});

@@ -10,6 +10,7 @@ import { errorHandler, notFound, requireJsonForWrites } from './middleware/error
 import { adminRouter } from './routes/admin/index.js';
 import { authRouter } from './routes/auth.js';
 import { exportsRouter } from './routes/exports.js';
+import { planRouter } from './routes/plan.js';
 import { settingsRouter } from './routes/settings.js';
 import { topupsRouter } from './routes/topups.js';
 import { webhooksRouter } from './routes/webhooks.js';
@@ -37,6 +38,8 @@ export function createApp() {
   if (config.clientOrigins.length) {
     app.use('/api', cors({ origin: config.clientOrigins, credentials: true }));
   }
+  // Kế hoạch giảng dạy lớn hơn các request khác: nhận tới 1 MB, route tự báo lỗi rõ ràng khi vượt 512 KB.
+  app.use('/api/plan', express.json({ limit: '1mb' }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
@@ -47,6 +50,7 @@ export function createApp() {
   api.use('/auth', authRouter);
   api.use('/settings', settingsRouter);
   api.use('/exports', exportsRouter);
+  api.use('/plan', planRouter);
   api.use('/topups', topupsRouter);
   api.use('/admin', adminRouter);
   api.use('/webhooks', webhooksRouter);

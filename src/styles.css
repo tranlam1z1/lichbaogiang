@@ -1140,6 +1140,90 @@ td.is-unknown .tkb-input {
   white-space: nowrap;
 }
 
+/* ---------- Trạng thái lưu kế hoạch ---------- */
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.save-status + .userbar {
+  margin-left: 0;
+}
+
+.save-status.is-saving {
+  background: var(--violet-soft);
+  color: var(--violet-deep);
+}
+
+.save-status.is-offline {
+  background: var(--yellow);
+  color: #5c4700;
+}
+
+.save-status.is-error {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.save-icon {
+  font-weight: 700;
+}
+
+.save-status .save-action {
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.save-short {
+  display: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Hộp thoại nhiều lựa chọn (dữ liệu cũ, xung đột, đăng xuất) */
+.choice-dialog {
+  width: min(520px, 100%);
+}
+
+.choice-body {
+  margin: 10px 0 18px;
+}
+
+.modal .choice-body p {
+  margin: 0 0 8px;
+}
+
+.modal .choice-body .choice-plan {
+  color: var(--ink);
+}
+
+.choice-list {
+  margin: 0 0 8px;
+  padding-left: 20px;
+  color: var(--muted);
+}
+
+.choice-dialog .modal-actions {
+  flex-wrap: wrap;
+}
+
 .auth-page {
   display: grid;
   place-items: center;
@@ -1855,6 +1939,18 @@ tr.is-clickable:hover td {
     justify-content: flex-start;
   }
 
+  .save-long {
+    display: none;
+  }
+
+  .save-short {
+    display: inline;
+  }
+
+  .choice-dialog .modal-actions .btn {
+    flex: 1 1 auto;
+  }
+
   .transfer {
     grid-template-columns: 1fr;
     justify-items: center;
@@ -1868,5 +1964,221 @@ tr.is-clickable:hover td {
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Nút hỗ trợ Zalo ---------- */
+/* Nằm dưới hộp thoại (z-index 50) và toast (60), trên nội dung trang. */
+.zalo-support {
+  --zs-bg: var(--card);
+  --zs-ink: var(--ink);
+  --zs-muted: var(--muted);
+  --zs-line: var(--line);
+  --zs-accent: var(--violet);
+  --zs-accent-ink: #fff;
+  position: fixed;
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  color: var(--zs-ink);
+}
+
+/* Có toast đang hiện thì nhích lên để không che toast. */
+body:has(.imp-toast) .zalo-support {
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Chừa chỗ cuối trang để nút không che nội dung / nút cuối cùng. */
+.app:has(.zalo-support) .page {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+
+.zalo-fab {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--zs-accent);
+  color: var(--zs-accent-ink);
+  box-shadow: 0 6px 18px rgba(34, 28, 69, 0.28);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.zalo-fab.has-logo {
+  background: var(--zs-bg);
+  overflow: visible;
+}
+
+.zalo-fab img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.zalo-fab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(34, 28, 69, 0.32);
+}
+
+.zalo-fab:focus-visible {
+  outline: 3px solid var(--zs-accent);
+  outline-offset: 3px;
+}
+
+.zalo-tip {
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(4px, -50%);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.zalo-fab:hover .zalo-tip,
+.zalo-fab:focus-visible .zalo-tip {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+.zalo-fab[aria-expanded='true'] .zalo-tip {
+  display: none;
+}
+
+.zalo-panel {
+  display: grid;
+  gap: 12px;
+  width: min(320px, calc(100vw - 32px));
+  max-height: calc(100vh - 110px);
+  max-height: calc(100dvh - 110px - env(safe-area-inset-bottom, 0px) - env(safe-area-inset-top, 0px));
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid var(--zs-line);
+  border-radius: 12px;
+  background: var(--zs-bg);
+  color: var(--zs-ink);
+  box-shadow: 0 16px 40px rgba(34, 28, 69, 0.25);
+}
+
+.zalo-panel p {
+  margin: 0;
+}
+
+.zalo-title {
+  font-weight: 600;
+}
+
+.zalo-open {
+  text-decoration: none;
+}
+
+.zalo-qr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--zs-muted);
+}
+
+/* Mã QR luôn nền trắng để điện thoại quét được, kể cả ở chế độ tối. */
+.zalo-qr svg {
+  flex: none;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.zalo-phone {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.zalo-hours,
+.zalo-note {
+  font-size: 0.85rem;
+  color: var(--zs-muted);
+}
+
+.zalo-note {
+  margin-top: -6px !important;
+  font-size: 0.78rem;
+}
+
+.zalo-panel .btn:not(.btn-primary) {
+  background: var(--zs-bg);
+  color: var(--zs-ink);
+  border-color: var(--zs-line);
+}
+
+.zalo-panel .btn:not(.btn-primary):hover {
+  border-color: var(--zs-accent);
+  color: var(--zs-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .zalo-support {
+    --zs-bg: #1f1b36;
+    --zs-ink: #ece9fb;
+    --zs-muted: #a9a3c9;
+    --zs-line: #3b3560;
+    --zs-accent: #8f7ce6;
+    --zs-accent-ink: #14112a;
+  }
+
+  .zalo-panel .btn-primary {
+    background: var(--zs-accent);
+    border-color: var(--zs-accent);
+    color: var(--zs-accent-ink);
+  }
+
+  .zalo-panel .btn-primary:hover {
+    background: #a695f0;
+    color: var(--zs-accent-ink);
+  }
+
+  .zalo-panel,
+  .zalo-fab {
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (max-width: 720px) {
+  .zalo-support {
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+
+  body:has(.imp-toast) .zalo-support {
+    bottom: calc(110px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .zalo-fab {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zalo-fab,
+  .zalo-tip {
+    transition: none;
   }
 }

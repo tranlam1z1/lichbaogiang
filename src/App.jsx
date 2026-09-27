@@ -5,6 +5,8 @@ import WeekCalendar from './components/WeekCalendar.jsx';
 import PpctTable from './components/PpctTable.jsx';
 import ClassInfo from './components/ClassInfo.jsx';
 import UserBar from './components/UserBar.jsx';
+import SaveStatus from './components/SaveStatus.jsx';
+import ZaloSupport from './components/ZaloSupport.jsx';
 
 const TABS = [
   { id: 'lessons', label: 'Báo giảng', short: 'Báo giảng', icon: '✎' },
@@ -15,7 +17,7 @@ const TABS = [
 ];
 
 export default function App() {
-  const { state, dispatch, saveError } = useApp();
+  const { state, dispatch } = useApp();
   const { info, tab } = state;
 
   return (
@@ -30,6 +32,7 @@ export default function App() {
                 {info.school} · Năm học {info.schoolYear}
               </p>
             </div>
+            <SaveStatus />
             <UserBar />
           </div>
           <nav className="tabs" aria-label="Các mục">
@@ -50,8 +53,6 @@ export default function App() {
         </div>
       </header>
 
-      {saveError && <div className="banner banner-error" role="alert">{saveError}</div>}
-
       <main className="page">
         {tab === 'lessons' && <LessonsPage />}
         {tab === 'timetable' && <TimetableEditor />}
@@ -59,6 +60,8 @@ export default function App() {
         {tab === 'ppct' && <PpctTable />}
         {tab === 'info' && <ClassInfo />}
       </main>
+
+      <ZaloSupport />
     </div>
   );
 }

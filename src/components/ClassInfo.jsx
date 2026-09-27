@@ -64,13 +64,13 @@ export default function ClassInfo() {
             <input value={info.className || ''} placeholder="4A" onChange={set('className')} />
           </label>
         </div>
-        <p className="hint">Khối quyết định dùng PPCT lớp nào để tra tên bài. Mọi thay đổi được lưu tự động trong trình duyệt này.</p>
+        <p className="hint">Khối quyết định dùng PPCT lớp nào để tra tên bài. Mọi thay đổi được lưu tự động vào tài khoản của bạn.</p>
       </section>
 
       <section className="card">
         <h2>Sao lưu dữ liệu</h2>
         <p className="card-text">
-          Dữ liệu chỉ nằm trong trình duyệt của máy này. Nên tải file sao lưu định kì, hoặc để chuyển sang máy khác.
+          Kế hoạch được lưu vào tài khoản, đăng nhập ở máy khác vẫn thấy. Có thể tải thêm file sao lưu để cất giữ riêng.
         </p>
         <div className="button-row">
           <button type="button" className="btn btn-primary" onClick={backup}>Tải file sao lưu (.json)</button>

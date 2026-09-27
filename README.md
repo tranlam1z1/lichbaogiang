@@ -104,6 +104,8 @@ Dữ liệu kế hoạch (TKB, lịch tuần, chỗ sửa tên bài…) vẫn **
 | POST | `/api/exports/:id/complete` | Báo đã tạo file thành công |
 | POST | `/api/exports/:id/refund` | Tạo file lỗi → hoàn lại lượt/điểm (chỉ một lần, trong 15 phút) |
 | GET | `/api/exports` | Lịch sử xuất file của mình (`?page=`) |
+| GET | `/api/plan` | Kế hoạch giảng dạy của mình → `{ data, version, updatedAt }` (chưa có: `data: null, version: 0`) |
+| PUT | `/api/plan` | `{ data, baseVersion }` → lưu nếu `baseVersion` khớp (0 = tạo mới), lệch thì 409 `PLAN_CONFLICT`; tối đa 512 KB |
 | POST | `/api/topups` | `{ amountVnd }` → tạo yêu cầu nạp, trả mã chuyển khoản và link QR |
 | GET | `/api/topups` | Lịch sử nạp của mình (`?page=&status=PENDING`) |
 | POST | `/api/topups/:id/cancel` | Hủy yêu cầu đang chờ duyệt |
@@ -196,6 +198,16 @@ API quản trị (tất cả yêu cầu role ADMIN):
 | Phân phối chương trình | Lọc theo khối, môn, tuần, tìm tên bài (không cần gõ dấu). Sửa tên bài thì mọi tuần đổi theo; có nút trả về bản gốc. |
 | Thông tin lớp | Cơ quan chủ quản, trường, GVCN, năm học, khối, tên lớp; sao lưu / khôi phục .json; đặt lại như file gốc (có xác nhận). |
 
+### Nút hỗ trợ qua Zalo
+
+Nút tròn ở góc dưới bên phải trang lập kế hoạch. Bấm vào thì mở ô gồm nút *Mở Zalo* (`https://zalo.me/<số>`), mã QR của đường dẫn đó, số điện thoại kèm nút *Sao chép*, giờ hỗ trợ và nút *Sao chép thông tin lỗi*. Nút này chép tuần đang xem, thẻ đang mở, trình duyệt và thiết bị để giáo viên dán vào tin nhắn, không chép dữ liệu kế hoạch hay thông tin cá nhân.
+
+- Cấu hình trong `.env` ở thư mục gốc (xem `.env.example`). Các biến được nhúng vào lúc `npm run build`, nên đổi xong phải build lại. Trên Render thì điền vào mục *Environment* của dịch vụ.
+  - `VITE_ZALO_PHONE`: số Zalo nhận tin, ví dụ `0912345678`. **Để trống thì không hiện nút.**
+  - `VITE_SUPPORT_HOURS`: giờ hỗ trợ, ví dụ `7:00 – 21:00 hằng ngày`. Để trống thì không hiện dòng này.
+- Logo: đặt file logo Zalo chính thức tại `src/assets/zalo-logo.svg` (hoặc `.png`) rồi build lại. Chưa có file thì nút dùng biểu tượng bong bóng chat.
+- Mã nguồn: `src/components/ZaloSupport.jsx`, kiểu dáng ở cuối `src/styles.css`.
+
 ## Cách tra tên bài (giống công thức Excel)
 
 1. Duyệt thời khóa biểu theo thứ tự thứ 2 → thứ 6 (hoặc thứ 7), sáng rồi chiều.
@@ -232,12 +244,12 @@ src/
   lib/exportCharge.js  authorize → tạo file → complete / refund
 shared/validation.js       luật kiểm tra form và số tiền nạp, dùng chung frontend + backend
 server/
-  prisma/schema.prisma     User, Setting, PointTransaction, ExportLog, TopUpRequest, BankTransaction; migrations/ lưu lịch sử thay đổi
+  prisma/schema.prisma     User, Plan, Setting, PointTransaction, ExportLog, TopUpRequest, BankTransaction; migrations/ lưu lịch sử thay đổi
   src/
     config.js              đọc và kiểm tra .env
     app.js, index.js       khởi tạo Express
     middleware/            auth (đọc phiên), rateLimit, errors (lỗi JSON, chống CSRF)
-    routes/                auth, settings, exports, topups, webhooks (SePay)
+    routes/                auth, settings, plan, exports, topups, webhooks (SePay)
     routes/admin/          index (tổng quan, nạp, đối soát ngân hàng, giao dịch, xuất file, cài đặt), users, shared
     services/points.js     MỌI thay đổi điểm/lượt: transaction + ghi sổ cái
     services/bankTransfers.js  đối soát tiền vào (SePay) với yêu cầu nạp

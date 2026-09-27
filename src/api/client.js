@@ -20,14 +20,20 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
 
-async function request(method, path, body) {
+// Trình duyệt chỉ cho request keepalive gửi tối đa 64 KB; lớn hơn thì gửi như thường.
+const KEEPALIVE_MAX_BYTES = 60 * 1024;
+
+/** opts.keepalive: request vẫn được gửi xong khi người dùng đóng tab (dùng lúc trang bị ẩn). */
+async function request(method, path, body, { keepalive = false } = {}) {
   let res;
+  const payload = method !== 'GET' ? JSON.stringify(body ?? {}) : undefined;
   try {
     res = await fetch(BASE + path, {
       method,
       credentials: 'include',
       headers: { Accept: 'application/json', ...(method !== 'GET' && { 'Content-Type': 'application/json' }) },
-      body: method !== 'GET' ? JSON.stringify(body ?? {}) : undefined,
+      body: payload,
+      keepalive: keepalive && new TextEncoder().encode(payload ?? '').length < KEEPALIVE_MAX_BYTES,
     });
   } catch {
     throw new ApiError(0, { message: 'Không kết nối được máy chủ. Kiểm tra mạng hoặc thử lại sau.', code: 'NETWORK' });
@@ -45,7 +51,7 @@ async function request(method, path, body) {
 export const api = {
   get: (path) => request('GET', path),
   post: (path, body) => request('POST', path, body),
-  put: (path, body) => request('PUT', path, body),
+  put: (path, body, opts) => request('PUT', path, body, opts),
   patch: (path, body) => request('PATCH', path, body),
   delete: (path, body) => request('DELETE', path, body),
 };
