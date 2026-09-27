@@ -34,11 +34,11 @@ test('Tuần 1 khớp sheet LỊCH BÁO GIẢNG trong Excel', () => {
       assert.equal(r.title, '');
     } else {
       assert.equal(String(r.ppct), String(x.ppct), `PPCT dòng ${x.row}`);
-      if (x.subject === 'HĐTN') {
-        // PPCT HĐTN lớp 4 đã được cập nhật theo danh mục mới, khác tên bài trong file Excel cũ.
-        const entry = ppctData[grade].find((e) => e[0] === 'HĐTN' && String(e[3]) === String(x.ppct));
+      if (x.subject === 'HĐTN' || x.subject === 'MĨ THUẬT') {
+        // PPCT HĐTN lớp 4 và Mĩ thuật (Kết nối tri thức) đã được cập nhật theo danh mục mới, khác tên bài trong file Excel cũ.
+        const entry = ppctData[grade].find((e) => e[0] === x.subject && String(e[3]) === String(x.ppct));
         assert.equal(r.title, entry[4], `tên bài dòng ${x.row}`);
-        diffs.push(`dòng ${x.row} HĐTN: PPCT mới → "${r.title}"`);
+        diffs.push(`dòng ${x.row} ${x.subject}: PPCT mới → "${r.title}"`);
       } else if (x.title === '' && r.title) {
         // Ô tên bài trong Excel đã bị xóa công thức (để trống) dù PPCT có tên bài.
         diffs.push(`dòng ${x.row} ${x.subject}: Excel để trống (mất công thức) → app: "${r.title}"`);
