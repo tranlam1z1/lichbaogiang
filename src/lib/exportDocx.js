@@ -1,9 +1,10 @@
-// Xuất Kế hoạch giảng dạy ra Word (.docx): A4 đứng, Times New Roman, mỗi tuần một trang.
+// Xuất Kế hoạch giảng dạy ra Word (.docx): A4 đứng hoặc ngang, Times New Roman, mỗi tuần một trang.
 import {
   AlignmentType,
   BorderStyle,
   Document,
   Packer,
+  PageOrientation,
   Paragraph,
   ShadingType,
   Table,
@@ -33,6 +34,28 @@ export const DOCX_COLUMNS = [
   { key: 'title', title: 'Tên bài dạy', cm: 7.8 },
   { key: 'equipment', title: 'Đồ dùng dạy học', cm: 2.6 },
 ];
+
+// A4 ngang: rộng 16838, cao 11906 (twip). Bề ngang tăng thêm được chia cho các cột:
+// "Tên bài dạy" nhận phần lớn nhất, các cột còn lại giãn theo tỉ lệ độ rộng cũ.
+const LANDSCAPE_PAGE = { width: 16838, height: 11906 };
+const TITLE_SHARE = 0.6;
+
+function landscapeColumns() {
+  const total = DOCX_COLUMNS.reduce((s, c) => s + c.cm, 0);
+  const extra = (LANDSCAPE_PAGE.width - MARGIN.left - MARGIN.right) / CM - total;
+  const others = total - DOCX_COLUMNS.find((c) => c.key === 'title').cm;
+  return DOCX_COLUMNS.map((c) => ({
+    ...c,
+    cm: c.key === 'title' ? c.cm + extra * TITLE_SHARE : c.cm + (extra * (1 - TITLE_SHARE) * c.cm) / others,
+  }));
+}
+
+/** Khổ giấy và độ rộng cột theo hướng giấy ('portrait' | 'landscape'). */
+function layoutFor(orientation) {
+  return orientation === 'landscape'
+    ? { page: LANDSCAPE_PAGE, columns: landscapeColumns(), landscape: true }
+    : { page: PAGE, columns: DOCX_COLUMNS, landscape: false };
+}
 
 const CELL_PAD_TW = 20; // lề trong ô (twip) trên/dưới
 const PT_PER_TW = 1 / 20;
@@ -65,9 +88,10 @@ function linesFor(text, cm, pt, em = 0.45) {
  * Chọn cỡ chữ lớn nhất (12 → 7pt) để cả tuần vừa đúng một trang A4.
  * Chiều cao ước lượng theo đo đạc thực tế trên Word/LibreOffice với Times New Roman.
  */
-export function fitWeek(rows) {
-  const available = (PAGE.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
-  const colCm = Object.fromEntries(DOCX_COLUMNS.map((c) => [c.key, c.cm]));
+export function fitWeek(rows, orientation = 'portrait') {
+  const { page, columns } = layoutFor(orientation);
+  const available = (page.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
+  const colCm = Object.fromEntries(columns.map((c) => [c.key, c.cm]));
   const headerH = 58; // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày…
   const pad = (CELL_PAD_TW * 2) * PT_PER_TW + 0.75;
   for (const pt of [12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.5, 7]) {
@@ -115,12 +139,12 @@ function cell(text, col, opts = {}) {
   });
 }
 
-function weekTable(rows, pt) {
-  const C = Object.fromEntries(DOCX_COLUMNS.map((c) => [c.key, c]));
+function weekTable(rows, pt, columns) {
+  const C = Object.fromEntries(columns.map((c) => [c.key, c]));
   const header = new TableRow({
     tableHeader: true,
     cantSplit: true,
-    children: DOCX_COLUMNS.map((c) => cell(c.title, c, { bold: true, fill: '92D050', pt: Math.min(pt + 0.5, 10), align: AlignmentType.CENTER })),
+    children: columns.map((c) => cell(c.title, c, { bold: true, fill: '92D050', pt: Math.min(pt + 0.5, 10), align: AlignmentType.CENTER })),
   });
   const body = rows.map((r) => {
     const dayMerge = r.dayRowSpan > 0 ? VerticalMergeType.RESTART : VerticalMergeType.CONTINUE;
@@ -140,8 +164,8 @@ function weekTable(rows, pt) {
     });
   });
   return new Table({
-    width: { size: Math.round(DOCX_COLUMNS.reduce((s, c) => s + c.cm, 0) * CM), type: WidthType.DXA },
-    columnWidths: DOCX_COLUMNS.map((c) => Math.round(c.cm * CM)),
+    width: { size: Math.round(columns.reduce((s, c) => s + c.cm, 0) * CM), type: WidthType.DXA },
+    columnWidths: columns.map((c) => Math.round(c.cm * CM)),
     layout: TableLayoutType.FIXED,
     rows: [header, ...body],
   });
@@ -155,18 +179,27 @@ function headerBlock(info, week) {
   ];
 }
 
-/** Tạo đối tượng Document từ dữ liệu các tuần (buildExportWeeks). */
-export function buildDocx(weeks, info, { forcePt } = {}) {
+/**
+ * Tạo đối tượng Document từ dữ liệu các tuần (buildExportWeeks).
+ * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
+ */
+export function buildDocx(weeks, info, { forcePt, orientation = 'portrait' } = {}) {
+  const { page, columns, landscape } = layoutFor(orientation);
+  // Khổ ngang: thư viện docx tự đổi chỗ rộng/cao khi ghi w:pgSz (w:w=16838, w:h=11906, w:orient="landscape"),
+  // nên ở đây truyền kích thước theo chiều dọc.
+  const pageSize = landscape
+    ? { width: page.height, height: page.width, orientation: PageOrientation.LANDSCAPE }
+    : { width: page.width, height: page.height };
   const sections = weeks.map(({ week, rows }) => {
-    const bodyPt = forcePt || fitWeek(rows).bodyPt;
+    const bodyPt = forcePt || fitWeek(rows, orientation).bodyPt;
     return {
       properties: {
         page: {
-          size: { width: PAGE.width, height: PAGE.height },
+          size: pageSize,
           margin: { ...MARGIN, header: 300, footer: 300 },
         },
       },
-      children: [...headerBlock(info, week), weekTable(rows, bodyPt)],
+      children: [...headerBlock(info, week), weekTable(rows, bodyPt, columns)],
     };
   });
   return new Document({

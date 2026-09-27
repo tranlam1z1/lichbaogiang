@@ -40,6 +40,21 @@ export function rangeLabel(range, weeks) {
   return `tuan-${weeks[0].num}-${weeks[weeks.length - 1].num}`;
 }
 
+/**
+ * Tên file khi xuất (chưa có đuôi), dạng "KHBD 4A TUẦN 3".
+ * Nhiều tuần: "KHBD 4A TUẦN 3-5"; học kì / cả năm: "KHBD 4A HỌC KÌ I", "KHBD 4A CẢ NĂM".
+ */
+export function exportFileName(className, range, weeks) {
+  const cls = String(className || '').replace(/[\\/:*?"<>|]/g, '').trim().replace(/\s+/g, ' ').toUpperCase();
+  let scope = '';
+  if (range.type === 'sem1') scope = 'HỌC KÌ I';
+  else if (range.type === 'sem2') scope = 'HỌC KÌ II';
+  else if (range.type === 'year') scope = 'CẢ NĂM';
+  else if (weeks.length === 1) scope = `TUẦN ${weeks[0].num}`;
+  else if (weeks.length > 1) scope = `TUẦN ${weeks[0].num}-${weeks[weeks.length - 1].num}`;
+  return ['KHBD', cls, scope].filter(Boolean).join(' ');
+}
+
 /** Dữ liệu từng tuần đã dựng sẵn cho Word/Excel. */
 export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides, lessonOverrides }) {
   return weeks.map((week) => {

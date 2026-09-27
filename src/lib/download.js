@@ -3,13 +3,13 @@ import { saveAs } from 'file-saver';
 import { buildDocx, docxToBlob } from './exportDocx.js';
 import { buildWorkbook, workbookToBlob } from './exportXlsx.js';
 
-export async function downloadDocx(weeks, info, filename) {
-  const blob = await docxToBlob(buildDocx(weeks, info));
+export async function downloadDocx(weeks, info, filename, { orientation } = {}) {
+  const blob = await docxToBlob(buildDocx(weeks, info, { orientation }));
   saveAs(blob, filename);
 }
 
-export async function downloadXlsx(weeks, info, filename) {
-  const blob = await workbookToBlob(buildWorkbook(weeks, info));
+export async function downloadXlsx(weeks, info, filename, { orientation } = {}) {
+  const blob = await workbookToBlob(buildWorkbook(weeks, info, { orientation }));
   saveAs(blob, filename);
 }
 

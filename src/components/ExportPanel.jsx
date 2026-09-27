@@ -4,9 +4,10 @@ import { useApp } from '../state/AppContext.jsx';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { ApiError } from '../api/client.js';
 import { runChargedExport } from '../lib/exportCharge.js';
-import { RANGE_OPTIONS, buildExportWeeks, rangeLabel, weeksInRange } from '../lib/range.js';
+import { RANGE_OPTIONS, buildExportWeeks, exportFileName, rangeLabel, weeksInRange } from '../lib/range.js';
 import { formatVnd } from '../../shared/validation.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
+import OrientationDialog, { loadOrientation } from './OrientationDialog.jsx';
 
 const KIND = {
   docx: { fileType: 'DOCX', label: 'Word' },
@@ -21,8 +22,10 @@ export default function ExportPanel({ currentWeek }) {
   const [range, setRange] = useState({ type: 'current', from: 1, to: 35 });
   const [busy, setBusy] = useState(null);
   const [message, setMessage] = useState(null);
-  // { type: 'confirm', kind, cost, points } | { type: 'insufficient', cost, points }
+  // { type: 'orientation', kind } | { type: 'confirm', kind, cost, points } | { type: 'insufficient', cost, points }
   const [dialog, setDialog] = useState(null);
+  // Hướng giấy của lần xuất đang làm ('portrait' | 'landscape').
+  const [orientation, setOrientation] = useState(loadOrientation);
 
   const weeks = useMemo(
     () => weeksInRange(state.calendar, range, currentWeek?.id),
@@ -30,14 +33,20 @@ export default function ExportPanel({ currentWeek }) {
   );
   const cost = settings?.pointsPerExport ?? 0;
 
-  /** Bấm nút tải: quyết định dùng lượt miễn phí, hỏi xác nhận trừ điểm, hay báo thiếu điểm. */
+  /** Bấm nút tải: hỏi hướng giấy trước. */
   const request = (kind) => {
     if (!weeks.length) {
       setMessage({ tone: 'error', text: 'Phạm vi đã chọn không có tuần học nào.' });
       return;
     }
+    setDialog({ type: 'orientation', kind });
+  };
+
+  /** Đã chọn hướng giấy: quyết định dùng lượt miễn phí, hỏi xác nhận trừ điểm, hay báo thiếu điểm. */
+  const proceed = (kind, chosen) => {
+    setOrientation(chosen);
     if (user.freeExportsLeft > 0 || cost === 0) {
-      run(kind, 0);
+      run(kind, 0, chosen);
     } else if (user.points < cost) {
       setDialog({ type: 'insufficient', cost, points: user.points });
     } else {
@@ -45,7 +54,7 @@ export default function ExportPanel({ currentWeek }) {
     }
   };
 
-  const run = async (kind, confirmCost) => {
+  const run = async (kind, confirmCost, paper = orientation) => {
     setDialog(null);
     setBusy(kind);
     setMessage(null);
@@ -62,7 +71,7 @@ export default function ExportPanel({ currentWeek }) {
       });
       const { downloadDocx, downloadXlsx } = await import('../lib/download.js');
       const rangeText = rangeLabel(range, weeks);
-      const base = `Ke-hoach-giang-day_${(state.info.className || 'lop').replace(/\s+/g, '')}_${rangeText}`;
+      const base = exportFileName(state.info.className, range, weeks);
 
       const auth = await runChargedExport({
         fileType,
@@ -70,8 +79,8 @@ export default function ExportPanel({ currentWeek }) {
         description: `${rangeText} (${weeks.length} tuần)`,
         generate: () =>
           kind === 'docx'
-            ? downloadDocx(data, state.info, `${base}.docx`)
-            : downloadXlsx(data, state.info, `${base}.xlsx`),
+            ? downloadDocx(data, state.info, `${base}.docx`, { orientation: paper })
+            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation: paper }),
         onUser: updateBalances,
       });
       const charge =
@@ -147,6 +156,12 @@ export default function ExportPanel({ currentWeek }) {
       {priceNote && <p className="export-price">{priceNote}</p>}
       {message && <p className={`export-msg is-${message.tone}`} role="status">{message.text}</p>}
 
+      <OrientationDialog
+        open={dialog?.type === 'orientation'}
+        kindLabel={dialog?.kind ? KIND[dialog.kind].label : ''}
+        onSubmit={(chosen) => proceed(dialog.kind, chosen)}
+        onCancel={() => setDialog(null)}
+      />
       <ConfirmDialog
         open={dialog?.type === 'confirm'}
         title="Xác nhận trừ điểm"

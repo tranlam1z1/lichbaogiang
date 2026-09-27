@@ -1045,6 +1045,81 @@ td.is-unknown .tkb-input {
   gap: 10px;
 }
 
+/* Chọn hướng giấy khi xuất file */
+.orient-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.orient-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  color: var(--ink);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.orient-option:hover {
+  border-color: var(--line-strong);
+}
+
+.orient-option.is-active {
+  border-color: var(--violet);
+  background: var(--violet-soft);
+}
+
+.orient-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.orient-option:has(input:focus-visible) {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+}
+
+.orient-page {
+  display: block;
+  border: 2px solid var(--line-strong);
+  border-radius: 3px;
+  background: repeating-linear-gradient(to bottom, transparent 0 5px, var(--grid-strong) 5px 6px) content-box, #fff;
+  padding: 5px;
+}
+
+.orient-page-portrait {
+  width: 34px;
+  height: 48px;
+}
+
+.orient-page-landscape {
+  width: 48px;
+  height: 34px;
+  margin: 7px 0;
+}
+
+.orient-option.is-active .orient-page {
+  border-color: var(--violet);
+}
+
+.orient-text {
+  display: grid;
+  gap: 2px;
+}
+
+.orient-text small {
+  color: var(--muted);
+}
+
 /* ---------- Màn hình nhỏ ---------- */
 /* ---------- Tài khoản ---------- */
 .userbar {

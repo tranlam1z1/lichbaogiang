@@ -17,33 +17,47 @@ export const XLSX_COLUMNS = [
   { key: 'equipment', header: 'Đồ dùng dạy học', width: 18 },
 ];
 
+// Khổ ngang: bề ngang rộng hơn, cột "Tên bài dạy" được giãn nhiều nhất.
+const LANDSCAPE_WIDTHS = { day: 11, session: 8, period: 6, subject: 16, ppct: 8, title: 78, equipment: 26 };
+
+function columnsFor(orientation) {
+  return orientation === 'landscape'
+    ? XLSX_COLUMNS.map((c) => ({ ...c, width: LANDSCAPE_WIDTHS[c.key] }))
+    : XLSX_COLUMNS;
+}
+
 function styleRange(ws, r1, r2, c1, c2, fn) {
   for (let r = r1; r <= r2; r += 1) for (let c = c1; c <= c2; c += 1) fn(ws.getCell(r, c));
 }
 
-function estimateHeight(r) {
+/** Ước lượng chiều cao dòng; số kí tự mỗi dòng tỉ lệ với độ rộng cột (dọc: 52 và 19 kí tự). */
+function estimateHeight(r, widths) {
   const lines = Math.max(
-    Math.ceil((r.title || '').length / 52) || 1,
-    Math.ceil((r.equipment || '').length / 19) || 1,
+    Math.ceil((r.title || '').length / ((52 * widths.title) / 46)) || 1,
+    Math.ceil((r.equipment || '').length / ((19 * widths.equipment) / 18)) || 1,
   );
   return Math.max(16, lines * 14 + 2);
 }
 
-function addWeekSheet(wb, info, week, rows) {
+function addWeekSheet(wb, info, week, rows, orientation) {
+  const columns = columnsFor(orientation);
+  const widths = Object.fromEntries(columns.map((c) => [c.key, c.width]));
+  const landscape = orientation === 'landscape';
   const ws = wb.addWorksheet(`Tuần ${week.num}`, {
     pageSetup: {
       paperSize: 9, // A4
-      orientation: 'portrait',
+      orientation: landscape ? 'landscape' : 'portrait',
       fitToPage: true,
       fitToWidth: 1,
-      fitToHeight: 1,
+      // Dọc: cả tuần vừa 1 trang như trước. Ngang: vừa 1 trang theo bề ngang, chiều dọc tự sang trang.
+      fitToHeight: landscape ? 0 : 1,
       horizontalCentered: true,
       margins: { left: 0.5, right: 0.4, top: 0.4, bottom: 0.4, header: 0.2, footer: 0.2 },
     },
     views: [{ showGridLines: false }],
   });
-  ws.columns = XLSX_COLUMNS.map((c) => ({ key: c.key, width: c.width }));
-  const last = XLSX_COLUMNS.length;
+  ws.columns = columns.map((c) => ({ key: c.key, width: c.width }));
+  const last = columns.length;
 
   const put = (row, col, value, font = {}, alignment = {}) => {
     const cell = ws.getCell(row, col);
@@ -90,7 +104,7 @@ function addWeekSheet(wb, info, week, rows) {
     put(r, 5, row.ppct === '' || row.ppct == null ? '' : row.ppct, { size: 11 }, { horizontal: 'center' });
     put(r, 6, row.title, { size: 11 });
     put(r, 7, row.equipment, { size: 11 });
-    ws.getRow(r).height = estimateHeight(row);
+    ws.getRow(r).height = estimateHeight(row, widths);
     r += 1;
   }
   styleRange(ws, headRow, r - 1, 1, last, (cell) => {
@@ -104,12 +118,15 @@ function addWeekSheet(wb, info, week, rows) {
   return firstBody;
 }
 
-/** Tạo workbook từ dữ liệu các tuần (buildExportWeeks). */
-export function buildWorkbook(weeks, info) {
+/**
+ * Tạo workbook từ dữ liệu các tuần (buildExportWeeks).
+ * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
+ */
+export function buildWorkbook(weeks, info, { orientation = 'portrait' } = {}) {
   const wb = new ExcelJS.Workbook();
   wb.creator = info.teacher || 'Giáo viên';
   wb.created = new Date();
-  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows);
+  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation);
   return wb;
 }
 
