@@ -61,12 +61,18 @@ export function fitBox(img, maxW, maxH) {
 }
 
 function loadImage(file) {
+  // Đọc thành data: URL, không dùng blob: — CSP của server (img-src 'self' data:) chặn blob: khi deploy.
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
-    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Không đọc được ảnh.')); };
-    img.src = url;
+    const fail = () => reject(new Error('Không đọc được ảnh.'));
+    const reader = new FileReader();
+    reader.onerror = fail;
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = fail;
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
   });
 }
 
