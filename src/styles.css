@@ -1553,6 +1553,252 @@ tr.is-clickable:hover td {
   padding-left: 20px;
 }
 
+/* ---------- Nhập thời khóa biểu từ Excel ---------- */
+.imp-modal {
+  display: grid;
+  gap: 10px;
+  width: min(960px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+.modal p.imp-guide {
+  margin: 0;
+}
+
+.imp-paste {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+  tab-size: 12;
+}
+
+.imp-paste:focus {
+  border-color: var(--violet);
+  outline: none;
+}
+
+.imp-file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.imp-file-name {
+  font-size: 0.85rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.imp-preview {
+  display: grid;
+  gap: 8px;
+}
+
+.imp-preview .banner,
+.imp-modal .banner {
+  margin: 0;
+}
+
+.modal p.imp-summary,
+.modal p.imp-note,
+.modal .imp-edit p {
+  margin: 0;
+  color: var(--ink);
+}
+
+.modal p.imp-note {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.imp-bad-text {
+  color: var(--red);
+  font-weight: 700;
+}
+
+.imp-new {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 16px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--violet-soft);
+  font-size: 0.88rem;
+}
+
+.imp-table {
+  min-width: 560px;
+}
+
+.imp-table td {
+  padding: 2px;
+}
+
+.imp-cell {
+  width: 100%;
+  min-width: 84px;
+  min-height: 32px;
+  padding: 4px 6px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: inherit;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.imp-cell:hover,
+.imp-table td.is-editing .imp-cell {
+  border-color: var(--violet);
+}
+
+.imp-table td.is-changed,
+.imp-swatch.is-changed {
+  background: var(--yellow);
+}
+
+.imp-table td.is-bad,
+.imp-swatch.is-bad {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.imp-table td.is-bad .imp-cell {
+  border: 1px dashed var(--red);
+}
+
+.imp-table td.is-skipped,
+.imp-swatch.is-skipped {
+  background: var(--paper);
+  color: var(--muted);
+}
+
+.imp-table td.is-skipped .imp-cell {
+  text-decoration: line-through;
+}
+
+.imp-table td.is-new .imp-cell {
+  font-style: italic;
+}
+
+.modal p.imp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.imp-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-left: 6px;
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+}
+
+.imp-edit {
+  display: grid;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--paper);
+}
+
+.imp-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.imp-edit-row input {
+  flex: 1 1 180px;
+  min-height: 32px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+}
+
+.imp-actions {
+  flex-wrap: wrap;
+  position: sticky;
+  bottom: -20px;
+  margin: 0 -20px -20px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--line);
+  background: var(--card);
+}
+
+.imp-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  padding: 8px 8px 8px 16px;
+  border-radius: 10px;
+  background: var(--ink);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(34, 28, 69, 0.3);
+  transform: translateX(-50%);
+}
+
+.imp-toast .btn {
+  flex: none;
+}
+
+.imp-toast .imp-toast-close {
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+@media (max-width: 720px) {
+  .modal-backdrop:has(.imp-modal) {
+    padding: 0;
+  }
+
+  .imp-modal {
+    width: 100%;
+    max-height: 100vh;
+    max-height: 100dvh;
+    min-height: 100dvh;
+    border-radius: 0;
+    padding: 14px;
+    align-content: start;
+  }
+
+  .imp-actions {
+    bottom: -14px;
+    margin: 0 -14px -14px;
+    padding: 10px 14px;
+  }
+
+  .imp-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .imp-toast {
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 720px) {
   body {
     font-size: 14px;

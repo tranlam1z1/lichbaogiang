@@ -4,6 +4,7 @@ import { MAX_PERIODS, SESSIONS, checkTimetable, describeCheck, schoolDays } from
 import { dayName } from '../lib/calendar.js';
 import { normalizeSubject } from '../lib/text.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
+import TimetableImport from './TimetableImport.jsx';
 
 const NO_RULES = {};
 
@@ -65,7 +66,10 @@ export default function TimetableEditor() {
       <section className="card">
         <div className="card-head">
           <h2>Thời khóa biểu</h2>
-          <button type="button" className="link-btn" onClick={() => setConfirm(true)}>Trả về TKB của file gốc</button>
+          <span className="head-actions">
+            <TimetableImport />
+            <button type="button" className="link-btn" onClick={() => setConfirm(true)}>Trả về TKB của file gốc</button>
+          </span>
         </div>
         <div className="options-row">
           <label className="field field-inline">

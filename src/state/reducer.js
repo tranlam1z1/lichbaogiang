@@ -89,6 +89,8 @@ export function reducer(state, action) {
       return { ...state, timetable: { ...state.timetable, ...action.patch } };
     case 'RESET_TIMETABLE':
       return { ...state, timetable: clone(defaults.timetable) };
+    case 'REPLACE_TIMETABLE':
+      return { ...state, timetable: action.timetable };
 
     // ---------- Sửa tên bài / đồ dùng trong một tuần ----------
     case 'SET_LESSON': {
