@@ -2,6 +2,8 @@
 
 Ứng dụng React (tiếng Việt) giúp giáo viên tiểu học lập **Kế hoạch giảng dạy** từ thời khóa biểu và phân phối chương trình (PPCT), thay cho file Excel `LBG_NH_26-27 (Gấm 4A).xls`.
 
+📘 **Hướng dẫn sử dụng cho giáo viên:** [docs/HUONG_DAN_SU_DUNG.md](docs/HUONG_DAN_SU_DUNG.md)
+
 ## Chạy ứng dụng
 
 Ứng dụng gồm **frontend** (React + Vite, thư mục gốc) và **backend** (Node.js + Express + Prisma, thư mục `server/`). Phải đăng nhập mới dùng được trang lập kế hoạch, nên khi phát triển cần chạy cả hai.

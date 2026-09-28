@@ -15,6 +15,7 @@ const LOGO = Object.values(
 )[0];
 
 const TAB_NAMES = {
+  help: 'Hướng dẫn sử dụng',
   lessons: 'Báo giảng',
   timetable: 'Thời khóa biểu',
   calendar: 'Lịch tuần',
@@ -83,6 +84,29 @@ function buildDebugInfo(state) {
   ].join('\n');
 }
 
+// Gợi ý "nhắn tin cho chúng tôi": hiện mỗi phiên cho tới khi người dùng mở bảng hỗ trợ lần đầu.
+const HINT_SEEN_KEY = 'zalo-support-seen'; // localStorage — đã từng mở bảng hỗ trợ
+const HINT_CLOSED_KEY = 'zalo-hint-closed'; // sessionStorage — đã tắt gợi ý trong phiên này
+const HINT_DELAY = 1500;
+const HINT_DURATION = 15000;
+
+function readFlag(storage, key) {
+  // Truy cập window.localStorage có thể ném lỗi khi trình duyệt chặn bộ nhớ, nên để trong try.
+  try {
+    return window[storage].getItem(key) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeFlag(storage, key) {
+  try {
+    window[storage].setItem(key, '1');
+  } catch {
+    /* bộ nhớ trình duyệt bị chặn — bỏ qua */
+  }
+}
+
 async function copyText(text) {
   try {
     await navigator.clipboard.writeText(text);
@@ -112,6 +136,33 @@ export default function ZaloSupport() {
   const fabRef = useRef(null);
   const firstRef = useRef(null);
   const titleId = useId();
+  // Nút nhấp nháy tới khi người dùng mở bảng hỗ trợ lần đầu.
+  const [attention, setAttention] = useState(() => !readFlag('localStorage', HINT_SEEN_KEY));
+  const [hint, setHint] = useState(false);
+
+  useEffect(() => {
+    if (!attention || readFlag('sessionStorage', HINT_CLOSED_KEY)) return undefined;
+    const show = setTimeout(() => setHint(true), HINT_DELAY);
+    const hide = setTimeout(() => setHint(false), HINT_DELAY + HINT_DURATION);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+  }, [attention]);
+
+  const toggle = () => {
+    setOpen((v) => !v);
+    setHint(false);
+    if (attention) {
+      setAttention(false);
+      writeFlag('localStorage', HINT_SEEN_KEY);
+    }
+  };
+
+  const closeHint = () => {
+    setHint(false);
+    writeFlag('sessionStorage', HINT_CLOSED_KEY);
+  };
 
   useEffect(() => {
     if (!open) return undefined;
@@ -146,7 +197,21 @@ export default function ZaloSupport() {
   };
 
   return (
-    <div className="zalo-support" ref={rootRef}>
+    <div className={`zalo-support${hint && !open ? ' has-hint' : ''}`} ref={rootRef}>
+      {hint && !open && (
+        <div className="zalo-hint" role="status">
+          <button type="button" className="zalo-hint-text" onClick={toggle}>
+            Cần hỗ trợ hay có yêu cầu gì? <strong>Nhắn tin cho chúng tôi</strong>
+          </button>
+          <button type="button" className="zalo-hint-close" aria-label="Ẩn gợi ý" onClick={closeHint}>
+            ×
+          </button>
+          <span className="zalo-hint-hand" aria-hidden="true">
+            👉
+          </span>
+        </div>
+      )}
+
       {open && (
         <div className="zalo-panel" role="dialog" aria-labelledby={titleId}>
           <p className="zalo-title" id={titleId}>
@@ -189,11 +254,11 @@ export default function ZaloSupport() {
       <button
         ref={fabRef}
         type="button"
-        className={`zalo-fab${LOGO ? ' has-logo' : ''}`}
+        className={`zalo-fab${LOGO ? ' has-logo' : ''}${attention && !open ? ' is-pulsing' : ''}`}
         aria-label="Hỗ trợ qua Zalo"
         aria-expanded={open}
         aria-haspopup="dialog"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
       >
         {LOGO ? <img src={LOGO} alt="" /> : <ChatIcon />}
         <span className="zalo-tip" aria-hidden="true">

@@ -1,4 +1,5 @@
 import { useApp } from './state/AppContext.jsx';
+import HelpPage from './components/HelpPage.jsx';
 import LessonsPage from './components/LessonsPage.jsx';
 import TimetableEditor from './components/TimetableEditor.jsx';
 import WeekCalendar from './components/WeekCalendar.jsx';
@@ -9,11 +10,13 @@ import SaveStatus from './components/SaveStatus.jsx';
 import ZaloSupport from './components/ZaloSupport.jsx';
 
 const TABS = [
-  { id: 'lessons', label: 'Báo giảng', short: 'Báo giảng', icon: '✎' },
+  { id: 'help', label: 'Hướng dẫn sử dụng', short: 'Hướng dẫn', icon: '?' },
+  // Theo thứ tự các bước trong hướng dẫn sử dụng (docs/HUONG_DAN_SU_DUNG.md).
+  { id: 'info', label: 'Thông tin lớp', short: 'Lớp', icon: '⌂' },
   { id: 'timetable', label: 'Thời khóa biểu', short: 'TKB', icon: '▦' },
   { id: 'calendar', label: 'Lịch tuần', short: 'Lịch tuần', icon: '◷' },
+  { id: 'lessons', label: 'Báo giảng', short: 'Báo giảng', icon: '✎' },
   { id: 'ppct', label: 'Phân phối chương trình', short: 'PPCT', icon: '☰' },
-  { id: 'info', label: 'Thông tin lớp', short: 'Lớp', icon: '⌂' },
 ];
 
 export default function App() {
@@ -54,6 +57,7 @@ export default function App() {
       </header>
 
       <main className="page">
+        {tab === 'help' && <HelpPage />}
         {tab === 'lessons' && <LessonsPage />}
         {tab === 'timetable' && <TimetableEditor />}
         {tab === 'calendar' && <WeekCalendar />}
