@@ -1550,6 +1550,39 @@ td.is-unknown .tkb-input {
   border-color: var(--red);
 }
 
+.input-addon {
+  position: relative;
+}
+
+.input-addon input {
+  padding-right: 40px;
+}
+
+/* Edge tự thêm nút xem mật khẩu riêng — ẩn đi để không bị hai con mắt. */
+.input-addon input::-ms-reveal {
+  display: none;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0 8px 8px 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.password-toggle:hover {
+  color: var(--violet);
+}
+
 .field-hint,
 .field-error {
   font-size: 0.8rem;

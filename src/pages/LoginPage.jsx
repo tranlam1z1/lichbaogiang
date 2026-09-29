@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext.jsx';
 import { validateLogin } from '../../shared/validation.js';
-import AuthLayout, { TextField } from './AuthLayout.jsx';
+import AuthLayout, { PasswordField, TextField } from './AuthLayout.jsx';
 
 export default function LoginPage() {
   const { login, notice } = useAuth();
@@ -49,10 +49,9 @@ export default function LoginPage() {
           error={errors.username}
           autoFocus
         />
-        <TextField
+        <PasswordField
           name="password"
           label="Mật khẩu"
-          type="password"
           autoComplete="current-password"
           value={form.password}
           onChange={change}
