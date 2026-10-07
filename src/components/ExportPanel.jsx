@@ -13,7 +13,7 @@ const KIND = {
   xlsx: { fileType: 'XLSX', label: 'Excel' },
 };
 
-/** Nút tải file Word / Excel. Bấm vào thì hỏi phạm vi tuần + khổ giấy, hiện số điểm theo số tuần rồi mới tải. */
+/** Nút tải file Word / Excel. Bấm vào thì hỏi phạm vi tuần + khổ giấy + cột đồ dùng, hiện số điểm theo số tuần rồi mới tải. */
 export default function ExportPanel({ currentWeek }) {
   const { state, grade, index, ppctOverrides } = useApp();
   const { user, settings, updateBalances, refreshSettings } = useAuth();
@@ -26,16 +26,16 @@ export default function ExportPanel({ currentWeek }) {
   const [dialog, setDialog] = useState(null);
 
   /** Người dùng đã chọn phạm vi + khổ giấy trong hộp thoại. */
-  const submit = ({ range: chosen, weeks, orientation, quote }) => {
+  const submit = ({ range: chosen, weeks, orientation, equipment, quote }) => {
     setRange(chosen);
     if (!quote.enough) {
       navigate('/nap-diem');
       return;
     }
-    run(dialog.kind, { range: chosen, weeks, orientation, confirmCost: quote.cost });
+    run(dialog.kind, { range: chosen, weeks, orientation, equipment, confirmCost: quote.cost });
   };
 
-  const run = async (kind, { range: chosen, weeks, orientation, confirmCost }) => {
+  const run = async (kind, { range: chosen, weeks, orientation, equipment, confirmCost }) => {
     setBusy(kind);
     setMessage(null);
     const { fileType, label } = KIND[kind];
@@ -61,8 +61,8 @@ export default function ExportPanel({ currentWeek }) {
         description: `${rangeText} (${weeks.length} tuần)`,
         generate: () =>
           kind === 'docx'
-            ? downloadDocx(data, state.info, `${base}.docx`, { orientation })
-            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation }),
+            ? downloadDocx(data, state.info, `${base}.docx`, { orientation, equipment })
+            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation, equipment }),
         onUser: updateBalances,
       });
       setDialog(null);

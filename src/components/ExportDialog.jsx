@@ -5,6 +5,7 @@ import { isTeachingWeek } from '../lib/calendar.js';
 import { quoteExport } from '../../shared/pricing.js';
 
 const STORAGE_KEY = 'export-orientation';
+const EQUIPMENT_KEY = 'export-equipment';
 
 export const ORIENTATIONS = [
   { id: 'portrait', label: 'Khổ dọc', hint: 'A4 dọc' },
@@ -29,6 +30,23 @@ function saveOrientation(value) {
   }
 }
 
+/** Lần trước có tải cột "Đồ dùng dạy học" không (mặc định: có). */
+function loadEquipment() {
+  try {
+    return window.localStorage.getItem(EQUIPMENT_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+}
+
+function saveEquipment(value) {
+  try {
+    window.localStorage.setItem(EQUIPMENT_KEY, value ? 'on' : 'off');
+  } catch {
+    // Trình duyệt chặn lưu trữ: bỏ qua, lần sau dùng mặc định.
+  }
+}
+
 const fmt = (n) => n.toLocaleString('vi-VN');
 
 /** "Tuần 5", "Tuần 1–18" hoặc "Không có tuần học". */
@@ -44,16 +62,18 @@ const priceLabel = (q) => {
 };
 
 /**
- * Hỏi phạm vi tuần + khổ giấy trước khi xuất, hiện giá từng phạm vi và tổng điểm phải trả.
- * onSubmit({ range, weeks, orientation, quote }) — quote.enough = false nghĩa là người dùng bấm "Nạp điểm".
+ * Hỏi phạm vi tuần + khổ giấy + có tải cột đồ dùng không trước khi xuất, hiện giá từng phạm vi và tổng điểm phải trả.
+ * onSubmit({ range, weeks, orientation, equipment, quote }) — quote.enough = false nghĩa là người dùng bấm "Nạp điểm".
  */
 export default function ExportDialog({ open, kindLabel, calendar, currentWeek, initialRange, user, settings, busy, error, onSubmit, onCancel }) {
   const [range, setRange] = useState(initialRange);
   const [orientation, setOrientation] = useState(loadOrientation);
+  const [equipment, setEquipment] = useState(loadEquipment);
   useEffect(() => {
     if (!open) return;
     setRange(initialRange);
     setOrientation(loadOrientation());
+    setEquipment(loadEquipment());
   }, [open, initialRange]);
 
   const teaching = useMemo(() => calendar.filter(isTeachingWeek), [calendar]);
@@ -85,7 +105,8 @@ export default function ExportDialog({ open, kindLabel, calendar, currentWeek, i
       submitDisabled={!weeks.length}
       onSubmit={() => {
         saveOrientation(orientation);
-        onSubmit({ range, weeks, orientation, quote });
+        saveEquipment(equipment);
+        onSubmit({ range, weeks, orientation, equipment, quote });
       }}
       onCancel={onCancel}
     >
@@ -146,6 +167,14 @@ export default function ExportDialog({ open, kindLabel, calendar, currentWeek, i
             </label>
           ))}
         </div>
+      </fieldset>
+
+      <fieldset className="export-fieldset">
+        <legend>Cột trong file</legend>
+        <label className="check">
+          <input type="checkbox" checked={equipment} onChange={(e) => setEquipment(e.target.checked)} />
+          <span>Tải cột "Đồ dùng dạy học"</span>
+        </label>
       </fieldset>
 
       <div className={`export-total${weeks.length && !quote.free && !quote.enough ? ' is-short' : ''}`} aria-live="polite">

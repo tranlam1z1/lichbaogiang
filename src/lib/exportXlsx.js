@@ -21,10 +21,14 @@ export const XLSX_COLUMNS = [
 // Khổ ngang: bề ngang rộng hơn, cột "Tên bài dạy" được giãn nhiều nhất.
 const LANDSCAPE_WIDTHS = { day: 11, session: 8, period: 6, subject: 16, ppct: 8, title: 78, equipment: 26 };
 
-function columnsFor(orientation) {
-  return orientation === 'landscape'
+/** Bỏ cột "Đồ dùng dạy học" thì cột "Tên bài dạy" nhận luôn phần bề ngang đó. */
+function columnsFor(orientation, equipment = true) {
+  const columns = orientation === 'landscape'
     ? XLSX_COLUMNS.map((c) => ({ ...c, width: LANDSCAPE_WIDTHS[c.key] }))
     : XLSX_COLUMNS;
+  if (equipment) return columns;
+  const eq = columns.find((c) => c.key === 'equipment').width;
+  return columns.filter((c) => c.key !== 'equipment').map((c) => (c.key === 'title' ? { ...c, width: c.width + eq } : c));
 }
 
 function styleRange(ws, r1, r2, c1, c2, fn) {
@@ -35,13 +39,14 @@ function styleRange(ws, r1, r2, c1, c2, fn) {
 function estimateHeight(r, widths) {
   const lines = Math.max(
     Math.ceil((r.title || '').length / ((52 * widths.title) / 46)) || 1,
-    Math.ceil((r.equipment || '').length / ((19 * widths.equipment) / 18)) || 1,
+    widths.equipment ? Math.ceil((r.equipment || '').length / ((19 * widths.equipment) / 18)) || 1 : 1,
   );
   return Math.max(16, lines * 14 + 2);
 }
 
-function addWeekSheet(wb, info, week, rows, orientation) {
-  const columns = columnsFor(orientation);
+function addWeekSheet(wb, info, week, rows, orientation, equipment) {
+  const columns = columnsFor(orientation, equipment);
+  const col = Object.fromEntries(columns.map((c, i) => [c.key, i + 1]));
   const widths = Object.fromEntries(columns.map((c) => [c.key, c.width]));
   const landscape = orientation === 'landscape';
   const ws = wb.addWorksheet(`Tuần ${week.num}`, {
@@ -79,7 +84,7 @@ function addWeekSheet(wb, info, week, rows, orientation) {
 
   // Tiêu đề bảng
   const headRow = 5;
-  XLSX_COLUMNS.forEach((c, i) => {
+  columns.forEach((c, i) => {
     put(headRow, i + 1, c.header, { bold: true, size: 11 }, { horizontal: 'center' }).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF92D050' } };
   });
   ws.getRow(headRow).height = 30;
@@ -100,11 +105,11 @@ function addWeekSheet(wb, info, week, rows, orientation) {
       put(r, 2, row.sessionLabel, { bold: true, size: 11, color: { argb: 'FF8B4513' } }, { horizontal: 'center' });
       if (row.sessionRowSpan > 1) ws.mergeCells(r, 2, r + row.sessionRowSpan - 1, 2);
     }
-    put(r, 3, row.period, { size: 11 }, { horizontal: 'center' });
-    put(r, 4, row.subject, { bold: true, size: 11 });
-    put(r, 5, row.ppct === '' || row.ppct == null ? '' : row.ppct, { size: 11 }, { horizontal: 'center' });
-    put(r, 6, row.title, { size: 11 });
-    put(r, 7, row.equipment, { size: 11 });
+    put(r, col.period, row.period, { size: 11 }, { horizontal: 'center' });
+    put(r, col.subject, row.subject, { bold: true, size: 11 });
+    put(r, col.ppct, row.ppct === '' || row.ppct == null ? '' : row.ppct, { size: 11 }, { horizontal: 'center' });
+    put(r, col.title, row.title, { size: 11 });
+    if (col.equipment) put(r, col.equipment, row.equipment, { size: 11 });
     ws.getRow(r).height = estimateHeight(row, widths);
     r += 1;
   }
@@ -115,12 +120,12 @@ function addWeekSheet(wb, info, week, rows, orientation) {
   });
 
   const lastRow = addSignatureBlock(wb, ws, info, r, columns);
-  ws.pageSetup.printArea = `A1:G${lastRow}`;
+  ws.pageSetup.printArea = `A1:${String.fromCharCode(64 + last)}${lastRow}`;
   ws.pageSetup.printTitlesRow = `${headRow}:${headRow}`;
   return firstBody;
 }
 
-// Khối chữ ký: GIÁO VIÊN gộp cột A–E, TỔ TRƯỞNG CHUYÊN MÔN gộp cột F–G.
+// Khối chữ ký: GIÁO VIÊN gộp cột A–E, TỔ TRƯỞNG CHUYÊN MÔN gộp từ cột F đến cột cuối.
 const SIGN_SPLIT = 5;
 const SIGN_ROW_PT = 54; // vùng ký ≈ 1,9 cm
 const SIGN_IMG_PX = { width: 227, height: 68 }; // tối đa 6 × 1,8 cm
@@ -186,12 +191,13 @@ function addSignatureBlock(wb, ws, info, startRow, columns) {
 /**
  * Tạo workbook từ dữ liệu các tuần (buildExportWeeks).
  * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
+ * equipment: false = bỏ cột "Đồ dùng dạy học".
  */
-export function buildWorkbook(weeks, info, { orientation = 'portrait' } = {}) {
+export function buildWorkbook(weeks, info, { orientation = 'portrait', equipment = true } = {}) {
   const wb = new ExcelJS.Workbook();
   wb.creator = info.teacher || 'Giáo viên';
   wb.created = new Date();
-  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation);
+  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation, equipment);
   return wb;
 }
 

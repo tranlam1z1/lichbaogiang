@@ -205,3 +205,20 @@ test('Tên để trống thì bỏ dòng họ tên, vẫn giữ chỗ ký', asyn
   const printEnd = Number(ws.pageSetup.printArea.split(':')[1].replace(/\D/g, ''));
   assert.equal(ws.getRow(printEnd).height, 54, 'dòng cuối vùng in là vùng ký');
 });
+
+for (const orientation of ['portrait', 'landscape']) {
+  test(`Bỏ cột "Đồ dùng dạy học" (${orientation === 'portrait' ? 'dọc' : 'ngang'}): Word và Excel chỉ còn 6 cột`, async () => {
+    const weeks = sampleWeeks.slice(0, 1);
+    const xml = await (await JSZip.loadAsync(await docxToBuffer(buildDocx(weeks, defaults.info, { orientation, equipment: false })))).file('word/document.xml').async('string');
+    assert.ok(!xml.includes('Đồ dùng dạy học'));
+    assert.ok(xml.includes('Tên bài dạy'));
+    const full = await (await JSZip.loadAsync(await docxToBuffer(buildDocx(weeks, defaults.info, { orientation })))).file('word/document.xml').async('string');
+    assert.ok(full.includes('Đồ dùng dạy học'), 'mặc định vẫn có cột đồ dùng');
+
+    const ws = buildWorkbook(weeks, defaults.info, { orientation, equipment: false }).worksheets[0];
+    assert.equal(ws.columns.length, 6);
+    assert.equal(ws.getCell(5, 6).value, 'Tên bài dạy');
+    assert.equal(ws.getCell(5, 7).value, null);
+    assert.match(ws.pageSetup.printArea, /^A1:F\d+$/);
+  });
+}

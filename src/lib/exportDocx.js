@@ -44,21 +44,29 @@ export const DOCX_COLUMNS = [
 const LANDSCAPE_PAGE = { width: 16838, height: 11906 };
 const TITLE_SHARE = 0.6;
 
-function landscapeColumns() {
-  const total = DOCX_COLUMNS.reduce((s, c) => s + c.cm, 0);
+/** Bỏ cột "Đồ dùng dạy học" thì cột "Tên bài dạy" nhận luôn phần bề ngang đó. */
+function portraitColumns(equipment) {
+  if (equipment) return DOCX_COLUMNS;
+  const eq = DOCX_COLUMNS.find((c) => c.key === 'equipment').cm;
+  return DOCX_COLUMNS.filter((c) => c.key !== 'equipment').map((c) => (c.key === 'title' ? { ...c, cm: c.cm + eq } : c));
+}
+
+function landscapeColumns(equipment) {
+  const base = portraitColumns(equipment);
+  const total = base.reduce((s, c) => s + c.cm, 0);
   const extra = (LANDSCAPE_PAGE.width - MARGIN.left - MARGIN.right) / CM - total;
-  const others = total - DOCX_COLUMNS.find((c) => c.key === 'title').cm;
-  return DOCX_COLUMNS.map((c) => ({
+  const others = total - base.find((c) => c.key === 'title').cm;
+  return base.map((c) => ({
     ...c,
     cm: c.key === 'title' ? c.cm + extra * TITLE_SHARE : c.cm + (extra * (1 - TITLE_SHARE) * c.cm) / others,
   }));
 }
 
-/** Khổ giấy và độ rộng cột theo hướng giấy ('portrait' | 'landscape'). */
-function layoutFor(orientation) {
+/** Khổ giấy và độ rộng cột theo hướng giấy ('portrait' | 'landscape') và có cột đồ dùng hay không. */
+function layoutFor(orientation, equipment = true) {
   return orientation === 'landscape'
-    ? { page: LANDSCAPE_PAGE, columns: landscapeColumns(), landscape: true }
-    : { page: PAGE, columns: DOCX_COLUMNS, landscape: false };
+    ? { page: LANDSCAPE_PAGE, columns: landscapeColumns(equipment), landscape: true }
+    : { page: PAGE, columns: portraitColumns(equipment), landscape: false };
 }
 
 const CELL_PAD_TW = 20; // lề trong ô (twip) trên/dưới
@@ -92,8 +100,8 @@ function linesFor(text, cm, pt, em = 0.45) {
  * Chọn cỡ chữ lớn nhất (12 → 7pt) để cả tuần vừa đúng một trang A4.
  * Chiều cao ước lượng theo đo đạc thực tế trên Word/LibreOffice với Times New Roman.
  */
-export function fitWeek(rows, orientation = 'portrait') {
-  const { page, columns } = layoutFor(orientation);
+export function fitWeek(rows, orientation = 'portrait', { equipment = true } = {}) {
+  const { page, columns } = layoutFor(orientation, equipment);
   const available = (page.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
   const colCm = Object.fromEntries(columns.map((c) => [c.key, c.cm]));
   const headerH = 58 + SIGN_BLOCK_PT; // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày… + khối chữ ký cuối trang
@@ -105,7 +113,7 @@ export function fitWeek(rows, orientation = 'portrait') {
     for (const r of rows) {
       const lines = Math.max(
         linesFor(r.title, colCm.title, pt),
-        linesFor(r.equipment, colCm.equipment, pt),
+        equipment ? linesFor(r.equipment, colCm.equipment, pt) : 1,
         linesFor(r.subject, colCm.subject, pt, 0.7),
         r.dayRowSpan > 0 && r.dayRowSpan < 2 ? 2 : 1,
       );
@@ -144,7 +152,6 @@ function cell(text, col, opts = {}) {
 }
 
 function weekTable(rows, pt, columns) {
-  const C = Object.fromEntries(columns.map((c) => [c.key, c]));
   const header = new TableRow({
     tableHeader: true,
     cantSplit: true,
@@ -154,17 +161,18 @@ function weekTable(rows, pt, columns) {
     const dayMerge = r.dayRowSpan > 0 ? VerticalMergeType.RESTART : VerticalMergeType.CONTINUE;
     const sesMerge = r.sessionRowSpan > 0 ? VerticalMergeType.RESTART : VerticalMergeType.CONTINUE;
     const dayText = r.dayRowSpan > 0 ? `${r.dayLabel}${r.date ? `\n${formatDM(r.date)}` : ''}` : '';
+    const make = {
+      day: (c) => cell(dayText, c, { merge: dayMerge, bold: true, pt, align: AlignmentType.CENTER, lineColors: [undefined, 'FF0000'] }),
+      session: (c) => cell(r.sessionRowSpan > 0 ? r.sessionLabel : '', c, { merge: sesMerge, bold: true, color: '8B4513', pt, align: AlignmentType.CENTER }),
+      period: (c) => cell(String(r.period), c, { pt, align: AlignmentType.CENTER }),
+      subject: (c) => cell(r.subject, c, { pt, bold: !!r.subject }),
+      ppct: (c) => cell(r.ppct === '' || r.ppct == null ? '' : String(r.ppct), c, { pt, align: AlignmentType.CENTER }),
+      title: (c) => cell(r.title, c, { pt }),
+      equipment: (c) => cell(r.equipment, c, { pt }),
+    };
     return new TableRow({
       cantSplit: true,
-      children: [
-        cell(dayText, C.day, { merge: dayMerge, bold: true, pt, align: AlignmentType.CENTER, lineColors: [undefined, 'FF0000'] }),
-        cell(r.sessionRowSpan > 0 ? r.sessionLabel : '', C.session, { merge: sesMerge, bold: true, color: '8B4513', pt, align: AlignmentType.CENTER }),
-        cell(String(r.period), C.period, { pt, align: AlignmentType.CENTER }),
-        cell(r.subject, C.subject, { pt, bold: !!r.subject }),
-        cell(r.ppct === '' || r.ppct == null ? '' : String(r.ppct), C.ppct, { pt, align: AlignmentType.CENTER }),
-        cell(r.title, C.title, { pt }),
-        cell(r.equipment, C.equipment, { pt }),
-      ],
+      children: columns.map((c) => make[c.key](c)),
     });
   });
   return new Table({
@@ -243,16 +251,17 @@ function headerBlock(info, week) {
 /**
  * Tạo đối tượng Document từ dữ liệu các tuần (buildExportWeeks).
  * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
+ * equipment: false = bỏ cột "Đồ dùng dạy học".
  */
-export function buildDocx(weeks, info, { forcePt, orientation = 'portrait' } = {}) {
-  const { page, columns, landscape } = layoutFor(orientation);
+export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equipment = true } = {}) {
+  const { page, columns, landscape } = layoutFor(orientation, equipment);
   // Khổ ngang: thư viện docx tự đổi chỗ rộng/cao khi ghi w:pgSz (w:w=16838, w:h=11906, w:orient="landscape"),
   // nên ở đây truyền kích thước theo chiều dọc.
   const pageSize = landscape
     ? { width: page.height, height: page.width, orientation: PageOrientation.LANDSCAPE }
     : { width: page.width, height: page.height };
   const sections = weeks.map(({ week, rows }) => {
-    const bodyPt = forcePt || fitWeek(rows, orientation).bodyPt;
+    const bodyPt = forcePt || fitWeek(rows, orientation, { equipment }).bodyPt;
     return {
       properties: {
         page: {
