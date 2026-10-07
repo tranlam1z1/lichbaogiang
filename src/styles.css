@@ -1182,11 +1182,20 @@ td.is-unknown .tkb-input {
 }
 
 .ppct-table {
-  min-width: 640px;
+  min-width: 860px;
 }
 
 .ppct-table .cell-title {
   min-width: 320px;
+}
+
+.ppct-table .cell-equip {
+  min-width: 200px;
+}
+
+.equip-table .cell-equip {
+  min-width: 260px;
+  width: 100%;
 }
 
 /* ---------- Hộp thoại ---------- */
@@ -1300,6 +1309,14 @@ td.is-unknown .tkb-input {
   padding: 0;
   border: 0;
   min-width: 0;
+}
+
+.export-fieldset .check {
+  display: flex;
+}
+
+.export-fieldset .check + .check {
+  margin-top: 6px;
 }
 
 .export-fieldset legend {

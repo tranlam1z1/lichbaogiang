@@ -173,8 +173,9 @@ Tên bài được tự tra từ thời khóa biểu và PPCT. Nếu không tra 
 - Bấm vào ô **Tên bài dạy** hoặc **Đồ dùng dạy học** để sửa. Chỗ sửa **chỉ áp dụng cho tuần đang xem**.
 - Ô đã sửa có **vạch đỏ** đánh dấu. Bấm **↺ Theo PPCT** để trả ô đó về tên bài gốc.
 - Bấm **Bỏ mọi chỗ sửa của tuần** để trả cả tuần về như ban đầu.
+- Muốn để trống ô đồ dùng, bấm vào ô rồi xóa hết chữ.
 
-> Muốn đổi tên một bài cho **mọi tuần**, sửa ở thẻ Phân phối chương trình (xem [mục 9](#9-sửa-tên-bài-trong-phân-phối-chương-trình)).
+> Muốn đổi tên bài hoặc đồ dùng cho **mọi tuần**, sửa ở thẻ Phân phối chương trình (xem [mục 9](#9-sửa-tên-bài-trong-phân-phối-chương-trình)).
 
 ---
 
@@ -244,6 +245,14 @@ Mở thẻ **Phân phối chương trình**.
 - Lọc theo **Khối**, **Môn**, **Tuần**, hoặc gõ vào ô **Tìm theo tên bài**. Không cần gõ dấu, ví dụ `doan van` vẫn tìm ra "đoạn văn".
 - Bấm vào tên bài để sửa. Sửa ở đây thì **mọi tuần dùng bài đó đều đổi theo**.
 - Bản gốc luôn được giữ lại. Bấm nút trả về cạnh ô đã sửa để dùng lại tên gốc.
+
+### Đồ dùng dạy học
+
+Đồ dùng dạy học được lấy theo thứ tự ưu tiên: **sửa tay trong tuần** → **đặt riêng cho bài** → **đặt theo môn**.
+
+- **Theo môn**: bảng **Đồ dùng dạy học theo môn** ở đầu thẻ. Bấm vào ô để sửa; **xóa hết chữ để để trống** (môn đó sẽ không ghi đồ dùng). Chưa đặt thì dùng mặc định có sẵn: Toán là *Vở thực hành*, môn khác là *Tranh, ảnh, PP*. Bấm **↺ Mặc định** để trả về.
+- **Theo bài**: cột **Đồ dùng dạy học** trong bảng Phân phối chương trình. Ô để trống thì dùng đồ dùng theo môn (hiện chữ mờ).
+- **Theo tuần**: sửa trực tiếp ở thẻ Báo giảng (xem [mục 6](#6-bước-4--xem-và-sửa-báo-giảng)); chỉ áp dụng cho tuần đó.
 
 ---
 

@@ -9,13 +9,15 @@ const NOT_TAUGHT_TIP = 'Môn này bạn không dạy. Bật lại ở mục "Mô
 
 /** Bảng kế hoạch giảng dạy của một tuần. */
 export default function LessonSheet({ week }) {
-  const { state, dispatch, grade, index, ppctOverrides } = useApp();
+  const { state, dispatch, grade, index, ppctOverrides, equipmentDefaults, ppctEquipment } = useApp();
   const [confirmReset, setConfirmReset] = useState(false);
   const weekOverrides = state.lessonOverrides[week.num] || {};
 
   const built = useMemo(
-    () => buildWeekLessons({ week, timetable: state.timetable, index, grade, ppctOverrides, lessonOverrides: weekOverrides, notTaught: state.notTaught }),
-    [week, state.timetable, index, grade, ppctOverrides, weekOverrides, state.notTaught],
+    () => buildWeekLessons({
+      week, timetable: state.timetable, index, grade, ppctOverrides, equipmentDefaults, ppctEquipment, lessonOverrides: weekOverrides, notTaught: state.notTaught,
+    }),
+    [week, state.timetable, index, grade, ppctOverrides, equipmentDefaults, ppctEquipment, weekOverrides, state.notTaught],
   );
   const rows = useMemo(() => flattenWeek(built), [built]);
   const editedCount = rows.filter((r) => r.editedTitle || r.editedEquipment).length;
@@ -130,12 +132,15 @@ export default function LessonSheet({ week }) {
           </tbody>
         </table>
       </div>
-      <p className="hint">Bấm vào ô Tên bài hoặc Đồ dùng để sửa. Phần sửa chỉ áp dụng cho tuần {week.num}; ô đã sửa có vạch đỏ bên trái.</p>
+      <p className="hint">
+        Bấm vào ô Tên bài hoặc Đồ dùng để sửa (xóa hết chữ là để trống). Phần sửa chỉ áp dụng cho tuần {week.num}; ô đã sửa có vạch đỏ bên trái.
+        Đồ dùng dùng chung cho mọi tuần đặt ở thẻ Phân phối chương trình.
+      </p>
 
       <ConfirmDialog
         open={confirmReset}
         title={`Bỏ mọi chỗ sửa của tuần ${week.num}?`}
-        message="Tên bài trở về theo PPCT và cột đồ dùng dạy học được xóa trắng."
+        message="Tên bài trở về theo PPCT, đồ dùng dạy học trở về như đã đặt ở thẻ Phân phối chương trình."
         confirmLabel="Bỏ chỗ sửa"
         danger
         onCancel={() => setConfirmReset(false)}

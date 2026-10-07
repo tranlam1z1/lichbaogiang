@@ -4,7 +4,7 @@ import defaults from '../data/defaults.json';
 import calendarData from '../data/calendar.json';
 import { findCurrentWeek, newWeekId, addDays } from '../lib/calendar.js';
 import { normalizeSubject } from '../lib/text.js';
-import { MAX_PERIODS } from '../lib/schedule.js';
+import { MAX_PERIODS, defaultEquipment } from '../lib/schedule.js';
 
 export const STORAGE_KEY = 'lich-bao-giang/v1';
 export const STATE_VERSION = 1;
@@ -20,6 +20,8 @@ export function createInitialState() {
     calendar,
     lessonOverrides: {},
     ppctOverrides: {},
+    equipmentDefaults: {},
+    ppctEquipment: {},
     checkRules: {},
     notTaught: [],
     selectedWeekId: findCurrentWeek(calendar)?.id ?? null,
@@ -52,6 +54,8 @@ export function hydrate(saved) {
     calendar: Array.isArray(s.calendar) && s.calendar.length ? s.calendar : base.calendar,
     lessonOverrides: s.lessonOverrides && typeof s.lessonOverrides === 'object' ? s.lessonOverrides : {},
     ppctOverrides: s.ppctOverrides && typeof s.ppctOverrides === 'object' ? s.ppctOverrides : {},
+    equipmentDefaults: s.equipmentDefaults && typeof s.equipmentDefaults === 'object' ? s.equipmentDefaults : {},
+    ppctEquipment: s.ppctEquipment && typeof s.ppctEquipment === 'object' ? s.ppctEquipment : {},
     checkRules: s.checkRules && typeof s.checkRules === 'object' ? s.checkRules : {},
     notTaught: Array.isArray(s.notTaught) ? [...new Set(s.notTaught.map(normalizeSubject).filter(Boolean))] : [],
     tab: s.tab || base.tab,
@@ -181,6 +185,30 @@ export function reducer(state, action) {
     }
     case 'RESET_PPCT_ALL':
       return { ...state, ppctOverrides: { ...state.ppctOverrides, [action.grade]: {} } };
+
+    // ---------- Đồ dùng dạy học theo môn / theo bài ----------
+    case 'SET_SUBJECT_EQUIPMENT': {
+      // value: chuỗi (kể cả '' = để trống) hoặc null = trả về mặc định có sẵn.
+      const subject = normalizeSubject(action.subject);
+      if (!subject) return state;
+      const g = { ...(state.equipmentDefaults[action.grade] || {}) };
+      const value = action.value == null ? null : String(action.value).trim();
+      if (value == null || value === defaultEquipment(subject)) delete g[subject];
+      else g[subject] = value;
+      return { ...state, equipmentDefaults: { ...state.equipmentDefaults, [action.grade]: g } };
+    }
+    case 'RESET_SUBJECT_EQUIPMENT_ALL':
+      return { ...state, equipmentDefaults: { ...state.equipmentDefaults, [action.grade]: {} } };
+    case 'SET_PPCT_EQUIPMENT': {
+      // Để trống = dùng đồ dùng theo môn.
+      const g = { ...(state.ppctEquipment[action.grade] || {}) };
+      const value = String(action.value ?? '').trim();
+      if (value) g[action.key] = value;
+      else delete g[action.key];
+      return { ...state, ppctEquipment: { ...state.ppctEquipment, [action.grade]: g } };
+    }
+    case 'RESET_PPCT_EQUIPMENT_ALL':
+      return { ...state, ppctEquipment: { ...state.ppctEquipment, [action.grade]: {} } };
 
     // ---------- Định mức tiết/tuần trong bảng đối chiếu ----------
     case 'SET_CHECK_RULE': {

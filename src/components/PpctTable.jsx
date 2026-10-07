@@ -1,8 +1,10 @@
 import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useApp, getPpctIndex } from '../state/AppContext.jsx';
 import { foldVietnamese } from '../lib/text.js';
+import { subjectEquipment } from '../lib/schedule.js';
 import EditableText from './EditableText.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
+import EquipmentDefaults from './EquipmentDefaults.jsx';
 
 const PAGE = 50;
 
@@ -17,7 +19,7 @@ function pageList(current, count) {
   return out;
 }
 
-/** Tra cứu và sửa phân phối chương trình. */
+/** Tra cứu và sửa phân phối chương trình (tên bài, đồ dùng dạy học từng bài). */
 export default function PpctTable() {
   const { state, dispatch, grade: classGrade } = useApp();
   const [grade, setGrade] = useState(String(classGrade));
@@ -26,12 +28,16 @@ export default function PpctTable() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const sectionRef = useRef(null);
-  const [confirm, setConfirm] = useState(false);
+  // 'names' | 'equipment' | null
+  const [confirm, setConfirm] = useState(null);
   const deferredQuery = useDeferredValue(query);
 
   const index = getPpctIndex(grade);
   const overrides = state.ppctOverrides[grade] || {};
   const editedCount = Object.keys(overrides).length;
+  const equipment = state.ppctEquipment[grade] || {};
+  const equipmentCount = Object.keys(equipment).length;
+  const subjectDefaults = state.equipmentDefaults[grade] || {};
 
   const entries = useMemo(() => [...index.map.values()].sort((a, b) => a.index - b.index), [index]);
   const filtered = useMemo(() => {
@@ -59,110 +65,145 @@ export default function PpctTable() {
   };
 
   return (
-    <section className="card" ref={sectionRef}>
-      <div className="card-head">
-        <h2>Phân phối chương trình</h2>
-        {editedCount > 0 && (
-          <span className="head-actions">
-            <span className="pill pill-edit">{editedCount} tên bài đã sửa</span>
-            <button type="button" className="link-btn" onClick={() => setConfirm(true)}>Trả về bản gốc lớp {grade}</button>
-          </span>
+    <>
+      <EquipmentDefaults grade={grade} index={index} />
+      <section className="card" ref={sectionRef}>
+        <div className="card-head">
+          <h2>Phân phối chương trình</h2>
+          {(editedCount > 0 || equipmentCount > 0) && (
+            <span className="head-actions">
+              {editedCount > 0 && (
+                <>
+                  <span className="pill pill-edit">{editedCount} tên bài đã sửa</span>
+                  <button type="button" className="link-btn" onClick={() => setConfirm('names')}>Trả về bản gốc lớp {grade}</button>
+                </>
+              )}
+              {equipmentCount > 0 && (
+                <>
+                  <span className="pill pill-edit">{equipmentCount} bài có đồ dùng riêng</span>
+                  <button type="button" className="link-btn" onClick={() => setConfirm('equipment')}>Xóa đồ dùng riêng lớp {grade}</button>
+                </>
+              )}
+            </span>
+          )}
+        </div>
+        <div className="filters">
+          <label className="field">
+            <span>Khối</span>
+            <select value={grade} onChange={(e) => { setGrade(e.target.value); setSubject(''); setPage(0); }}>
+              {[1, 2, 3, 4, 5].map((g) => <option key={g} value={g}>Lớp {g}{String(g) === String(classGrade) ? ' (lớp đang dạy)' : ''}</option>)}
+            </select>
+          </label>
+          <label className="field">
+            <span>Môn</span>
+            <select value={subject} onChange={resetPaging(setSubject)}>
+              <option value="">Tất cả môn</option>
+              {index.subjects.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+          <label className="field">
+            <span>Tuần</span>
+            <select value={week} onChange={resetPaging(setWeek)}>
+              <option value="">Tất cả tuần</option>
+              {weeks.map((w) => <option key={w} value={w}>Tuần {w}</option>)}
+            </select>
+          </label>
+          <label className="field field-grow">
+            <span>Tìm theo tên bài</span>
+            <input type="search" value={query} placeholder="Ví dụ: phân số, doan van…" onChange={resetPaging(setQuery)} />
+          </label>
+        </div>
+        <p className="result-count">
+          {filtered.length} dòng
+          {pageCount > 1 && ` · đang xem ${current * PAGE + 1}–${Math.min((current + 1) * PAGE, filtered.length)} (trang ${current + 1}/${pageCount})`}
+        </p>
+
+        <div className="table-scroll">
+          <table className="data-table ppct-table">
+            <thead>
+              <tr><th>Môn</th><th className="num">Tuần</th><th className="num">Tiết thứ</th><th className="num">PPCT</th><th>Tên bài</th><th>Đồ dùng dạy học</th></tr>
+            </thead>
+            <tbody>
+              {filtered.slice(current * PAGE, (current + 1) * PAGE).map((e) => {
+                const edited = overrides[e.key] != null;
+                const ownEquipment = equipment[e.key];
+                const bySubject = subjectEquipment(e.subject, subjectDefaults);
+                return (
+                  <tr key={e.key}>
+                    <td className="nowrap">{e.subject}</td>
+                    <td className="num">{e.week}</td>
+                    <td className="num">{e.tiet}</td>
+                    <td className="num">{e.num}</td>
+                    <td className={`cell-title${edited ? ' is-edited' : ''}`}>
+                      <EditableText
+                        value={edited ? overrides[e.key] : e.name}
+                        placeholder="(chưa có tên bài)"
+                        ariaLabel={`Tên bài ${e.subject} tuần ${e.week} tiết ${e.tiet}`}
+                        onCommit={(v) => dispatch({ type: 'SET_PPCT_NAME', grade, key: e.key, name: v, original: e.name })}
+                      />
+                      {edited && (
+                        <button type="button" className="revert" title={`Bản gốc: ${e.name || '(trống)'}`} onClick={() => dispatch({ type: 'RESET_PPCT_NAME', grade, key: e.key })}>
+                          ↺ Bản gốc
+                        </button>
+                      )}
+                    </td>
+                    <td className={`cell-equip${ownEquipment ? ' is-edited' : ''}`}>
+                      <EditableText
+                        value={ownEquipment || ''}
+                        placeholder={bySubject ? `${bySubject} (theo môn)` : '(để trống)'}
+                        ariaLabel={`Đồ dùng ${e.subject} tuần ${e.week} tiết ${e.tiet}`}
+                        onCommit={(v) => dispatch({ type: 'SET_PPCT_EQUIPMENT', grade, key: e.key, value: v })}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {pageCount > 1 && (
+          <nav className="pager" aria-label="Phân trang">
+            <button type="button" className="btn btn-small" disabled={current === 0} onClick={() => goTo(current - 1)}>‹ Trước</button>
+            {pageList(current, pageCount).map((p, i) => (p === null
+              ? <span key={`gap${i}`} className="pager-gap">…</span>
+              : (
+                <button
+                  key={p}
+                  type="button"
+                  className={`btn btn-small${p === current ? ' btn-primary' : ''}`}
+                  aria-current={p === current ? 'page' : undefined}
+                  onClick={() => goTo(p)}
+                >
+                  {p + 1}
+                </button>
+              )))}
+            <button type="button" className="btn btn-small" disabled={current === pageCount - 1} onClick={() => goTo(current + 1)}>Sau ›</button>
+          </nav>
         )}
-      </div>
-      <div className="filters">
-        <label className="field">
-          <span>Khối</span>
-          <select value={grade} onChange={(e) => { setGrade(e.target.value); setSubject(''); setPage(0); }}>
-            {[1, 2, 3, 4, 5].map((g) => <option key={g} value={g}>Lớp {g}{String(g) === String(classGrade) ? ' (lớp đang dạy)' : ''}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span>Môn</span>
-          <select value={subject} onChange={resetPaging(setSubject)}>
-            <option value="">Tất cả môn</option>
-            {index.subjects.map((s) => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </label>
-        <label className="field">
-          <span>Tuần</span>
-          <select value={week} onChange={resetPaging(setWeek)}>
-            <option value="">Tất cả tuần</option>
-            {weeks.map((w) => <option key={w} value={w}>Tuần {w}</option>)}
-          </select>
-        </label>
-        <label className="field field-grow">
-          <span>Tìm theo tên bài</span>
-          <input type="search" value={query} placeholder="Ví dụ: phân số, doan van…" onChange={resetPaging(setQuery)} />
-        </label>
-      </div>
-      <p className="result-count">
-        {filtered.length} dòng
-        {pageCount > 1 && ` · đang xem ${current * PAGE + 1}–${Math.min((current + 1) * PAGE, filtered.length)} (trang ${current + 1}/${pageCount})`}
-      </p>
+        <p className="hint">
+          Sửa tên bài hoặc đồ dùng ở đây thì mọi tuần dùng bài đó đổi theo. Bản gốc tên bài luôn được giữ để trả về.
+          Ô đồ dùng để trống thì dùng đồ dùng theo môn (chữ mờ).
+        </p>
 
-      <div className="table-scroll">
-        <table className="data-table ppct-table">
-          <thead>
-            <tr><th>Môn</th><th className="num">Tuần</th><th className="num">Tiết thứ</th><th className="num">PPCT</th><th>Tên bài</th></tr>
-          </thead>
-          <tbody>
-            {filtered.slice(current * PAGE, (current + 1) * PAGE).map((e) => {
-              const edited = overrides[e.key] != null;
-              return (
-                <tr key={e.key}>
-                  <td className="nowrap">{e.subject}</td>
-                  <td className="num">{e.week}</td>
-                  <td className="num">{e.tiet}</td>
-                  <td className="num">{e.num}</td>
-                  <td className={`cell-title${edited ? ' is-edited' : ''}`}>
-                    <EditableText
-                      value={edited ? overrides[e.key] : e.name}
-                      placeholder="(chưa có tên bài)"
-                      ariaLabel={`Tên bài ${e.subject} tuần ${e.week} tiết ${e.tiet}`}
-                      onCommit={(v) => dispatch({ type: 'SET_PPCT_NAME', grade, key: e.key, name: v, original: e.name })}
-                    />
-                    {edited && (
-                      <button type="button" className="revert" title={`Bản gốc: ${e.name || '(trống)'}`} onClick={() => dispatch({ type: 'RESET_PPCT_NAME', grade, key: e.key })}>
-                        ↺ Bản gốc
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      {pageCount > 1 && (
-        <nav className="pager" aria-label="Phân trang">
-          <button type="button" className="btn btn-small" disabled={current === 0} onClick={() => goTo(current - 1)}>‹ Trước</button>
-          {pageList(current, pageCount).map((p, i) => (p === null
-            ? <span key={`gap${i}`} className="pager-gap">…</span>
-            : (
-              <button
-                key={p}
-                type="button"
-                className={`btn btn-small${p === current ? ' btn-primary' : ''}`}
-                aria-current={p === current ? 'page' : undefined}
-                onClick={() => goTo(p)}
-              >
-                {p + 1}
-              </button>
-            )))}
-          <button type="button" className="btn btn-small" disabled={current === pageCount - 1} onClick={() => goTo(current + 1)}>Sau ›</button>
-        </nav>
-      )}
-      <p className="hint">Sửa tên bài ở đây thì mọi tuần dùng bài đó đổi theo. Bản gốc luôn được giữ để trả về.</p>
-
-      <ConfirmDialog
-        open={confirm}
-        title={`Trả về PPCT gốc lớp ${grade}?`}
-        message={`${editedCount} tên bài đã sửa sẽ trở về như trong file Excel.`}
-        confirmLabel="Trả về bản gốc"
-        danger
-        onCancel={() => setConfirm(false)}
-        onConfirm={() => { dispatch({ type: 'RESET_PPCT_ALL', grade }); setConfirm(false); }}
-      />
-    </section>
+        <ConfirmDialog
+          open={confirm === 'names'}
+          title={`Trả về PPCT gốc lớp ${grade}?`}
+          message={`${editedCount} tên bài đã sửa sẽ trở về như trong file Excel.`}
+          confirmLabel="Trả về bản gốc"
+          danger
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => { dispatch({ type: 'RESET_PPCT_ALL', grade }); setConfirm(null); }}
+        />
+        <ConfirmDialog
+          open={confirm === 'equipment'}
+          title={`Xóa đồ dùng riêng của các bài lớp ${grade}?`}
+          message={`${equipmentCount} bài sẽ dùng lại đồ dùng theo môn.`}
+          confirmLabel="Xóa đồ dùng riêng"
+          danger
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => { dispatch({ type: 'RESET_PPCT_EQUIPMENT_ALL', grade }); setConfirm(null); }}
+        />
+      </section>
+    </>
   );
 }

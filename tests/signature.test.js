@@ -207,6 +207,25 @@ test('Tên để trống thì bỏ dòng họ tên, vẫn giữ chỗ ký', asyn
 });
 
 for (const orientation of ['portrait', 'landscape']) {
+  test(`Bỏ phần ký tên (${orientation === 'portrait' ? 'dọc' : 'ngang'}): Word và Excel không còn khối GIÁO VIÊN / TỔ TRƯỞNG`, async () => {
+    const info = infoFor(CASES[3]);
+    const weeks = sampleWeeks.slice(0, 1);
+    const docx = await JSZip.loadAsync(await docxToBuffer(buildDocx(weeks, info, { orientation, signature: false })));
+    const xml = await docx.file('word/document.xml').async('string');
+    assert.ok(!xml.includes('TỔ TRƯỞNG CHUYÊN MÔN'));
+    assert.ok(!xml.includes('(Ký, ghi rõ họ tên)'));
+    assert.ok(!xml.includes('Lê Văn Tổ'));
+    assert.ok(!xml.includes('<w:drawing>'), 'không chèn ảnh chữ ký');
+    // Bỏ khối chữ ký thì còn nhiều chỗ hơn → cỡ chữ không nhỏ đi.
+    assert.ok(fitWeek(busiest.rows, orientation, { signature: false }).bodyPt >= fitWeek(busiest.rows, orientation).bodyPt);
+
+    const ws = buildWorkbook(weeks, info, { orientation, signature: false }).worksheets[0];
+    assert.equal(ws.getImages().length, 0);
+    const printEnd = Number(ws.pageSetup.printArea.split(':')[1].replace(/\D/g, ''));
+    assert.equal(printEnd, 5 + weeks[0].rows.length, 'vùng in kết thúc ở dòng cuối bảng');
+    for (let i = 1; i <= ws.rowCount; i += 1) assert.notEqual(ws.getCell(i, 1).value, 'GIÁO VIÊN');
+  });
+
   test(`Bỏ cột "Đồ dùng dạy học" (${orientation === 'portrait' ? 'dọc' : 'ngang'}): Word và Excel chỉ còn 6 cột`, async () => {
     const weeks = sampleWeeks.slice(0, 1);
     const xml = await (await JSZip.loadAsync(await docxToBuffer(buildDocx(weeks, defaults.info, { orientation, equipment: false })))).file('word/document.xml').async('string');

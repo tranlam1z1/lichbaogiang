@@ -6,6 +6,7 @@ import { quoteExport } from '../../shared/pricing.js';
 
 const STORAGE_KEY = 'export-orientation';
 const EQUIPMENT_KEY = 'export-equipment';
+const SIGNATURE_KEY = 'export-signature';
 
 export const ORIENTATIONS = [
   { id: 'portrait', label: 'Khổ dọc', hint: 'A4 dọc' },
@@ -30,22 +31,27 @@ function saveOrientation(value) {
   }
 }
 
-/** Lần trước có tải cột "Đồ dùng dạy học" không (mặc định: có). */
-function loadEquipment() {
+/** Lựa chọn bật/tắt đã lưu lần trước (mặc định: bật). */
+function loadToggle(key) {
   try {
-    return window.localStorage.getItem(EQUIPMENT_KEY) !== 'off';
+    return window.localStorage.getItem(key) !== 'off';
   } catch {
     return true;
   }
 }
 
-function saveEquipment(value) {
+function saveToggle(key, value) {
   try {
-    window.localStorage.setItem(EQUIPMENT_KEY, value ? 'on' : 'off');
+    window.localStorage.setItem(key, value ? 'on' : 'off');
   } catch {
     // Trình duyệt chặn lưu trữ: bỏ qua, lần sau dùng mặc định.
   }
 }
+
+/** Lần trước có tải cột "Đồ dùng dạy học" không (mặc định: có). */
+const loadEquipment = () => loadToggle(EQUIPMENT_KEY);
+/** Lần trước có tải phần ký tên Giáo viên / Tổ trưởng không (mặc định: có). */
+const loadSignature = () => loadToggle(SIGNATURE_KEY);
 
 const fmt = (n) => n.toLocaleString('vi-VN');
 
@@ -62,18 +68,20 @@ const priceLabel = (q) => {
 };
 
 /**
- * Hỏi phạm vi tuần + khổ giấy + có tải cột đồ dùng không trước khi xuất, hiện giá từng phạm vi và tổng điểm phải trả.
- * onSubmit({ range, weeks, orientation, equipment, quote }) — quote.enough = false nghĩa là người dùng bấm "Nạp điểm".
+ * Hỏi phạm vi tuần + khổ giấy + có tải cột đồ dùng / phần ký tên không trước khi xuất, hiện giá từng phạm vi và tổng điểm phải trả.
+ * onSubmit({ range, weeks, orientation, equipment, signature, quote }) — quote.enough = false nghĩa là người dùng bấm "Nạp điểm".
  */
 export default function ExportDialog({ open, kindLabel, calendar, currentWeek, initialRange, user, settings, busy, error, onSubmit, onCancel }) {
   const [range, setRange] = useState(initialRange);
   const [orientation, setOrientation] = useState(loadOrientation);
   const [equipment, setEquipment] = useState(loadEquipment);
+  const [signature, setSignature] = useState(loadSignature);
   useEffect(() => {
     if (!open) return;
     setRange(initialRange);
     setOrientation(loadOrientation());
     setEquipment(loadEquipment());
+    setSignature(loadSignature());
   }, [open, initialRange]);
 
   const teaching = useMemo(() => calendar.filter(isTeachingWeek), [calendar]);
@@ -105,8 +113,9 @@ export default function ExportDialog({ open, kindLabel, calendar, currentWeek, i
       submitDisabled={!weeks.length}
       onSubmit={() => {
         saveOrientation(orientation);
-        saveEquipment(equipment);
-        onSubmit({ range, weeks, orientation, equipment, quote });
+        saveToggle(EQUIPMENT_KEY, equipment);
+        saveToggle(SIGNATURE_KEY, signature);
+        onSubmit({ range, weeks, orientation, equipment, signature, quote });
       }}
       onCancel={onCancel}
     >
@@ -170,10 +179,14 @@ export default function ExportDialog({ open, kindLabel, calendar, currentWeek, i
       </fieldset>
 
       <fieldset className="export-fieldset">
-        <legend>Cột trong file</legend>
+        <legend>Nội dung trong file</legend>
         <label className="check">
           <input type="checkbox" checked={equipment} onChange={(e) => setEquipment(e.target.checked)} />
           <span>Tải cột "Đồ dùng dạy học"</span>
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={signature} onChange={(e) => setSignature(e.target.checked)} />
+          <span>Tải phần ký tên Giáo viên, Tổ trưởng chuyên môn</span>
         </label>
       </fieldset>
 

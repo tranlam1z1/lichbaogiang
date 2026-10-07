@@ -244,6 +244,8 @@ function PlanProvider({ userId, initial, syncInit, children }) {
       grade,
       index,
       ppctOverrides: state.ppctOverrides[grade] || {},
+      equipmentDefaults: state.equipmentDefaults[grade] || {},
+      ppctEquipment: state.ppctEquipment[grade] || {},
       subjectSuggestions: suggestions,
       sync: { ...sync, cacheError, ...actions },
     };

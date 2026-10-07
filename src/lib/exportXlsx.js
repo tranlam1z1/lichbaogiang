@@ -44,7 +44,7 @@ function estimateHeight(r, widths) {
   return Math.max(16, lines * 14 + 2);
 }
 
-function addWeekSheet(wb, info, week, rows, orientation, equipment) {
+function addWeekSheet(wb, info, week, rows, orientation, equipment, signature) {
   const columns = columnsFor(orientation, equipment);
   const col = Object.fromEntries(columns.map((c, i) => [c.key, i + 1]));
   const widths = Object.fromEntries(columns.map((c) => [c.key, c.width]));
@@ -119,7 +119,7 @@ function addWeekSheet(wb, info, week, rows, orientation, equipment) {
     if (!cell.alignment) cell.alignment = { vertical: 'middle', wrapText: true };
   });
 
-  const lastRow = addSignatureBlock(wb, ws, info, r, columns);
+  const lastRow = signature ? addSignatureBlock(wb, ws, info, r, columns) : r - 1;
   ws.pageSetup.printArea = `A1:${String.fromCharCode(64 + last)}${lastRow}`;
   ws.pageSetup.printTitlesRow = `${headRow}:${headRow}`;
   return firstBody;
@@ -192,12 +192,13 @@ function addSignatureBlock(wb, ws, info, startRow, columns) {
  * Tạo workbook từ dữ liệu các tuần (buildExportWeeks).
  * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
  * equipment: false = bỏ cột "Đồ dùng dạy học".
+ * signature: false = bỏ khối ký tên GIÁO VIÊN / TỔ TRƯỞNG CHUYÊN MÔN cuối trang.
  */
-export function buildWorkbook(weeks, info, { orientation = 'portrait', equipment = true } = {}) {
+export function buildWorkbook(weeks, info, { orientation = 'portrait', equipment = true, signature = true } = {}) {
   const wb = new ExcelJS.Workbook();
   wb.creator = info.teacher || 'Giáo viên';
   wb.created = new Date();
-  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation, equipment);
+  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation, equipment, signature);
   return wb;
 }
 

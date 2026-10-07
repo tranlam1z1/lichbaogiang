@@ -10,10 +10,24 @@ export const SESSIONS = [
 ];
 export const MAX_PERIODS = 5;
 
-/** Đồ dùng dạy học mặc định theo môn (khi giáo viên chưa sửa). */
+/** Đồ dùng dạy học có sẵn theo môn (khi giáo viên chưa đặt cho môn đó). */
 export function defaultEquipment(subject) {
   if (!subject || SKIP_LOOKUP_SUBJECTS.has(subject)) return '';
   return subject === 'TOÁN' ? 'Vở thực hành' : 'Tranh, ảnh, PP';
+}
+
+/** Đồ dùng mặc định của môn: giáo viên đã đặt (kể cả để trống) thì dùng, chưa đặt thì dùng mặc định có sẵn. */
+export function subjectEquipment(subject, equipmentDefaults = {}) {
+  const s = normalizeSubject(subject);
+  if (!s || SKIP_LOOKUP_SUBJECTS.has(s)) return '';
+  const own = equipmentDefaults[s];
+  return own != null ? own : defaultEquipment(s);
+}
+
+/** Đồ dùng của một tiết: đặt riêng cho bài trong PPCT > đặt theo môn > mặc định có sẵn. */
+export function resolveEquipment(subject, ppctKey, { equipmentDefaults, ppctEquipment } = {}) {
+  const own = ppctKey ? ppctEquipment?.[ppctKey] : null;
+  return own || subjectEquipment(subject, equipmentDefaults);
 }
 
 export function schoolDays(timetable) {
@@ -47,10 +61,14 @@ export function iterateTimetable(timetable) {
  * @param {object} args.index           chỉ mục PPCT của khối (buildPpctIndex)
  * @param {number} args.grade           khối lớp (để ghi cảnh báo)
  * @param {object} [args.ppctOverrides] {key: tên bài đã sửa} của khối
+ * @param {object} [args.equipmentDefaults] {MÔN: đồ dùng mặc định} của khối ('' = để trống)
+ * @param {object} [args.ppctEquipment] {key: đồ dùng riêng của bài trong PPCT} của khối
  * @param {object} [args.lessonOverrides] {slotKey: {subject, title?, equipment?}} của tuần này
  * @param {string[]} [args.notTaught]  các môn giáo viên không dạy: vẫn hiện tiết nhưng để trống tên bài
  */
-export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides = {}, lessonOverrides = {}, notTaught = [] }) {
+export function buildWeekLessons({
+  week, timetable, index, grade, ppctOverrides = {}, equipmentDefaults = {}, ppctEquipment = {}, lessonOverrides = {}, notTaught = [],
+}) {
   const counts = new Map();
   const skip = new Set(notTaught);
   const days = schoolDays(timetable);
@@ -74,7 +92,7 @@ export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides 
       ppct: '',
       baseTitle: '',
       title: '',
-      baseEquipment: defaultEquipment(slot.subject),
+      baseEquipment: subjectEquipment(slot.subject, equipmentDefaults),
       equipment: '',
       warning: null,
       editedTitle: false,
@@ -98,6 +116,7 @@ export function buildWeekLessons({ week, timetable, index, grade, ppctOverrides 
         row.ppct = r.ppct ?? '';
         row.baseTitle = r.title;
         row.warning = r.warning;
+        row.baseEquipment = resolveEquipment(slot.subject, r.key, { equipmentDefaults, ppctEquipment });
       }
     }
     row.title = row.baseTitle;

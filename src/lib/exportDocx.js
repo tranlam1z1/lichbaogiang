@@ -100,11 +100,11 @@ function linesFor(text, cm, pt, em = 0.45) {
  * Chọn cỡ chữ lớn nhất (12 → 7pt) để cả tuần vừa đúng một trang A4.
  * Chiều cao ước lượng theo đo đạc thực tế trên Word/LibreOffice với Times New Roman.
  */
-export function fitWeek(rows, orientation = 'portrait', { equipment = true } = {}) {
+export function fitWeek(rows, orientation = 'portrait', { equipment = true, signature = true } = {}) {
   const { page, columns } = layoutFor(orientation, equipment);
   const available = (page.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
   const colCm = Object.fromEntries(columns.map((c) => [c.key, c.cm]));
-  const headerH = 58 + SIGN_BLOCK_PT; // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày… + khối chữ ký cuối trang
+  const headerH = 58 + (signature ? SIGN_BLOCK_PT : 0); // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày… + khối chữ ký cuối trang
   const pad = (CELL_PAD_TW * 2) * PT_PER_TW + 0.75;
   for (const pt of [12, 11.5, 11, 10.5, 10, 9.5, 9, 8.5, 8, 7.5, 7]) {
     const lineH = pt * 1.16;
@@ -252,8 +252,9 @@ function headerBlock(info, week) {
  * Tạo đối tượng Document từ dữ liệu các tuần (buildExportWeeks).
  * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
  * equipment: false = bỏ cột "Đồ dùng dạy học".
+ * signature: false = bỏ khối ký tên GIÁO VIÊN / TỔ TRƯỞNG CHUYÊN MÔN cuối trang.
  */
-export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equipment = true } = {}) {
+export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equipment = true, signature = true } = {}) {
   const { page, columns, landscape } = layoutFor(orientation, equipment);
   // Khổ ngang: thư viện docx tự đổi chỗ rộng/cao khi ghi w:pgSz (w:w=16838, w:h=11906, w:orient="landscape"),
   // nên ở đây truyền kích thước theo chiều dọc.
@@ -261,7 +262,7 @@ export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equi
     ? { width: page.height, height: page.width, orientation: PageOrientation.LANDSCAPE }
     : { width: page.width, height: page.height };
   const sections = weeks.map(({ week, rows }) => {
-    const bodyPt = forcePt || fitWeek(rows, orientation, { equipment }).bodyPt;
+    const bodyPt = forcePt || fitWeek(rows, orientation, { equipment, signature }).bodyPt;
     return {
       properties: {
         page: {
@@ -269,7 +270,7 @@ export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equi
           margin: { ...MARGIN, header: 300, footer: 300 },
         },
       },
-      children: [...headerBlock(info, week), weekTable(rows, bodyPt, columns), ...signatureBlock(info, columns)],
+      children: [...headerBlock(info, week), weekTable(rows, bodyPt, columns), ...(signature ? signatureBlock(info, columns) : [])],
     };
   });
   return new Document({

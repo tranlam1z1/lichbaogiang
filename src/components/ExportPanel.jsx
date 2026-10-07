@@ -13,9 +13,9 @@ const KIND = {
   xlsx: { fileType: 'XLSX', label: 'Excel' },
 };
 
-/** Nút tải file Word / Excel. Bấm vào thì hỏi phạm vi tuần + khổ giấy + cột đồ dùng, hiện số điểm theo số tuần rồi mới tải. */
+/** Nút tải file Word / Excel. Bấm vào thì hỏi phạm vi tuần + khổ giấy + cột đồ dùng + phần ký tên, hiện số điểm theo số tuần rồi mới tải. */
 export default function ExportPanel({ currentWeek }) {
-  const { state, grade, index, ppctOverrides } = useApp();
+  const { state, grade, index, ppctOverrides, equipmentDefaults, ppctEquipment } = useApp();
   const { user, settings, updateBalances, refreshSettings } = useAuth();
   const navigate = useNavigate();
   // Phạm vi lần trước — mở hộp thoại lần sau chọn sẵn.
@@ -26,16 +26,16 @@ export default function ExportPanel({ currentWeek }) {
   const [dialog, setDialog] = useState(null);
 
   /** Người dùng đã chọn phạm vi + khổ giấy trong hộp thoại. */
-  const submit = ({ range: chosen, weeks, orientation, equipment, quote }) => {
+  const submit = ({ range: chosen, weeks, orientation, equipment, signature, quote }) => {
     setRange(chosen);
     if (!quote.enough) {
       navigate('/nap-diem');
       return;
     }
-    run(dialog.kind, { range: chosen, weeks, orientation, equipment, confirmCost: quote.cost });
+    run(dialog.kind, { range: chosen, weeks, orientation, equipment, signature, confirmCost: quote.cost });
   };
 
-  const run = async (kind, { range: chosen, weeks, orientation, equipment, confirmCost }) => {
+  const run = async (kind, { range: chosen, weeks, orientation, equipment, signature, confirmCost }) => {
     setBusy(kind);
     setMessage(null);
     const { fileType, label } = KIND[kind];
@@ -47,6 +47,8 @@ export default function ExportPanel({ currentWeek }) {
         index,
         grade,
         ppctOverrides,
+        equipmentDefaults,
+        ppctEquipment,
         lessonOverrides: state.lessonOverrides,
         notTaught: state.notTaught,
       });
@@ -61,8 +63,8 @@ export default function ExportPanel({ currentWeek }) {
         description: `${rangeText} (${weeks.length} tuần)`,
         generate: () =>
           kind === 'docx'
-            ? downloadDocx(data, state.info, `${base}.docx`, { orientation, equipment })
-            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation, equipment }),
+            ? downloadDocx(data, state.info, `${base}.docx`, { orientation, equipment, signature })
+            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation, equipment, signature }),
         onUser: updateBalances,
       });
       setDialog(null);

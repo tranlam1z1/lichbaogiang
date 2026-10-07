@@ -163,6 +163,50 @@ test('Đồ dùng dạy học mặc định: TOÁN → Vở thực hành, môn k
   assert.ok(edited.editedEquipment);
 });
 
+test('Đồ dùng dạy học: đặt theo môn (để trống được), đặt riêng theo bài, sửa tay theo tuần', () => {
+  let s = createInitialState();
+  const build = () => flattenWeek(buildWeekLessons({
+    week: week1, timetable: s.timetable, index, grade,
+    equipmentDefaults: s.equipmentDefaults[grade], ppctEquipment: s.ppctEquipment[grade], lessonOverrides: s.lessonOverrides[1],
+  }));
+  const toan = () => build().filter((r) => r.subject === 'TOÁN');
+  const other = () => build().find((r) => r.subject && r.subject !== 'TOÁN' && r.subject !== 'CHÀO CỜ');
+
+  // Theo môn: sửa, để trống, trả về mặc định có sẵn.
+  s = reducer(s, { type: 'SET_SUBJECT_EQUIPMENT', grade, subject: 'toán', value: 'Bộ đồ dùng Toán ' });
+  assert.ok(toan().every((r) => r.equipment === 'Bộ đồ dùng Toán' && !r.editedEquipment));
+  s = reducer(s, { type: 'SET_SUBJECT_EQUIPMENT', grade, subject: 'TOÁN', value: '' });
+  assert.ok(toan().every((r) => r.equipment === ''));
+  assert.equal(other().equipment, 'Tranh, ảnh, PP');
+  s = reducer(s, { type: 'SET_SUBJECT_EQUIPMENT', grade, subject: 'TOÁN', value: null });
+  assert.deepEqual(s.equipmentDefaults[grade], {});
+  assert.ok(toan().every((r) => r.equipment === 'Vở thực hành'));
+  // Gõ đúng mặc định có sẵn thì không lưu.
+  s = reducer(s, { type: 'SET_SUBJECT_EQUIPMENT', grade, subject: 'TOÁN', value: 'Vở thực hành' });
+  assert.deepEqual(s.equipmentDefaults[grade], {});
+
+  // Theo bài trong PPCT: chỉ tiết dạy bài đó đổi; để trống thì dùng lại theo môn.
+  const first = toan()[0];
+  const key = ppctKey('TOÁN', week1.num, first.tiet);
+  s = reducer(s, { type: 'SET_PPCT_EQUIPMENT', grade, key, value: 'Que tính' });
+  assert.equal(toan()[0].equipment, 'Que tính');
+  assert.ok(toan().slice(1).every((r) => r.equipment === 'Vở thực hành'));
+
+  // Sửa tay trong tuần vẫn ưu tiên hơn; để trống được.
+  s = reducer(s, { type: 'SET_LESSON', weekNum: 1, slotKey: first.key, subject: 'TOÁN', field: 'equipment', value: '', base: 'Que tính' });
+  assert.equal(toan()[0].equipment, '');
+  assert.ok(toan()[0].editedEquipment);
+  s = reducer(s, { type: 'RESET_WEEK_LESSONS', weekNum: 1 });
+  s = reducer(s, { type: 'SET_PPCT_EQUIPMENT', grade, key, value: '  ' });
+  assert.deepEqual(s.ppctEquipment[grade], {});
+  assert.equal(toan()[0].equipment, 'Vở thực hành');
+
+  // Sao lưu cũ không có hai trường này.
+  const old = reducer(createInitialState(), { type: 'RESTORE', data: { info: { grade } } });
+  assert.deepEqual(old.equipmentDefaults, {});
+  assert.deepEqual(old.ppctEquipment, {});
+});
+
 test('Môn không dạy: giữ tiết và tên môn, để trống tên bài; bật lại thì phần đã sửa hiện lại', () => {
   let s = createInitialState();
   const first = flattenWeek(buildWeekLessons({ week: week1, timetable: s.timetable, index, grade })).find((r) => r.subject === 'TIẾNG ANH');
