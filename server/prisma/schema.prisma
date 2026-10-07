@@ -64,7 +64,7 @@ model PointTransaction {
   id               Int      @id @default(autoincrement())
   userId           Int
   user             User     @relation("UserTransactions", fields: [userId], references: [id])
-  // SIGNUP_BONUS | EXPORT | EXPORT_REFUND | TOPUP | ADMIN_ADJUST | FREE_RESET
+  // SIGNUP_BONUS | EXPORT | EXPORT_REFUND | TOPUP | ADMIN_ADJUST | BULK_BONUS | FREE_RESET
   type             String
   points           Int      @default(0) // + cộng, − trừ
   balanceAfter     Int // số điểm sau giao dịch

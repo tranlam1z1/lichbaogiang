@@ -260,6 +260,54 @@ export async function adjustPoints(userId, delta, actorId, reason) {
   }, TX_OPTS);
 }
 
+/** Số dòng mỗi lần cập nhật/ghi sổ khi cộng hàng loạt — tránh vượt giới hạn tham số của SQLite. */
+const BULK_CHUNK = 500;
+
+/**
+ * Admin cộng điểm cho TẤT CẢ người dùng (mặc định bỏ qua tài khoản đang khóa).
+ * Chỉ cộng, không trừ; bắt buộc lý do; mỗi người một dòng sổ cái loại BULK_BONUS.
+ */
+export async function bulkAddPoints(delta, actorId, reason, { includeLocked = false } = {}) {
+  const note = String(reason || '').trim();
+  const n = Number(delta);
+  const errors = {};
+  if (!Number.isInteger(n) || n <= 0) errors.delta = 'Số điểm phải là số nguyên dương.';
+  else if (n > MAX_ADJUST_POINTS) errors.delta = `Mỗi lần chỉ cộng tối đa ${MAX_ADJUST_POINTS.toLocaleString('vi-VN')} điểm.`;
+  if (!note) errors.reason = 'Vui lòng nhập lý do.';
+  if (Object.keys(errors).length) {
+    throw new HttpError(400, Object.values(errors)[0], { code: 'VALIDATION', errors });
+  }
+  return prisma.$transaction(async (tx) => {
+    // Chốt danh sách trước rồi cập nhật theo id: người đăng ký giữa chừng không bị lệch giữa điểm và sổ cái.
+    const ids = (await tx.user.findMany({
+      where: includeLocked ? {} : { isLocked: false },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+    })).map((u) => u.id);
+    for (let i = 0; i < ids.length; i += BULK_CHUNK) {
+      const chunk = ids.slice(i, i + BULK_CHUNK);
+      await tx.user.updateMany({ where: { id: { in: chunk } }, data: { points: { increment: n } } });
+      const users = await tx.user.findMany({
+        where: { id: { in: chunk } },
+        select: { id: true, points: true, freeExportsLeft: true },
+      });
+      await tx.pointTransaction.createMany({
+        data: users.map((u) => ({
+          userId: u.id,
+          type: 'BULK_BONUS',
+          points: n,
+          balanceAfter: u.points,
+          freeExports: 0,
+          freeExportsAfter: u.freeExportsLeft,
+          actorId,
+          note: note.slice(0, 300),
+        })),
+      });
+    }
+    return { count: ids.length, delta: n };
+  }, { ...TX_OPTS, timeout: 60_000 });
+}
+
 /** Admin đặt lại số lượt xuất miễn phí về một giá trị cụ thể (ghi sổ cái phần chênh lệch). */
 export async function resetFreeExports(userId, value, actorId, reason) {
   const n = Number(value);

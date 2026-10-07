@@ -6,7 +6,7 @@ import { HttpError, validationError } from '../../lib/errors.js';
 import { pageResult, paging } from '../../lib/paging.js';
 import { setSessionCookie } from '../../lib/session.js';
 import { publicUser } from '../../lib/users.js';
-import { adjustPoints, resetFreeExports } from '../../services/points.js';
+import { adjustPoints, bulkAddPoints, resetFreeExports } from '../../services/points.js';
 import { getSettings } from '../../services/settings.js';
 import { validatePassword } from '../../../../shared/validation.js';
 import { BCRYPT_ROUNDS } from '../auth.js';
@@ -150,6 +150,14 @@ usersRouter.post('/:id/role', async (req, res) => {
     return u;
   });
   res.json({ user: adminUser(updated) });
+});
+
+/** Cộng điểm toàn server: mọi tài khoản (includeLocked = true thì gồm cả tài khoản đang khóa). */
+usersRouter.post('/bulk-points', async (req, res) => {
+  const result = await bulkAddPoints(req.body?.delta, req.user.id, req.body?.reason, {
+    includeLocked: req.body?.includeLocked === true,
+  });
+  res.json(result);
 });
 
 usersRouter.post('/:id/points', async (req, res) => {

@@ -1,6 +1,6 @@
 // Tiện ích dùng chung cho các route quản trị.
 
-export const TRANSACTION_TYPES = ['SIGNUP_BONUS', 'EXPORT', 'EXPORT_REFUND', 'TOPUP', 'ADMIN_ADJUST', 'FREE_RESET'];
+export const TRANSACTION_TYPES = ['SIGNUP_BONUS', 'EXPORT', 'EXPORT_REFUND', 'TOPUP', 'ADMIN_ADJUST', 'BULK_BONUS', 'FREE_RESET'];
 
 /** Tìm người dùng theo tên đăng nhập, email hoặc SĐT (tìm gần đúng). */
 export function userSearchWhere(q) {

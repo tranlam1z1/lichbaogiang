@@ -185,6 +185,7 @@ API quản trị (tất cả yêu cầu role ADMIN):
 | GET | `/api/admin/stats` · `/api/admin/topups/pending-count` |
 | GET | `/api/admin/users?q=&role=&status=&sort=&page=` · `/api/admin/users/:id` |
 | POST | `/api/admin/users/:id/lock` `{ locked, reason }` · `/reset-password` `{ password? }` · `/role` `{ role }` · `/points` `{ delta, reason }` · `/free-exports` `{ value?, reason? }` |
+| POST | `/api/admin/users/bulk-points` `{ delta, reason, includeLocked? }` — cộng điểm cho mọi tài khoản (mặc định bỏ qua tài khoản khóa), ghi sổ cái `BULK_BONUS` từng người |
 | GET | `/api/admin/topups?status=&q=&userId=&from=&to=` |
 | POST | `/api/admin/topups/:id/approve` · `/api/admin/topups/:id/reject` `{ reason }` |
 | GET | `/api/admin/transactions?q=&userId=&type=&from=&to=` · `/api/admin/exports?q=&userId=&fileType=&chargeType=&status=&from=&to=` |

@@ -153,6 +153,7 @@ export const TX_TYPES = {
   EXPORT_REFUND: 'Hoàn lại (xuất lỗi)',
   TOPUP: 'Nạp điểm',
   ADMIN_ADJUST: 'Admin cộng/trừ điểm',
+  BULK_BONUS: 'Cộng điểm toàn server',
   FREE_RESET: 'Đặt lại lượt miễn phí',
 };
 

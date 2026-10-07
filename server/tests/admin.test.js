@@ -129,6 +129,36 @@ test('cộng / trừ điểm thủ công: bắt buộc lý do, không trừ âm,
   assert.equal(tx.body.sum.points, 30);
 });
 
+test('cộng điểm toàn server: chỉ cộng, bắt buộc lý do, mặc định bỏ qua tài khoản khóa, ghi sổ cái từng người', async () => {
+  const a = await newUser(43);
+  const b = await newUser(44);
+  await admin('POST', `/admin/users/${b.id}/lock`, { locked: true, reason: 'Vi phạm' });
+  const before = await prisma.user.findMany({ select: { id: true, points: true, isLocked: true } });
+  const pointsOf = async (id) => (await prisma.user.findUnique({ where: { id } })).points;
+
+  assert.equal((await a.call('POST', '/admin/users/bulk-points', { delta: 10, reason: 'x' })).status, 403);
+  assert.equal((await admin('POST', '/admin/users/bulk-points', { delta: 10 })).status, 400);
+  assert.equal((await admin('POST', '/admin/users/bulk-points', { delta: -10, reason: 'x' })).status, 400);
+  assert.equal((await admin('POST', '/admin/users/bulk-points', { delta: 1.5, reason: 'x' })).status, 400);
+
+  const r = await admin('POST', '/admin/users/bulk-points', { delta: 25, reason: 'Khai giảng' });
+  assert.equal(r.status, 200);
+  assert.equal(r.body.count, before.filter((u) => !u.isLocked).length);
+  assert.equal(await pointsOf(a.id), before.find((u) => u.id === a.id).points + 25);
+  assert.equal(await pointsOf(b.id), before.find((u) => u.id === b.id).points);
+
+  const tx = await admin('GET', `/admin/transactions?userId=${a.id}&type=BULK_BONUS`);
+  assert.equal(tx.body.total, 1);
+  assert.equal(tx.body.items[0].points, 25);
+  assert.equal(tx.body.items[0].balanceAfter, await pointsOf(a.id));
+  assert.equal(tx.body.items[0].actor.id, adminId);
+  assert.equal(tx.body.items[0].note, 'Khai giảng');
+
+  const all = await admin('POST', '/admin/users/bulk-points', { delta: 5, reason: 'Bù lỗi', includeLocked: true });
+  assert.equal(all.body.count, before.length);
+  assert.equal(await pointsOf(b.id), before.find((u) => u.id === b.id).points + 5);
+});
+
 test('đặt lại lượt miễn phí: mặc định theo cài đặt, ghi sổ cái phần chênh lệch', async () => {
   const u = await newUser(38);
   await u.call('POST', '/exports/authorize', { fileType: 'DOCX' });
