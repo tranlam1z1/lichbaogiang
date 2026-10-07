@@ -294,6 +294,7 @@ Sẽ ra file `khbd-2026-10-01.dump`. Cất vào nơi an toàn (Google Drive, One
 | Hiện tượng | Nguyên nhân / cách xử lý |
 |---|---|
 | Build lỗi `Thiếu DATABASE_URL` hoặc `Can't reach database server` | Chưa điền / điền sai `DATABASE_URL`. Kiểm tra đã copy đủ chuỗi, có `?sslmode=require`, host **không** có `-pooler`. |
+| Build lỗi `P1002` (`... was reached but timed out`, thường kèm `advisory lock`) | Render → **Environment** thêm biến `PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK` = `1`. Kiểm tra host trong `DATABASE_URL` **không** có `-pooler`, và thêm `&connect_timeout=30` vào cuối chuỗi (Neon đang ngủ cần vài giây để dậy). Save → **Manual Deploy**. |
 | Build lỗi `Chưa tạo được admin ...` | Một trong các biến `ADMIN_*` sai định dạng, hoặc email/SĐT đã được tài khoản khác dùng. Đọc dòng lỗi trong **Logs**, sửa trong **Environment**. |
 | Quên mật khẩu admin | Render → Environment: đặt `ADMIN_PASSWORD` = mật khẩu mới, `ADMIN_RESET_PASSWORD` = `true` → Save → **Manual Deploy**. Đăng nhập xong thì xóa `ADMIN_PASSWORD` và đặt lại `ADMIN_RESET_PASSWORD` = `false`. |
 | Trang tải rất lâu lần đầu | Gói free đang "thức dậy" — chờ 1 phút. |

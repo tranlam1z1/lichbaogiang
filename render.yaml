@@ -26,6 +26,10 @@ services:
         value: "1"
       - key: COOKIE_SAMESITE
         value: lax
+      # Render chỉ chạy một bản build tại một thời điểm → không cần advisory lock của prisma migrate.
+      # Tránh lỗi P1002 "Timed out trying to acquire a postgres advisory lock" trên Neon.
+      - key: PRISMA_SCHEMA_DISABLE_ADVISORY_LOCK
+        value: "1"
       - key: JWT_SECRET
         generateValue: true
       # Chuỗi kết nối Neon loại "direct" (không có -pooler trong tên host), kèm ?sslmode=require
