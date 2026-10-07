@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useApp } from '../state/AppContext.jsx';
 import { generateCalendar, isTeachingWeek, validateCalendar, vnWeekday, dayName } from '../lib/calendar.js';
+import { CALENDAR_PRESETS } from '../data/calendarPresets.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
 /** Bảng lịch tuần sửa được + công cụ tạo lại cả năm. */
@@ -29,6 +30,7 @@ export default function WeekCalendar() {
     })(),
   });
   const [pending, setPending] = useState(null);
+  const [pendingYear, setPendingYear] = useState(null);
   const [genError, setGenError] = useState(null);
 
   const update = (id, patch) => dispatch({ type: 'UPDATE_WEEK', id, patch });
@@ -37,14 +39,34 @@ export default function WeekCalendar() {
   const preview = () => {
     try {
       setGenError(null);
+      setPendingYear(null);
       setPending(generateCalendar({ ...gen, daysPerWeek: state.timetable.saturday ? 6 : 5 }));
     } catch (e) {
       setGenError(e.message);
     }
   };
 
+  const applyPreset = (p) => {
+    setPendingYear(p.schoolYear);
+    setPending(JSON.parse(JSON.stringify(p.calendar)));
+  };
+
+  const closeDialog = () => { setPending(null); setPendingYear(null); };
+
   return (
     <div className="stack">
+      <section className="card">
+        <h2>Lịch tuần theo năm học</h2>
+        <div className="options-row">
+          {CALENDAR_PRESETS.map((p) => (
+            <button key={p.schoolYear} type="button" className="btn" onClick={() => applyPreset(p)}>
+              Năm học {p.schoolYear}
+            </button>
+          ))}
+        </div>
+        <p className="hint">Thay toàn bộ lịch tuần bằng lịch mẫu của năm học đã chọn và cập nhật "Năm học" trong thông tin lớp.</p>
+      </section>
+
       <section className="card">
         <h2>Tạo lại lịch tuần</h2>
         <div className="form-grid gen-grid">
@@ -121,12 +143,16 @@ export default function WeekCalendar() {
 
       <ConfirmDialog
         open={!!pending}
-        title="Thay toàn bộ lịch tuần?"
+        title={pendingYear ? `Dùng lịch tuần năm học ${pendingYear}?` : 'Thay toàn bộ lịch tuần?'}
         message={pending ? `Lịch mới có ${pending.length} dòng (${pending.filter(isTeachingWeek).length} tuần học), từ ${pending[0]?.start} đến ${pending[pending.length - 1]?.end}. Phần sửa tên bài theo từng tuần vẫn được giữ theo số tuần.` : ''}
         confirmLabel="Thay lịch"
         danger
-        onCancel={() => setPending(null)}
-        onConfirm={() => { dispatch({ type: 'REPLACE_CALENDAR', calendar: pending }); setPending(null); }}
+        onCancel={closeDialog}
+        onConfirm={() => {
+          dispatch({ type: 'REPLACE_CALENDAR', calendar: pending });
+          if (pendingYear) dispatch({ type: 'SET_INFO', patch: { schoolYear: pendingYear } });
+          closeDialog();
+        }}
       />
     </div>
   );
