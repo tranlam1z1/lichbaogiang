@@ -209,20 +209,26 @@ test('cài đặt: validate, lưu vào database và có hiệu lực ngay', asyn
   assert.equal(bad.status, 400);
   assert.deepEqual(Object.keys(bad.body.errors).sort(), ['pointsPerExport', 'topupUnitVnd']);
 
-  const ok = await admin('PUT', '/admin/settings', { values: { pointsPerExport: 8, freeExportsForNewUser: 2 } });
+  const ok = await admin('PUT', '/admin/settings', { values: { pointsPerExport: 8, freeExportsForNewUser: 2, pointsForNewUser: 30 } });
   assert.equal(ok.status, 200);
   assert.equal(ok.body.values.pointsPerExport, 8);
   assert.equal((await prisma.setting.findUnique({ where: { key: 'pointsPerExport' } })).updatedById, adminId);
 
   const u = await newUser(41);
-  assert.equal((await u.call('GET', '/auth/me')).body.user.freeExportsLeft, 2);
+  const me = (await u.call('GET', '/auth/me')).body.user;
+  assert.equal(me.freeExportsLeft, 2);
+  assert.equal(me.points, 30);
+  const bonus = await prisma.pointTransaction.findFirst({ where: { userId: u.id, type: 'SIGNUP_BONUS' } });
+  assert.equal(bonus.points, 30);
+  assert.equal(bonus.balanceAfter, 30);
+  assert.equal(bonus.freeExports, 2);
   await prisma.user.update({ where: { id: u.id }, data: { freeExportsLeft: 0, points: 100 } });
   const old = await u.call('POST', '/exports/authorize', { fileType: 'DOCX', confirmCost: 5 });
   assert.equal(old.status, 409);
   assert.equal(old.body.details.cost, 8);
   assert.equal((await u.call('POST', '/exports/authorize', { fileType: 'DOCX', confirmCost: 8 })).body.user.points, 92);
 
-  await admin('PUT', '/admin/settings', { values: { pointsPerExport: 5, freeExportsForNewUser: 5 } });
+  await admin('PUT', '/admin/settings', { values: { pointsPerExport: 5, freeExportsForNewUser: 5, pointsForNewUser: 0 } });
 });
 
 test('seed: tạo admin từ biến môi trường, chạy lại không tạo trùng, nâng quyền tài khoản có sẵn', () => {

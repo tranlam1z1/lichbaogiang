@@ -9,6 +9,7 @@ settingsRouter.get('/public', async (req, res) => {
   const s = await getSettings();
   res.json({
     freeExportsForNewUser: s.freeExportsForNewUser,
+    pointsForNewUser: s.pointsForNewUser,
     pointsPerExport: s.pointsPerExport,
     pointsPerExtraWeek: s.pointsPerExtraWeek,
     topupUnitVnd: s.topupUnitVnd,

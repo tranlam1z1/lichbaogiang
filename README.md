@@ -120,6 +120,7 @@ Mọi request ghi dữ liệu phải gửi `Content-Type: application/json` (ch�
 | Quy tắc | Mặc định | Tên cài đặt trong bảng `Setting` |
 |---|---|---|
 | Lượt xuất miễn phí cho tài khoản mới (Word hay Excel đều tính 1 lượt) | 5 | `freeExportsForNewUser` |
+| Số điểm tặng cho tài khoản mới | 0 | `pointsForNewUser` |
 | Số điểm trừ mỗi lần xuất khi đã hết lượt miễn phí | 5 | `pointsPerExport` |
 | Mệnh giá nạp (vừa là mức tối thiểu, vừa là bước nhảy) | 10.000đ | `topupUnitVnd` |
 | Số điểm nhận được cho mỗi mệnh giá | 100 | `pointsPerUnit` |

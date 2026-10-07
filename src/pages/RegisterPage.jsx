@@ -7,8 +7,19 @@ import AuthLayout, { TextField } from './AuthLayout.jsx';
 const EMPTY = { username: '', password: '', confirmPassword: '', email: '', phone: '' };
 const ALL_TOUCHED = Object.fromEntries(Object.keys(EMPTY).map((k) => [k, true]));
 
+/** Dòng giới thiệu quà tặng khi đăng ký, theo cài đặt hiện tại của admin. */
+function signupGiftText(settings) {
+  const free = settings?.freeExportsForNewUser ?? 5;
+  const points = settings?.pointsForNewUser ?? 0;
+  const gifts = [
+    free > 0 && `${free} lượt xuất file Word/Excel miễn phí`,
+    points > 0 && `${points.toLocaleString('vi-VN')} điểm`,
+  ].filter(Boolean);
+  return gifts.length ? `Tài khoản mới được tặng ${gifts.join(' và ')}.` : undefined;
+}
+
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, settings } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   // Chỉ hiện lỗi của ô đã rời khỏi (hoặc sau khi bấm Đăng ký) để không báo lỗi khi người dùng đang gõ dở.
@@ -55,7 +66,7 @@ export default function RegisterPage() {
   return (
     <AuthLayout
       title="Tạo tài khoản"
-      subtitle="Tài khoản mới được tặng 5 lượt xuất file Word/Excel miễn phí."
+      subtitle={signupGiftText(settings)}
       footer={<>Đã có tài khoản? <Link to="/dang-nhap">Đăng nhập</Link></>}
     >
       {message && <div className="banner banner-alert" role="alert">{message}</div>}

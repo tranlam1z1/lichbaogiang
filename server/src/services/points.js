@@ -40,20 +40,27 @@ async function balances(tx, userId) {
 }
 
 // ---------------------------------------------------------------------------
-// Đăng ký: tặng lượt miễn phí
+// Đăng ký: tặng lượt miễn phí và điểm
 // ---------------------------------------------------------------------------
 
-/** Tạo tài khoản kèm lượt miễn phí theo cài đặt hiện tại, có ghi sổ cái. */
+/** Tạo tài khoản kèm lượt miễn phí và điểm tặng theo cài đặt hiện tại, có ghi sổ cái. */
 export async function createUserWithBonus(data) {
   return prisma.$transaction(async (tx) => {
-    const { freeExportsForNewUser } = await getSettings(tx);
-    const user = await tx.user.create({ data: { ...data, freeExportsLeft: freeExportsForNewUser } });
-    if (freeExportsForNewUser > 0) {
+    const { freeExportsForNewUser, pointsForNewUser } = await getSettings(tx);
+    const user = await tx.user.create({
+      data: { ...data, freeExportsLeft: freeExportsForNewUser, points: pointsForNewUser },
+    });
+    if (freeExportsForNewUser > 0 || pointsForNewUser > 0) {
+      const gifts = [
+        freeExportsForNewUser > 0 && `${freeExportsForNewUser} lượt xuất miễn phí`,
+        pointsForNewUser > 0 && `${pointsForNewUser} điểm`,
+      ].filter(Boolean);
       await writeLedger(tx, user, {
         type: 'SIGNUP_BONUS',
+        points: pointsForNewUser,
         freeExports: freeExportsForNewUser,
         actorId: user.id,
-        note: `Tặng ${freeExportsForNewUser} lượt xuất miễn phí khi đăng ký`,
+        note: `Tặng ${gifts.join(' và ')} khi đăng ký`,
       });
     }
     return user;

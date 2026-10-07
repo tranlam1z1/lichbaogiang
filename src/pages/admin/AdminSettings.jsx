@@ -6,7 +6,7 @@ import { exportCost } from '../../../shared/pricing.js';
 import { formatDateTime } from '../account/AccountLayout.jsx';
 import AdminLayout from './AdminLayout.jsx';
 
-const ORDER = ['freeExportsForNewUser', 'pointsPerExport', 'pointsPerExtraWeek', 'topupUnitVnd', 'pointsPerUnit'];
+const ORDER = ['freeExportsForNewUser', 'pointsForNewUser', 'pointsPerExport', 'pointsPerExtraWeek', 'topupUnitVnd', 'pointsPerUnit'];
 
 /** Sửa số lượt miễn phí, điểm mỗi lần xuất, tỷ lệ quy đổi — lưu trong database. */
 export default function AdminSettings() {
@@ -85,7 +85,10 @@ export default function AdminSettings() {
             <div className="settings-preview" aria-live="polite">
               <strong>Người dùng sẽ thấy:</strong>
               <ul>
-                <li>Tài khoản mới được <strong>{n('freeExportsForNewUser')}</strong> lượt xuất miễn phí (tài khoản đã có không bị ảnh hưởng).</li>
+                <li>
+                  Tài khoản mới được <strong>{n('freeExportsForNewUser')}</strong> lượt xuất miễn phí
+                  {n('pointsForNewUser') > 0 && <> và <strong>{n('pointsForNewUser')}</strong> điểm</>} (tài khoản đã có không bị ảnh hưởng).
+                </li>
                 <li>
                   Lượt miễn phí chỉ dùng khi tải 1 tuần. Điểm trừ theo số tuần: 1 tuần <strong>{cost(1)}</strong> điểm,
                   18 tuần (một học kì) <strong>{cost(18)}</strong> điểm, 35 tuần (cả năm) <strong>{cost(35)}</strong> điểm.

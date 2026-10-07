@@ -174,6 +174,7 @@ test('cài đặt công khai', async () => {
   const r = await client(srv.base)('GET', '/settings/public');
   assert.deepEqual(r.body, {
     freeExportsForNewUser: 5,
+    pointsForNewUser: 0,
     pointsPerExport: 5,
     pointsPerExtraWeek: 2,
     topupUnitVnd: 10000,
