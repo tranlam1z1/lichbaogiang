@@ -34,8 +34,8 @@ test('Tuần 1 khớp sheet LỊCH BÁO GIẢNG trong Excel', () => {
       assert.equal(r.title, '');
     } else {
       assert.equal(String(r.ppct), String(x.ppct), `PPCT dòng ${x.row}`);
-      if (x.subject === 'HĐTN' || x.subject === 'MĨ THUẬT') {
-        // PPCT HĐTN lớp 4 và Mĩ thuật (Kết nối tri thức) đã được cập nhật theo danh mục mới, khác tên bài trong file Excel cũ.
+      if (['HĐTN', 'MĨ THUẬT', 'ÂM NHẠC', 'TIN HỌC', 'CÔNG NGHỆ', 'GDTC'].includes(x.subject)) {
+        // PPCT HĐTN lớp 4 và Mĩ thuật, Âm nhạc, Tin học, Công nghệ, GDTC (Kết nối tri thức) đã được cập nhật theo danh mục mới, khác tên bài trong file Excel cũ.
         const entry = ppctData[grade].find((e) => e[0] === x.subject && String(e[3]) === String(x.ppct));
         assert.equal(r.title, entry[4], `tên bài dòng ${x.row}`);
         diffs.push(`dòng ${x.row} ${x.subject}: PPCT mới → "${r.title}"`);
