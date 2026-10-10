@@ -241,3 +241,52 @@ for (const orientation of ['portrait', 'landscape']) {
     assert.match(ws.pageSetup.printArea, /^A1:F\d+$/);
   });
 }
+
+for (const orientation of ['portrait', 'landscape']) {
+  test(`Cột "Nội dung tích hợp" (${orientation === 'portrait' ? 'dọc' : 'ngang'}): mặc định không có, bật thì là cột cuối bảng`, async () => {
+    const weeks = sampleWeeks.slice(0, 1).map(({ week, rows }) => ({
+      week,
+      rows: rows.map((r, i) => (i === 1 ? { ...r, integration: 'GD ATGT thử' } : r)),
+    }));
+    const xmlOf = async (opts) => (await JSZip.loadAsync(await docxToBuffer(buildDocx(weeks, defaults.info, { orientation, ...opts })))).file('word/document.xml').async('string');
+    // Độ rộng các cột của bảng báo giảng (bảng đầu tiên trong file).
+    const grid = (xml) => [...xml.match(/<w:tblGrid>.*?<\/w:tblGrid>/)[0].matchAll(/w:w="(\d+)"/g)].map((m) => Number(m[1]));
+    const sum = (list) => list.reduce((a, b) => a + b, 0);
+
+    // Word
+    const off = await xmlOf({});
+    assert.ok(!off.includes('Nội dung tích hợp'), 'mặc định không có cột');
+    assert.ok(!off.includes('GD ATGT thử'));
+    assert.equal(grid(off).length, 7);
+    const on = await xmlOf({ integration: true });
+    assert.ok(on.indexOf('Nội dung tích hợp') > on.indexOf('Đồ dùng dạy học'), 'cột nằm sau Đồ dùng dạy học');
+    assert.ok(on.includes('GD ATGT thử'));
+    assert.equal(grid(on).length, 8);
+    assert.ok(Math.abs(sum(grid(on)) - sum(grid(off))) <= 8, 'bề ngang bảng không đổi');
+    assert.ok(grid(on)[5] > grid(on)[7], 'Tên bài dạy vẫn là cột rộng nhất');
+    const noEquipment = await xmlOf({ equipment: false, integration: true });
+    assert.ok(!noEquipment.includes('Đồ dùng dạy học'));
+    assert.ok(noEquipment.includes('Nội dung tích hợp'));
+    assert.equal(grid(noEquipment).length, 7);
+    // Thêm cột thì cột tên bài hẹp lại → cỡ chữ không lớn hơn.
+    assert.ok(fitWeek(busiest.rows, orientation, { integration: true }).bodyPt <= fitWeek(busiest.rows, orientation).bodyPt);
+
+    // Excel
+    const base = buildWorkbook(weeks, defaults.info, { orientation }).worksheets[0];
+    assert.equal(base.columns.length, 7);
+    assert.match(base.pageSetup.printArea, /^A1:G\d+$/);
+    const ws = buildWorkbook(weeks, defaults.info, { orientation, integration: true }).worksheets[0];
+    assert.equal(ws.columns.length, 8);
+    assert.equal(ws.getCell(5, 7).value, 'Đồ dùng dạy học');
+    assert.equal(ws.getCell(5, 8).value, 'Nội dung tích hợp');
+    assert.equal(ws.getCell(7, 8).value, 'GD ATGT thử');
+    assert.ok(ws.getCell(7, 8).border?.top, 'ô có kẻ khung');
+    assert.match(ws.pageSetup.printArea, /^A1:H\d+$/);
+    assert.equal(sum(ws.columns.map((c) => c.width)), sum(base.columns.map((c) => c.width)), 'bề ngang bảng không đổi');
+    assert.equal(ws.getCell(5 + weeks[0].rows.length + 2, 6).value, 'TỔ TRƯỞNG CHUYÊN MÔN');
+    const noEq = buildWorkbook(weeks, defaults.info, { orientation, equipment: false, integration: true }).worksheets[0];
+    assert.equal(noEq.columns.length, 7);
+    assert.equal(noEq.getCell(5, 7).value, 'Nội dung tích hợp');
+    assert.equal(noEq.getCell(7, 7).value, 'GD ATGT thử');
+  });
+}

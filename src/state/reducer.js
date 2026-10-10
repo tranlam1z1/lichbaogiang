@@ -22,6 +22,8 @@ export function createInitialState() {
     ppctOverrides: {},
     equipmentDefaults: {},
     ppctEquipment: {},
+    ppctIntegration: {},
+    equipmentBlank: { grades: [], weeks: [] },
     checkRules: {},
     notTaught: [],
     selectedWeekId: findCurrentWeek(calendar)?.id ?? null,
@@ -42,6 +44,12 @@ function normalizeSignatures(saved, base) {
   return out;
 }
 
+/** Công tắc để trống cột đồ dùng (theo khối / theo tuần); bản sao lưu cũ không có thì coi như tắt hết. */
+function normalizeEquipmentBlank(saved) {
+  const ints = (list) => (Array.isArray(list) ? [...new Set(list.map(Number).filter(Number.isInteger))] : []);
+  return { grades: ints(saved?.grades), weeks: ints(saved?.weeks) };
+}
+
 /** Ghép dữ liệu đã lưu / file sao lưu với cấu trúc mặc định để tránh thiếu trường. */
 export function hydrate(saved) {
   const base = createInitialState();
@@ -56,6 +64,8 @@ export function hydrate(saved) {
     ppctOverrides: s.ppctOverrides && typeof s.ppctOverrides === 'object' ? s.ppctOverrides : {},
     equipmentDefaults: s.equipmentDefaults && typeof s.equipmentDefaults === 'object' ? s.equipmentDefaults : {},
     ppctEquipment: s.ppctEquipment && typeof s.ppctEquipment === 'object' ? s.ppctEquipment : {},
+    ppctIntegration: s.ppctIntegration && typeof s.ppctIntegration === 'object' ? s.ppctIntegration : {},
+    equipmentBlank: normalizeEquipmentBlank(s.equipmentBlank),
     checkRules: s.checkRules && typeof s.checkRules === 'object' ? s.checkRules : {},
     notTaught: Array.isArray(s.notTaught) ? [...new Set(s.notTaught.map(normalizeSubject).filter(Boolean))] : [],
     tab: s.tab || base.tab,
@@ -112,7 +122,7 @@ export function reducer(state, action) {
     case 'REPLACE_TIMETABLE':
       return { ...state, timetable: action.timetable };
 
-    // ---------- Sửa tên bài / đồ dùng trong một tuần ----------
+    // ---------- Sửa tên bài / đồ dùng / nội dung tích hợp trong một tuần ----------
     case 'SET_LESSON': {
       const { weekNum, slotKey, subject, field, value, base = '' } = action;
       const week = { ...(state.lessonOverrides[weekNum] || {}) };
@@ -120,11 +130,12 @@ export function reducer(state, action) {
       if (cell.subject !== normalizeSubject(week[slotKey]?.subject)) {
         delete cell.title;
         delete cell.equipment;
+        delete cell.integration;
       }
       const clean = (value ?? '').toString();
       if (clean === base) delete cell[field];
       else cell[field] = clean;
-      if (cell.title == null && cell.equipment == null) delete week[slotKey];
+      if (cell.title == null && cell.equipment == null && cell.integration == null) delete week[slotKey];
       else week[slotKey] = cell;
       const lessonOverrides = { ...state.lessonOverrides, [weekNum]: week };
       if (!Object.keys(week).length) delete lessonOverrides[weekNum];
@@ -200,15 +211,38 @@ export function reducer(state, action) {
     case 'RESET_SUBJECT_EQUIPMENT_ALL':
       return { ...state, equipmentDefaults: { ...state.equipmentDefaults, [action.grade]: {} } };
     case 'SET_PPCT_EQUIPMENT': {
-      // Để trống = dùng đồ dùng theo môn.
+      // Xóa hết chữ = dùng đồ dùng theo môn; blank: true = để trống riêng bài này (lưu '').
       const g = { ...(state.ppctEquipment[action.grade] || {}) };
       const value = String(action.value ?? '').trim();
-      if (value) g[action.key] = value;
+      if (action.blank) g[action.key] = '';
+      else if (value) g[action.key] = value;
       else delete g[action.key];
       return { ...state, ppctEquipment: { ...state.ppctEquipment, [action.grade]: g } };
     }
     case 'RESET_PPCT_EQUIPMENT_ALL':
       return { ...state, ppctEquipment: { ...state.ppctEquipment, [action.grade]: {} } };
+    case 'SET_EQUIPMENT_BLANK': {
+      // scope: 'grade' (mọi tuần của khối) | 'week' (một tuần); id: khối / số tuần. Chỉ ẩn, không xóa đồ dùng đã đặt.
+      const field = action.scope === 'grade' ? 'grades' : 'weeks';
+      const id = Number(action.id);
+      if (!Number.isInteger(id)) return state;
+      const set = new Set(state.equipmentBlank[field]);
+      if (action.on) set.add(id);
+      else set.delete(id);
+      return { ...state, equipmentBlank: { ...state.equipmentBlank, [field]: [...set] } };
+    }
+
+    // ---------- Nội dung tích hợp theo bài ----------
+    case 'SET_PPCT_INTEGRATION': {
+      // Để trống = bài không có nội dung tích hợp.
+      const g = { ...(state.ppctIntegration[action.grade] || {}) };
+      const value = String(action.value ?? '').trim();
+      if (value) g[action.key] = value;
+      else delete g[action.key];
+      return { ...state, ppctIntegration: { ...state.ppctIntegration, [action.grade]: g } };
+    }
+    case 'RESET_PPCT_INTEGRATION_ALL':
+      return { ...state, ppctIntegration: { ...state.ppctIntegration, [action.grade]: {} } };
 
     // ---------- Định mức tiết/tuần trong bảng đối chiếu ----------
     case 'SET_CHECK_RULE': {

@@ -8,8 +8,8 @@ import excelWeek1 from './fixtures/excel-week1.json';
 import { buildPpctIndex, lookupLesson, ppctKey } from '../src/lib/ppct.js';
 import { buildWeekLessons, flattenWeek, checkTimetable } from '../src/lib/schedule.js';
 import { findCurrentWeek, generateCalendar, isTeachingWeek } from '../src/lib/calendar.js';
-import { weeksInRange } from '../src/lib/range.js';
-import { reducer, createInitialState } from '../src/state/reducer.js';
+import { buildExportWeeks, weeksInRange } from '../src/lib/range.js';
+import { reducer, createInitialState, toBackup } from '../src/state/reducer.js';
 
 const grade = defaults.info.grade;
 const index = buildPpctIndex(ppctData[grade]);
@@ -207,6 +207,51 @@ test('Đồ dùng dạy học: đặt theo môn (để trống được), đặt
   assert.deepEqual(old.ppctEquipment, {});
 });
 
+test('Để trống đồ dùng bằng một lần bấm: công tắc theo tuần / cả năm giữ nguyên nội dung, ✕ để trống riêng một bài', () => {
+  let s = createInitialState();
+  const week2 = calendarData.find((w) => w.num === 2);
+  const build = (week = week1) => buildExportWeeks({
+    weeks: [week], timetable: s.timetable, index, grade,
+    equipmentDefaults: s.equipmentDefaults[grade], ppctEquipment: s.ppctEquipment[grade],
+    lessonOverrides: s.lessonOverrides, equipmentBlank: s.equipmentBlank,
+  })[0].rows;
+  const allBlank = (rows) => rows.every((r) => r.equipment === '' && !r.editedEquipment);
+
+  // Một bài đặt riêng trong PPCT, một ô sửa tay trong tuần 1.
+  const [first, second] = build().filter((r) => r.subject === 'TOÁN');
+  const key = ppctKey('TOÁN', week1.num, first.tiet);
+  s = reducer(s, { type: 'SET_PPCT_EQUIPMENT', grade, key, value: 'Que tính' });
+  s = reducer(s, { type: 'SET_LESSON', weekNum: 1, slotKey: second.key, subject: 'TOÁN', field: 'equipment', value: 'Bảng con', base: second.baseEquipment });
+  const before = build();
+
+  // Theo tuần: chỉ tuần đó trống, kể cả bài đặt riêng và ô sửa tay; tắt là hiện lại y như cũ.
+  s = reducer(s, { type: 'SET_EQUIPMENT_BLANK', scope: 'week', id: 1, on: true });
+  assert.ok(allBlank(build()));
+  assert.ok(build(week2).some((r) => r.equipment));
+  s = reducer(s, { type: 'SET_EQUIPMENT_BLANK', scope: 'week', id: 1, on: false });
+  assert.deepEqual(s.equipmentBlank, { grades: [], weeks: [] });
+  assert.deepEqual(build(), before);
+
+  // Cả năm (theo khối): mọi tuần trống; công tắc đi theo file sao lưu.
+  s = reducer(s, { type: 'SET_EQUIPMENT_BLANK', scope: 'grade', id: String(grade), on: true });
+  assert.ok(allBlank(build()) && allBlank(build(week2)));
+  assert.deepEqual(reducer(createInitialState(), { type: 'RESTORE', data: toBackup(s) }).equipmentBlank, { grades: [grade], weeks: [] });
+  s = reducer(s, { type: 'SET_EQUIPMENT_BLANK', scope: 'grade', id: grade, on: false });
+  assert.deepEqual(build(), before);
+
+  // ✕ ở bảng PPCT: để trống riêng bài đó dù môn có đồ dùng; "Theo môn" thì dùng lại đồ dùng của môn.
+  s = reducer(s, { type: 'SET_PPCT_EQUIPMENT', grade, key, value: '', blank: true });
+  assert.equal(s.ppctEquipment[grade][key], '');
+  assert.equal(build().find((r) => r.key === first.key).equipment, '');
+  s = reducer(s, { type: 'SET_PPCT_EQUIPMENT', grade, key, value: '' });
+  assert.deepEqual(s.ppctEquipment[grade], {});
+  assert.equal(build().find((r) => r.key === first.key).equipment, 'Vở thực hành');
+
+  // Sao lưu cũ không có công tắc này.
+  const old = reducer(createInitialState(), { type: 'RESTORE', data: { info: { grade } } });
+  assert.deepEqual(old.equipmentBlank, { grades: [], weeks: [] });
+});
+
 test('Môn không dạy: giữ tiết và tên môn, để trống tên bài; bật lại thì phần đã sửa hiện lại', () => {
   let s = createInitialState();
   const first = flattenWeek(buildWeekLessons({ week: week1, timetable: s.timetable, index, grade })).find((r) => r.subject === 'TIẾNG ANH');
@@ -238,4 +283,62 @@ test('Môn không dạy: sao lưu cũ không có notTaught thì dạy tất cả
   assert.deepEqual(s.notTaught, []);
   const t = reducer(createInitialState(), { type: 'RESTORE', data: { notTaught: ['tiếng anh', 'TIẾNG ANH', ''] } });
   assert.deepEqual(t.notTaught, ['TIẾNG ANH']);
+});
+
+test('Nội dung tích hợp: đặt theo bài trong PPCT, sửa tay theo tuần, mặc định để trống', () => {
+  let s = createInitialState();
+  const build = () => flattenWeek(buildWeekLessons({
+    week: week1, timetable: s.timetable, index, grade,
+    ppctIntegration: s.ppctIntegration[grade], lessonOverrides: s.lessonOverrides[1],
+  }));
+  const toan = () => build().filter((r) => r.subject === 'TOÁN');
+  const setLesson = (row, value, base) => reducer(s, { type: 'SET_LESSON', weekNum: 1, slotKey: row.key, subject: 'TOÁN', field: 'integration', value, base });
+
+  // Chưa nhập thì mọi tiết để trống.
+  assert.ok(build().every((r) => r.integration === '' && !r.editedIntegration));
+
+  // Theo bài trong PPCT: chỉ tiết dạy bài đó có nội dung.
+  const [first, second] = toan();
+  const key = ppctKey('TOÁN', week1.num, first.tiet);
+  s = reducer(s, { type: 'SET_PPCT_INTEGRATION', grade, key, value: ' GD ATGT ' });
+  assert.deepEqual(s.ppctIntegration[grade], { [key]: 'GD ATGT' });
+  assert.equal(toan()[0].integration, 'GD ATGT');
+  assert.ok(!toan()[0].editedIntegration);
+  assert.ok(build().filter((r) => r.key !== first.key).every((r) => r.integration === ''));
+
+  // Sửa tay trong tuần ưu tiên hơn, để trống được; gõ lại đúng nội dung của bài thì bỏ phần sửa.
+  s = setLesson(first, 'BVMT', 'GD ATGT');
+  s = setLesson(second, 'Quyền con người', '');
+  assert.equal(toan()[0].integration, 'BVMT');
+  assert.ok(toan()[0].editedIntegration);
+  assert.equal(toan()[1].integration, 'Quyền con người');
+  s = setLesson(first, '', 'GD ATGT');
+  assert.equal(toan()[0].integration, '');
+  assert.ok(toan()[0].editedIntegration);
+  s = setLesson(first, 'GD ATGT', 'GD ATGT');
+  assert.equal(toan()[0].integration, 'GD ATGT');
+  assert.ok(!toan()[0].editedIntegration);
+  assert.deepEqual(Object.keys(s.lessonOverrides[1]), [second.key]);
+  s = reducer(s, { type: 'RESET_WEEK_LESSONS', weekNum: 1 });
+  assert.equal(toan()[1].integration, '');
+
+  // Môn không dạy thì không ghi nội dung tích hợp.
+  const off = flattenWeek(buildWeekLessons({
+    week: week1, timetable: s.timetable, index, grade, ppctIntegration: s.ppctIntegration[grade], notTaught: ['TOÁN'],
+  }));
+  assert.ok(off.filter((r) => r.subject === 'TOÁN').every((r) => r.integration === ''));
+
+  // Xóa hết chữ ở PPCT là bỏ; xóa tất cả của khối.
+  s = reducer(s, { type: 'SET_PPCT_INTEGRATION', grade, key, value: '  ' });
+  assert.deepEqual(s.ppctIntegration[grade], {});
+  s = reducer(s, { type: 'SET_PPCT_INTEGRATION', grade, key, value: 'STEM' });
+  s = reducer(s, { type: 'RESET_PPCT_INTEGRATION_ALL', grade });
+  assert.deepEqual(s.ppctIntegration[grade], {});
+
+  // Sao lưu cũ không có trường này.
+  const old = reducer(createInitialState(), { type: 'RESTORE', data: { info: { grade } } });
+  assert.deepEqual(old.ppctIntegration, {});
+  s = reducer(s, { type: 'SET_PPCT_INTEGRATION', grade, key, value: 'STEM' });
+  const restored = reducer(createInitialState(), { type: 'RESTORE', data: JSON.parse(JSON.stringify(s)) });
+  assert.deepEqual(restored.ppctIntegration[grade], { [key]: 'STEM' });
 });

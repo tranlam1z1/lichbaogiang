@@ -200,10 +200,10 @@ API quản trị (tất cả yêu cầu role ADMIN):
 
 | Mục | Chức năng |
 |---|---|
-| Báo giảng | Chọn tuần (mặc định tuần hiện tại, tuần nghỉ hiện riêng, không chọn được), bảng báo giảng gộp ô Thứ/Buổi, sửa trực tiếp Tên bài và Đồ dùng (chỉ cho tuần đó, có vạch đỏ đánh dấu và nút *↺ Theo PPCT*), xuất Word/Excel theo phạm vi. |
+| Báo giảng | Chọn tuần (mặc định tuần hiện tại, tuần nghỉ hiện riêng, không chọn được), bảng báo giảng gộp ô Thứ/Buổi, sửa trực tiếp Tên bài, Đồ dùng và Nội dung tích hợp (chỉ cho tuần đó, có vạch đỏ đánh dấu và nút *↺ Theo PPCT*), xuất Word/Excel theo phạm vi; hộp thoại tải hỏi có kèm cột Nội dung tích hợp không (mặc định không, nhớ lựa chọn lần trước). |
 | Thời khóa biểu | Lưới nhập môn có gợi ý từ PPCT, chọn số tiết sáng/chiều, học thứ 7; mục *Môn tôi dạy* (bỏ chọn môn do giáo viên khác dạy); bảng đối chiếu số tiết mỗi môn với PPCT. |
 | Lịch tuần | Sửa từng dòng (số tuần, ghi chú, học kì, từ ngày, đến ngày), thêm/xóa dòng, công cụ tạo lại cả năm. |
-| Phân phối chương trình | Lọc theo khối, môn, tuần, tìm tên bài (không cần gõ dấu). Sửa tên bài thì mọi tuần đổi theo; có nút trả về bản gốc. |
+| Phân phối chương trình | Lọc theo khối, môn, tuần, tìm tên bài (không cần gõ dấu). Sửa tên bài thì mọi tuần đổi theo; có nút trả về bản gốc. Cột Nội dung tích hợp nhập theo từng bài (lưu ở `ppctIntegration`), mặc định để trống. |
 | Thông tin lớp | Cơ quan chủ quản, trường, GVCN, tổ trưởng chuyên môn, năm học, khối, tên lớp; ảnh chữ ký của giáo viên và tổ trưởng (bật/tắt chèn vào file xuất); sao lưu / khôi phục .json; đặt lại như file gốc (có xác nhận). |
 
 ### Nút hỗ trợ qua Zalo

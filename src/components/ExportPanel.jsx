@@ -13,9 +13,9 @@ const KIND = {
   xlsx: { fileType: 'XLSX', label: 'Excel' },
 };
 
-/** Nút tải file Word / Excel. Bấm vào thì hỏi phạm vi tuần + khổ giấy + cột đồ dùng + phần ký tên, hiện số điểm theo số tuần rồi mới tải. */
+/** Nút tải file Word / Excel. Bấm vào thì hỏi phạm vi tuần + khổ giấy + cột đồ dùng + cột nội dung tích hợp + phần ký tên, hiện số điểm theo số tuần rồi mới tải. */
 export default function ExportPanel({ currentWeek }) {
-  const { state, grade, index, ppctOverrides, equipmentDefaults, ppctEquipment } = useApp();
+  const { state, grade, index, ppctOverrides, equipmentDefaults, ppctEquipment, ppctIntegration } = useApp();
   const { user, settings, updateBalances, refreshSettings } = useAuth();
   const navigate = useNavigate();
   // Phạm vi lần trước — mở hộp thoại lần sau chọn sẵn.
@@ -26,16 +26,16 @@ export default function ExportPanel({ currentWeek }) {
   const [dialog, setDialog] = useState(null);
 
   /** Người dùng đã chọn phạm vi + khổ giấy trong hộp thoại. */
-  const submit = ({ range: chosen, weeks, orientation, equipment, signature, quote }) => {
+  const submit = ({ range: chosen, weeks, orientation, equipment, integration, signature, quote }) => {
     setRange(chosen);
     if (!quote.enough) {
       navigate('/nap-diem');
       return;
     }
-    run(dialog.kind, { range: chosen, weeks, orientation, equipment, signature, confirmCost: quote.cost });
+    run(dialog.kind, { range: chosen, weeks, orientation, equipment, integration, signature, confirmCost: quote.cost });
   };
 
-  const run = async (kind, { range: chosen, weeks, orientation, equipment, signature, confirmCost }) => {
+  const run = async (kind, { range: chosen, weeks, orientation, equipment, integration, signature, confirmCost }) => {
     setBusy(kind);
     setMessage(null);
     const { fileType, label } = KIND[kind];
@@ -49,8 +49,10 @@ export default function ExportPanel({ currentWeek }) {
         ppctOverrides,
         equipmentDefaults,
         ppctEquipment,
+        ppctIntegration,
         lessonOverrides: state.lessonOverrides,
         notTaught: state.notTaught,
+        equipmentBlank: state.equipmentBlank,
       });
       const { downloadDocx, downloadXlsx } = await import('../lib/download.js');
       const rangeText = rangeLabel(chosen, weeks);
@@ -63,8 +65,8 @@ export default function ExportPanel({ currentWeek }) {
         description: `${rangeText} (${weeks.length} tuần)`,
         generate: () =>
           kind === 'docx'
-            ? downloadDocx(data, state.info, `${base}.docx`, { orientation, equipment, signature })
-            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation, equipment, signature }),
+            ? downloadDocx(data, state.info, `${base}.docx`, { orientation, equipment, integration, signature })
+            : downloadXlsx(data, state.info, `${base}.xlsx`, { orientation, equipment, integration, signature }),
         onUser: updateBalances,
       });
       setDialog(null);

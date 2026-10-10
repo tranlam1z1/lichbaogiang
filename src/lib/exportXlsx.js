@@ -17,18 +17,21 @@ export const XLSX_COLUMNS = [
   { key: 'title', header: 'Tên bài dạy', width: 46 },
   { key: 'equipment', header: 'Đồ dùng dạy học', width: 18 },
 ];
+// Cột tùy chọn ở cuối bảng; bề ngang lấy bớt từ cột "Tên bài dạy".
+const INTEGRATION_COLUMN = { key: 'integration', header: 'Nội dung tích hợp', width: 14 };
 
 // Khổ ngang: bề ngang rộng hơn, cột "Tên bài dạy" được giãn nhiều nhất.
-const LANDSCAPE_WIDTHS = { day: 11, session: 8, period: 6, subject: 16, ppct: 8, title: 78, equipment: 26 };
+const LANDSCAPE_WIDTHS = { day: 11, session: 8, period: 6, subject: 16, ppct: 8, title: 78, equipment: 26, integration: 20 };
 
-/** Bỏ cột "Đồ dùng dạy học" thì cột "Tên bài dạy" nhận luôn phần bề ngang đó. */
-function columnsFor(orientation, equipment = true) {
-  const columns = orientation === 'landscape'
-    ? XLSX_COLUMNS.map((c) => ({ ...c, width: LANDSCAPE_WIDTHS[c.key] }))
-    : XLSX_COLUMNS;
-  if (equipment) return columns;
+/** Bỏ cột "Đồ dùng dạy học" thì cột "Tên bài dạy" nhận luôn phần bề ngang đó; thêm cột "Nội dung tích hợp" thì nhường lại. */
+function columnsFor(orientation, equipment = true, integration = false) {
+  const sized = (c) => (orientation === 'landscape' ? { ...c, width: LANDSCAPE_WIDTHS[c.key] } : c);
+  const columns = XLSX_COLUMNS.map(sized);
+  const extra = sized(INTEGRATION_COLUMN);
   const eq = columns.find((c) => c.key === 'equipment').width;
-  return columns.filter((c) => c.key !== 'equipment').map((c) => (c.key === 'title' ? { ...c, width: c.width + eq } : c));
+  const delta = (equipment ? 0 : eq) - (integration ? extra.width : 0);
+  const kept = columns.filter((c) => equipment || c.key !== 'equipment').map((c) => (c.key === 'title' ? { ...c, width: c.width + delta } : c));
+  return integration ? [...kept, extra] : kept;
 }
 
 function styleRange(ws, r1, r2, c1, c2, fn) {
@@ -40,12 +43,13 @@ function estimateHeight(r, widths) {
   const lines = Math.max(
     Math.ceil((r.title || '').length / ((52 * widths.title) / 46)) || 1,
     widths.equipment ? Math.ceil((r.equipment || '').length / ((19 * widths.equipment) / 18)) || 1 : 1,
+    widths.integration ? Math.ceil((r.integration || '').length / ((19 * widths.integration) / 18)) || 1 : 1,
   );
   return Math.max(16, lines * 14 + 2);
 }
 
-function addWeekSheet(wb, info, week, rows, orientation, equipment, signature) {
-  const columns = columnsFor(orientation, equipment);
+function addWeekSheet(wb, info, week, rows, orientation, equipment, integration, signature) {
+  const columns = columnsFor(orientation, equipment, integration);
   const col = Object.fromEntries(columns.map((c, i) => [c.key, i + 1]));
   const widths = Object.fromEntries(columns.map((c) => [c.key, c.width]));
   const landscape = orientation === 'landscape';
@@ -110,6 +114,7 @@ function addWeekSheet(wb, info, week, rows, orientation, equipment, signature) {
     put(r, col.ppct, row.ppct === '' || row.ppct == null ? '' : row.ppct, { size: 11 }, { horizontal: 'center' });
     put(r, col.title, row.title, { size: 11 });
     if (col.equipment) put(r, col.equipment, row.equipment, { size: 11 });
+    if (col.integration) put(r, col.integration, row.integration, { size: 11 });
     ws.getRow(r).height = estimateHeight(row, widths);
     r += 1;
   }
@@ -192,13 +197,14 @@ function addSignatureBlock(wb, ws, info, startRow, columns) {
  * Tạo workbook từ dữ liệu các tuần (buildExportWeeks).
  * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
  * equipment: false = bỏ cột "Đồ dùng dạy học".
+ * integration: true = thêm cột "Nội dung tích hợp" ở cuối bảng.
  * signature: false = bỏ khối ký tên GIÁO VIÊN / TỔ TRƯỞNG CHUYÊN MÔN cuối trang.
  */
-export function buildWorkbook(weeks, info, { orientation = 'portrait', equipment = true, signature = true } = {}) {
+export function buildWorkbook(weeks, info, { orientation = 'portrait', equipment = true, integration = false, signature = true } = {}) {
   const wb = new ExcelJS.Workbook();
   wb.creator = info.teacher || 'Giáo viên';
   wb.created = new Date();
-  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation, equipment, signature);
+  for (const { week, rows } of weeks) addWeekSheet(wb, info, week, rows, orientation, equipment, integration, signature);
   return wb;
 }
 

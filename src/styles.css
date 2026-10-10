@@ -572,6 +572,15 @@ a.tab {
   accent-color: var(--violet);
 }
 
+.check-small {
+  font-size: 0.85rem;
+}
+
+.check-small input {
+  width: 16px;
+  height: 16px;
+}
+
 /* ---------- Chữ ký ---------- */
 .sig-grid {
   display: grid;
@@ -846,7 +855,7 @@ a.tab {
 }
 
 .lesson-table {
-  min-width: 860px;
+  min-width: 960px;
   table-layout: fixed;
   font-family: var(--font-sheet);
   font-size: 0.95rem;
@@ -857,7 +866,8 @@ a.tab {
 .lesson-table .c-period { width: 46px; }
 .lesson-table .c-subject { width: 118px; }
 .lesson-table .c-ppct { width: 58px; }
-.lesson-table .c-equip { width: 20%; }
+.lesson-table .c-equip { width: 17%; }
+.lesson-table .c-integ { width: 17%; }
 
 .lesson-table th,
 .lesson-table td {
@@ -938,7 +948,8 @@ a.tab {
 }
 
 .cell-title,
-.cell-equip {
+.cell-equip,
+.cell-integ {
   position: relative;
 }
 
@@ -995,6 +1006,39 @@ td.is-edited {
 
 .revert:hover {
   text-decoration: underline;
+}
+
+/* Nút ✕ ở góc ô: bấm một lần là để trống */
+.cell-edit.has-clear {
+  padding-right: 26px;
+}
+
+.cell-clear {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  line-height: 20px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.cell-clear:hover,
+.cell-clear:focus-visible {
+  background: var(--red-soft);
+  color: var(--red);
+}
+
+.data-table .cell-clear {
+  top: 10px;
+  right: 12px;
 }
 
 /* ---------- Thời khóa biểu ---------- */
@@ -1182,20 +1226,26 @@ td.is-unknown .tkb-input {
 }
 
 .ppct-table {
-  min-width: 860px;
+  min-width: 1040px;
 }
 
 .ppct-table .cell-title {
   min-width: 320px;
 }
 
-.ppct-table .cell-equip {
+.ppct-table .cell-equip,
+.ppct-table .cell-integ {
   min-width: 200px;
 }
 
 .equip-table .cell-equip {
   min-width: 260px;
   width: 100%;
+}
+
+/* Đang bật "Để trống đồ dùng mọi tuần": nội dung vẫn giữ nhưng không được ghi ra */
+.equip-table.is-off .cell-edit {
+  color: var(--muted);
 }
 
 /* ---------- Hộp thoại ---------- */

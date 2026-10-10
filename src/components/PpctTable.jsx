@@ -19,7 +19,7 @@ function pageList(current, count) {
   return out;
 }
 
-/** Tra cứu và sửa phân phối chương trình (tên bài, đồ dùng dạy học từng bài). */
+/** Tra cứu và sửa phân phối chương trình (tên bài, đồ dùng dạy học, nội dung tích hợp từng bài). */
 export default function PpctTable() {
   const { state, dispatch, grade: classGrade } = useApp();
   const [grade, setGrade] = useState(String(classGrade));
@@ -28,7 +28,7 @@ export default function PpctTable() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const sectionRef = useRef(null);
-  // 'names' | 'equipment' | null
+  // 'names' | 'equipment' | 'integration' | null
   const [confirm, setConfirm] = useState(null);
   const deferredQuery = useDeferredValue(query);
 
@@ -37,6 +37,8 @@ export default function PpctTable() {
   const editedCount = Object.keys(overrides).length;
   const equipment = state.ppctEquipment[grade] || {};
   const equipmentCount = Object.keys(equipment).length;
+  const integration = state.ppctIntegration[grade] || {};
+  const integrationCount = Object.keys(integration).length;
   const subjectDefaults = state.equipmentDefaults[grade] || {};
 
   const entries = useMemo(() => [...index.map.values()].sort((a, b) => a.index - b.index), [index]);
@@ -70,7 +72,7 @@ export default function PpctTable() {
       <section className="card" ref={sectionRef}>
         <div className="card-head">
           <h2>Phân phối chương trình</h2>
-          {(editedCount > 0 || equipmentCount > 0) && (
+          {(editedCount > 0 || equipmentCount > 0 || integrationCount > 0) && (
             <span className="head-actions">
               {editedCount > 0 && (
                 <>
@@ -82,6 +84,12 @@ export default function PpctTable() {
                 <>
                   <span className="pill pill-edit">{equipmentCount} bài có đồ dùng riêng</span>
                   <button type="button" className="link-btn" onClick={() => setConfirm('equipment')}>Xóa đồ dùng riêng lớp {grade}</button>
+                </>
+              )}
+              {integrationCount > 0 && (
+                <>
+                  <span className="pill pill-edit">{integrationCount} bài có nội dung tích hợp</span>
+                  <button type="button" className="link-btn" onClick={() => setConfirm('integration')}>Xóa nội dung tích hợp lớp {grade}</button>
                 </>
               )}
             </span>
@@ -121,12 +129,14 @@ export default function PpctTable() {
         <div className="table-scroll">
           <table className="data-table ppct-table">
             <thead>
-              <tr><th>Môn</th><th className="num">Tuần</th><th className="num">Tiết thứ</th><th className="num">PPCT</th><th>Tên bài</th><th>Đồ dùng dạy học</th></tr>
+              <tr><th>Môn</th><th className="num">Tuần</th><th className="num">Tiết thứ</th><th className="num">PPCT</th><th>Tên bài</th><th>Đồ dùng dạy học</th><th>Nội dung tích hợp</th></tr>
             </thead>
             <tbody>
               {filtered.slice(current * PAGE, (current + 1) * PAGE).map((e) => {
                 const edited = overrides[e.key] != null;
+                // undefined = theo môn; '' = để trống riêng bài này.
                 const ownEquipment = equipment[e.key];
+                const hasOwnEquipment = ownEquipment != null;
                 const bySubject = subjectEquipment(e.subject, subjectDefaults);
                 return (
                   <tr key={e.key}>
@@ -147,12 +157,34 @@ export default function PpctTable() {
                         </button>
                       )}
                     </td>
-                    <td className={`cell-equip${ownEquipment ? ' is-edited' : ''}`}>
+                    <td className={`cell-equip${hasOwnEquipment ? ' is-edited' : ''}`}>
                       <EditableText
                         value={ownEquipment || ''}
-                        placeholder={bySubject ? `${bySubject} (theo môn)` : '(để trống)'}
+                        placeholder={!hasOwnEquipment && bySubject ? `${bySubject} (theo môn)` : '(để trống)'}
                         ariaLabel={`Đồ dùng ${e.subject} tuần ${e.week} tiết ${e.tiet}`}
                         onCommit={(v) => dispatch({ type: 'SET_PPCT_EQUIPMENT', grade, key: e.key, value: v })}
+                        // Môn đã để trống sẵn thì chỉ cần bỏ đồ dùng riêng của bài.
+                        onClear={(hasOwnEquipment ? ownEquipment : bySubject)
+                          ? () => dispatch({ type: 'SET_PPCT_EQUIPMENT', grade, key: e.key, value: '', blank: !!bySubject })
+                          : undefined}
+                      />
+                      {hasOwnEquipment && (
+                        <button
+                          type="button"
+                          className="revert"
+                          title={`Theo môn: ${bySubject || '(trống)'}`}
+                          onClick={() => dispatch({ type: 'SET_PPCT_EQUIPMENT', grade, key: e.key, value: '' })}
+                        >
+                          ↺ Theo môn
+                        </button>
+                      )}
+                    </td>
+                    <td className={`cell-integ${integration[e.key] ? ' is-edited' : ''}`}>
+                      <EditableText
+                        value={integration[e.key] || ''}
+                        placeholder="(không có)"
+                        ariaLabel={`Nội dung tích hợp ${e.subject} tuần ${e.week} tiết ${e.tiet}`}
+                        onCommit={(v) => dispatch({ type: 'SET_PPCT_INTEGRATION', grade, key: e.key, value: v })}
                       />
                     </td>
                   </tr>
@@ -181,8 +213,8 @@ export default function PpctTable() {
           </nav>
         )}
         <p className="hint">
-          Sửa tên bài hoặc đồ dùng ở đây thì mọi tuần dùng bài đó đổi theo. Bản gốc tên bài luôn được giữ để trả về.
-          Ô đồ dùng để trống thì dùng đồ dùng theo môn (chữ mờ).
+          Sửa tên bài, đồ dùng hoặc nội dung tích hợp ở đây thì mọi tuần dùng bài đó đổi theo. Bản gốc tên bài luôn được giữ để trả về.
+          Ô đồ dùng chưa nhập thì dùng đồ dùng theo môn (chữ mờ); bấm ✕ để để trống riêng bài đó, ↺ Theo môn để dùng lại theo môn.
         </p>
 
         <ConfirmDialog
@@ -202,6 +234,15 @@ export default function PpctTable() {
           danger
           onCancel={() => setConfirm(null)}
           onConfirm={() => { dispatch({ type: 'RESET_PPCT_EQUIPMENT_ALL', grade }); setConfirm(null); }}
+        />
+        <ConfirmDialog
+          open={confirm === 'integration'}
+          title={`Xóa nội dung tích hợp của các bài lớp ${grade}?`}
+          message={`${integrationCount} bài sẽ không còn nội dung tích hợp. Nội dung đã sửa tay ở thẻ Báo giảng vẫn giữ.`}
+          confirmLabel="Xóa nội dung tích hợp"
+          danger
+          onCancel={() => setConfirm(null)}
+          onConfirm={() => { dispatch({ type: 'RESET_PPCT_INTEGRATION_ALL', grade }); setConfirm(null); }}
         />
       </section>
     </>

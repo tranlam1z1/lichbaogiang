@@ -38,21 +38,24 @@ export const DOCX_COLUMNS = [
   { key: 'title', title: 'Tên bài dạy', cm: 7.8 },
   { key: 'equipment', title: 'Đồ dùng dạy học', cm: 2.6 },
 ];
+// Cột tùy chọn ở cuối bảng; bề ngang lấy bớt từ cột "Tên bài dạy".
+const INTEGRATION_COLUMN = { key: 'integration', title: 'Nội dung tích hợp', cm: 2.0 };
 
 // A4 ngang: rộng 16838, cao 11906 (twip). Bề ngang tăng thêm được chia cho các cột:
 // "Tên bài dạy" nhận phần lớn nhất, các cột còn lại giãn theo tỉ lệ độ rộng cũ.
 const LANDSCAPE_PAGE = { width: 16838, height: 11906 };
 const TITLE_SHARE = 0.6;
 
-/** Bỏ cột "Đồ dùng dạy học" thì cột "Tên bài dạy" nhận luôn phần bề ngang đó. */
-function portraitColumns(equipment) {
-  if (equipment) return DOCX_COLUMNS;
+/** Bỏ cột "Đồ dùng dạy học" thì cột "Tên bài dạy" nhận luôn phần bề ngang đó; thêm cột "Nội dung tích hợp" thì nhường lại. */
+function portraitColumns(equipment, integration) {
   const eq = DOCX_COLUMNS.find((c) => c.key === 'equipment').cm;
-  return DOCX_COLUMNS.filter((c) => c.key !== 'equipment').map((c) => (c.key === 'title' ? { ...c, cm: c.cm + eq } : c));
+  const delta = (equipment ? 0 : eq) - (integration ? INTEGRATION_COLUMN.cm : 0);
+  const columns = DOCX_COLUMNS.filter((c) => equipment || c.key !== 'equipment').map((c) => (c.key === 'title' ? { ...c, cm: c.cm + delta } : c));
+  return integration ? [...columns, INTEGRATION_COLUMN] : columns;
 }
 
-function landscapeColumns(equipment) {
-  const base = portraitColumns(equipment);
+function landscapeColumns(equipment, integration) {
+  const base = portraitColumns(equipment, integration);
   const total = base.reduce((s, c) => s + c.cm, 0);
   const extra = (LANDSCAPE_PAGE.width - MARGIN.left - MARGIN.right) / CM - total;
   const others = total - base.find((c) => c.key === 'title').cm;
@@ -62,11 +65,11 @@ function landscapeColumns(equipment) {
   }));
 }
 
-/** Khổ giấy và độ rộng cột theo hướng giấy ('portrait' | 'landscape') và có cột đồ dùng hay không. */
-function layoutFor(orientation, equipment = true) {
+/** Khổ giấy và độ rộng cột theo hướng giấy ('portrait' | 'landscape') và có cột đồ dùng / nội dung tích hợp hay không. */
+function layoutFor(orientation, equipment = true, integration = false) {
   return orientation === 'landscape'
-    ? { page: LANDSCAPE_PAGE, columns: landscapeColumns(equipment), landscape: true }
-    : { page: PAGE, columns: portraitColumns(equipment), landscape: false };
+    ? { page: LANDSCAPE_PAGE, columns: landscapeColumns(equipment, integration), landscape: true }
+    : { page: PAGE, columns: portraitColumns(equipment, integration), landscape: false };
 }
 
 const CELL_PAD_TW = 20; // lề trong ô (twip) trên/dưới
@@ -100,8 +103,8 @@ function linesFor(text, cm, pt, em = 0.45) {
  * Chọn cỡ chữ lớn nhất (12 → 7pt) để cả tuần vừa đúng một trang A4.
  * Chiều cao ước lượng theo đo đạc thực tế trên Word/LibreOffice với Times New Roman.
  */
-export function fitWeek(rows, orientation = 'portrait', { equipment = true, signature = true } = {}) {
-  const { page, columns } = layoutFor(orientation, equipment);
+export function fitWeek(rows, orientation = 'portrait', { equipment = true, integration = false, signature = true } = {}) {
+  const { page, columns } = layoutFor(orientation, equipment, integration);
   const available = (page.height - MARGIN.top - MARGIN.bottom) * PT_PER_TW; // pt
   const colCm = Object.fromEntries(columns.map((c) => [c.key, c.cm]));
   const headerH = 58 + (signature ? SIGN_BLOCK_PT : 0); // tiêu đề, tuần/lớp/giáo viên, từ ngày… đến ngày… + khối chữ ký cuối trang
@@ -114,6 +117,7 @@ export function fitWeek(rows, orientation = 'portrait', { equipment = true, sign
       const lines = Math.max(
         linesFor(r.title, colCm.title, pt),
         equipment ? linesFor(r.equipment, colCm.equipment, pt) : 1,
+        integration ? linesFor(r.integration, colCm.integration, pt) : 1,
         linesFor(r.subject, colCm.subject, pt, 0.7),
         r.dayRowSpan > 0 && r.dayRowSpan < 2 ? 2 : 1,
       );
@@ -169,6 +173,7 @@ function weekTable(rows, pt, columns) {
       ppct: (c) => cell(r.ppct === '' || r.ppct == null ? '' : String(r.ppct), c, { pt, align: AlignmentType.CENTER }),
       title: (c) => cell(r.title, c, { pt }),
       equipment: (c) => cell(r.equipment, c, { pt }),
+      integration: (c) => cell(r.integration, c, { pt }),
     };
     return new TableRow({
       cantSplit: true,
@@ -252,17 +257,18 @@ function headerBlock(info, week) {
  * Tạo đối tượng Document từ dữ liệu các tuần (buildExportWeeks).
  * orientation: 'portrait' (A4 dọc, mặc định) | 'landscape' (A4 ngang).
  * equipment: false = bỏ cột "Đồ dùng dạy học".
+ * integration: true = thêm cột "Nội dung tích hợp" ở cuối bảng.
  * signature: false = bỏ khối ký tên GIÁO VIÊN / TỔ TRƯỞNG CHUYÊN MÔN cuối trang.
  */
-export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equipment = true, signature = true } = {}) {
-  const { page, columns, landscape } = layoutFor(orientation, equipment);
+export function buildDocx(weeks, info, { forcePt, orientation = 'portrait', equipment = true, integration = false, signature = true } = {}) {
+  const { page, columns, landscape } = layoutFor(orientation, equipment, integration);
   // Khổ ngang: thư viện docx tự đổi chỗ rộng/cao khi ghi w:pgSz (w:w=16838, w:h=11906, w:orient="landscape"),
   // nên ở đây truyền kích thước theo chiều dọc.
   const pageSize = landscape
     ? { width: page.height, height: page.width, orientation: PageOrientation.LANDSCAPE }
     : { width: page.width, height: page.height };
   const sections = weeks.map(({ week, rows }) => {
-    const bodyPt = forcePt || fitWeek(rows, orientation, { equipment, signature }).bodyPt;
+    const bodyPt = forcePt || fitWeek(rows, orientation, { equipment, integration, signature }).bodyPt;
     return {
       properties: {
         page: {

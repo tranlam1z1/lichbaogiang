@@ -361,6 +361,7 @@ function PlanProvider({ userId, planId, planName, initial, syncInit, onSwitch, c
       ppctOverrides: state.ppctOverrides[grade] || {},
       equipmentDefaults: state.equipmentDefaults[grade] || {},
       ppctEquipment: state.ppctEquipment[grade] || {},
+      ppctIntegration: state.ppctIntegration[grade] || {},
       subjectSuggestions: suggestions,
       sync: { ...sync, cacheError, ...actions },
       plan: { ...plan, ...planActions },

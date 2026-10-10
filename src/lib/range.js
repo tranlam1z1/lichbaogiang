@@ -1,7 +1,7 @@
 // Chọn phạm vi tuần để xuất file và gom dữ liệu xuất. Không phụ thuộc React.
 
 import { isTeachingWeek } from './calendar.js';
-import { buildWeekLessons, flattenWeek } from './schedule.js';
+import { buildWeekLessons, flattenWeek, isEquipmentBlank } from './schedule.js';
 
 export const RANGE_OPTIONS = [
   { id: 'current', label: 'Tuần đang xem' },
@@ -56,7 +56,9 @@ export function exportFileName(className, range, weeks) {
 }
 
 /** Dữ liệu từng tuần đã dựng sẵn cho Word/Excel. */
-export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides, equipmentDefaults, ppctEquipment, lessonOverrides, notTaught }) {
+export function buildExportWeeks({
+  weeks, timetable, index, grade, ppctOverrides, equipmentDefaults, ppctEquipment, ppctIntegration, lessonOverrides, notTaught, equipmentBlank,
+}) {
   return weeks.map((week) => {
     const built = buildWeekLessons({
       week,
@@ -66,8 +68,10 @@ export function buildExportWeeks({ weeks, timetable, index, grade, ppctOverrides
       ppctOverrides,
       equipmentDefaults,
       ppctEquipment,
+      ppctIntegration,
       lessonOverrides: lessonOverrides?.[week.num] || {},
       notTaught,
+      blankEquipment: isEquipmentBlank(equipmentBlank, grade, week.num),
     });
     return { week, rows: flattenWeek(built) };
   });

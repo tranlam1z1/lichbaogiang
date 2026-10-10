@@ -165,16 +165,17 @@ Mở thẻ **Báo giảng**.
 
 ### Đọc bảng báo giảng
 
-Bảng gồm các cột: **Thứ / ngày**, **Buổi**, **Tiết**, **Môn**, **PPCT** (số tiết theo PPCT), **Tên bài dạy**, **Đồ dùng dạy học**.
+Bảng gồm các cột: **Thứ / ngày**, **Buổi**, **Tiết**, **Môn**, **PPCT** (số tiết theo PPCT), **Tên bài dạy**, **Đồ dùng dạy học**, **Nội dung tích hợp**.
 
 Tên bài được tự tra từ thời khóa biểu và PPCT. Nếu không tra được, ô sẽ hiện một **cảnh báo nhỏ**, ví dụ *"PPCT tuần 3 chỉ có 1 tiết môn này"* hoặc *"Môn này không có trong PPCT lớp 4"*. Khi đó hãy kiểm tra lại tên môn trong thời khóa biểu, hoặc gõ tên bài bằng tay.
 
-### Sửa tên bài, đồ dùng cho riêng một tuần
+### Sửa tên bài, đồ dùng, nội dung tích hợp cho riêng một tuần
 
-- Bấm vào ô **Tên bài dạy** hoặc **Đồ dùng dạy học** để sửa. Chỗ sửa **chỉ áp dụng cho tuần đang xem**.
+- Bấm vào ô **Tên bài dạy**, **Đồ dùng dạy học** hoặc **Nội dung tích hợp** để sửa. Chỗ sửa **chỉ áp dụng cho tuần đang xem**.
 - Ô đã sửa có **vạch đỏ** đánh dấu. Bấm **↺ Theo PPCT** để trả ô đó về tên bài gốc.
 - Bấm **Bỏ mọi chỗ sửa của tuần** để trả cả tuần về như ban đầu.
-- Muốn để trống ô đồ dùng, bấm vào ô rồi xóa hết chữ.
+- Muốn để trống **một ô** đồ dùng, bấm nút **✕** ở góc ô (hoặc bấm vào ô rồi xóa hết chữ).
+- Muốn để trống **cả cột** đồ dùng của tuần đang xem, đánh dấu **Để trống cột Đồ dùng tuần này** ở phía trên bảng. Nội dung đồ dùng vẫn được giữ; bỏ dấu là hiện lại như cũ. File Word/Excel tải về cũng để trống cột này ở tuần đó.
 
 > Muốn đổi tên bài hoặc đồ dùng cho **mọi tuần**, sửa ở thẻ Phân phối chương trình (xem [mục 9](#9-sửa-tên-bài-trong-phân-phối-chương-trình)).
 
@@ -194,11 +195,12 @@ Tên bài được tự tra từ thời khóa biểu và PPCT. Nếu không tra 
 
    Bên cạnh mỗi lựa chọn có ghi số tuần và giá tương ứng.
 3. Chọn **Khổ giấy**: **Khổ dọc** (A4 dọc) hoặc **Khổ ngang** (A4 ngang). Lựa chọn này được ghi nhớ cho lần sau.
-4. Xem dòng **Tổng** ở cuối hộp thoại, rồi bấm nút xác nhận:
+4. Ở mục **Nội dung trong file**, chọn những phần muốn có trong file: cột **Đồ dùng dạy học**, cột **Nội dung tích hợp**, phần **ký tên** Giáo viên / Tổ trưởng chuyên môn. Cột Nội dung tích hợp lúc đầu **không được chọn**; muốn file có cột này thì đánh dấu **Tải cột "Nội dung tích hợp"**. Các lựa chọn được ghi nhớ cho lần sau.
+5. Xem dòng **Tổng** ở cuối hộp thoại, rồi bấm nút xác nhận:
    - **Tải (dùng 1 lượt miễn phí)**: khi tải 1 tuần và còn lượt miễn phí.
    - **Trừ N điểm và tải**: khi dùng điểm.
    - **Nạp điểm**: khi không đủ điểm. Bấm vào để chuyển sang trang nạp điểm.
-5. File được tải về máy. Thông báo bên dưới cho biết đã dùng lượt hay trừ bao nhiêu điểm.
+6. File được tải về máy. Thông báo bên dưới cho biết đã dùng lượt hay trừ bao nhiêu điểm.
 
 ### Giá tải file
 
@@ -251,9 +253,20 @@ Mở thẻ **Phân phối chương trình**.
 
 Đồ dùng dạy học được lấy theo thứ tự ưu tiên: **sửa tay trong tuần** → **đặt riêng cho bài** → **đặt theo môn**.
 
-- **Theo môn**: bảng **Đồ dùng dạy học theo môn** ở đầu thẻ. Bấm vào ô để sửa; **xóa hết chữ để để trống** (môn đó sẽ không ghi đồ dùng). Chưa đặt thì dùng mặc định có sẵn: Toán là *Vở thực hành*, môn khác là *Tranh, ảnh, PP*. Bấm **↺ Mặc định** để trả về.
-- **Theo bài**: cột **Đồ dùng dạy học** trong bảng Phân phối chương trình. Ô để trống thì dùng đồ dùng theo môn (hiện chữ mờ).
+- **Theo môn**: bảng **Đồ dùng dạy học theo môn** ở đầu thẻ. Bấm vào ô để sửa; **bấm ✕ ở góc ô (hoặc xóa hết chữ) để để trống** (môn đó sẽ không ghi đồ dùng). Chưa đặt thì dùng mặc định có sẵn: Toán là *Vở thực hành*, môn khác là *Tranh, ảnh, PP*. Bấm **↺ Mặc định** để trả về.
+- **Theo bài**: cột **Đồ dùng dạy học** trong bảng Phân phối chương trình. Ô chưa nhập thì dùng đồ dùng theo môn (hiện chữ mờ). Bấm **✕** để để trống riêng bài đó; bấm **↺ Theo môn** để dùng lại đồ dùng theo môn.
 - **Theo tuần**: sửa trực tiếp ở thẻ Báo giảng (xem [mục 6](#6-bước-4--xem-và-sửa-báo-giảng)); chỉ áp dụng cho tuần đó.
+
+**Để trống đồ dùng cả năm bằng một lần bấm:** đánh dấu **Để trống đồ dùng mọi tuần** ở đầu bảng Đồ dùng dạy học theo môn. Cột Đồ dùng dạy học sẽ trống ở mọi tuần, cả trên thẻ Báo giảng lẫn trong file tải về (kể cả ô đã sửa tay và bài đặt riêng). Đồ dùng đã đặt không bị xóa; bỏ dấu là hiện lại như cũ.
+
+### Nội dung tích hợp
+
+Cột **Nội dung tích hợp** (ví dụ: GD an toàn giao thông, bảo vệ môi trường, quyền con người, STEM…) lúc đầu để trống ở mọi bài. Thứ tự ưu tiên: **sửa tay trong tuần** → **nhập theo bài**.
+
+- **Theo bài**: cột **Nội dung tích hợp** ở cuối bảng Phân phối chương trình. Nhập ở đây thì mọi tuần dạy bài đó đều có; xóa hết chữ là bỏ.
+- **Theo tuần**: sửa trực tiếp ở cột cuối của thẻ Báo giảng (xem [mục 6](#6-bước-4--xem-và-sửa-báo-giảng)); chỉ áp dụng cho tuần đó.
+
+Khi tải Word / Excel, hộp thoại sẽ hỏi có tải cột này không (xem [mục 7](#7-bước-5--tải-file-word--excel)). Chọn có thì cột nằm ở cuối bảng, sau cột Đồ dùng dạy học.
 
 ---
 

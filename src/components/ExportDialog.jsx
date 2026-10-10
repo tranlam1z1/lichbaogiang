@@ -6,6 +6,7 @@ import { quoteExport } from '../../shared/pricing.js';
 
 const STORAGE_KEY = 'export-orientation';
 const EQUIPMENT_KEY = 'export-equipment';
+const INTEGRATION_KEY = 'export-integration';
 const SIGNATURE_KEY = 'export-signature';
 
 export const ORIENTATIONS = [
@@ -31,12 +32,13 @@ function saveOrientation(value) {
   }
 }
 
-/** Lựa chọn bật/tắt đã lưu lần trước (mặc định: bật). */
-function loadToggle(key) {
+/** Lựa chọn bật/tắt đã lưu lần trước; chưa lưu lần nào thì dùng fallback (mặc định: bật). */
+function loadToggle(key, fallback = true) {
   try {
-    return window.localStorage.getItem(key) !== 'off';
+    const v = window.localStorage.getItem(key);
+    return v === 'on' || v === 'off' ? v === 'on' : fallback;
   } catch {
-    return true;
+    return fallback;
   }
 }
 
@@ -50,6 +52,8 @@ function saveToggle(key, value) {
 
 /** Lần trước có tải cột "Đồ dùng dạy học" không (mặc định: có). */
 const loadEquipment = () => loadToggle(EQUIPMENT_KEY);
+/** Lần trước có tải cột "Nội dung tích hợp" không (mặc định: không). */
+const loadIntegration = () => loadToggle(INTEGRATION_KEY, false);
 /** Lần trước có tải phần ký tên Giáo viên / Tổ trưởng không (mặc định: có). */
 const loadSignature = () => loadToggle(SIGNATURE_KEY);
 
@@ -68,19 +72,21 @@ const priceLabel = (q) => {
 };
 
 /**
- * Hỏi phạm vi tuần + khổ giấy + có tải cột đồ dùng / phần ký tên không trước khi xuất, hiện giá từng phạm vi và tổng điểm phải trả.
- * onSubmit({ range, weeks, orientation, equipment, signature, quote }) — quote.enough = false nghĩa là người dùng bấm "Nạp điểm".
+ * Hỏi phạm vi tuần + khổ giấy + có tải cột đồ dùng / cột nội dung tích hợp / phần ký tên không trước khi xuất, hiện giá từng phạm vi và tổng điểm phải trả.
+ * onSubmit({ range, weeks, orientation, equipment, integration, signature, quote }) — quote.enough = false nghĩa là người dùng bấm "Nạp điểm".
  */
 export default function ExportDialog({ open, kindLabel, calendar, currentWeek, initialRange, user, settings, busy, error, onSubmit, onCancel }) {
   const [range, setRange] = useState(initialRange);
   const [orientation, setOrientation] = useState(loadOrientation);
   const [equipment, setEquipment] = useState(loadEquipment);
+  const [integration, setIntegration] = useState(loadIntegration);
   const [signature, setSignature] = useState(loadSignature);
   useEffect(() => {
     if (!open) return;
     setRange(initialRange);
     setOrientation(loadOrientation());
     setEquipment(loadEquipment());
+    setIntegration(loadIntegration());
     setSignature(loadSignature());
   }, [open, initialRange]);
 
@@ -114,8 +120,9 @@ export default function ExportDialog({ open, kindLabel, calendar, currentWeek, i
       onSubmit={() => {
         saveOrientation(orientation);
         saveToggle(EQUIPMENT_KEY, equipment);
+        saveToggle(INTEGRATION_KEY, integration);
         saveToggle(SIGNATURE_KEY, signature);
-        onSubmit({ range, weeks, orientation, equipment, signature, quote });
+        onSubmit({ range, weeks, orientation, equipment, integration, signature, quote });
       }}
       onCancel={onCancel}
     >
@@ -183,6 +190,10 @@ export default function ExportDialog({ open, kindLabel, calendar, currentWeek, i
         <label className="check">
           <input type="checkbox" checked={equipment} onChange={(e) => setEquipment(e.target.checked)} />
           <span>Tải cột "Đồ dùng dạy học"</span>
+        </label>
+        <label className="check">
+          <input type="checkbox" checked={integration} onChange={(e) => setIntegration(e.target.checked)} />
+          <span>Tải cột "Nội dung tích hợp"</span>
         </label>
         <label className="check">
           <input type="checkbox" checked={signature} onChange={(e) => setSignature(e.target.checked)} />

@@ -24,10 +24,19 @@ export function subjectEquipment(subject, equipmentDefaults = {}) {
   return own != null ? own : defaultEquipment(s);
 }
 
-/** Đồ dùng của một tiết: đặt riêng cho bài trong PPCT > đặt theo môn > mặc định có sẵn. */
+/** Đồ dùng của một tiết: đặt riêng cho bài trong PPCT ('' = để trống) > đặt theo môn > mặc định có sẵn. */
 export function resolveEquipment(subject, ppctKey, { equipmentDefaults, ppctEquipment } = {}) {
   const own = ppctKey ? ppctEquipment?.[ppctKey] : null;
-  return own || subjectEquipment(subject, equipmentDefaults);
+  return own != null ? own : subjectEquipment(subject, equipmentDefaults);
+}
+
+/**
+ * Công tắc "để trống cột đồ dùng": bật cho cả khối (mọi tuần) hoặc cho riêng một tuần.
+ * Nội dung đồ dùng đã đặt vẫn được giữ, tắt công tắc là hiện lại.
+ * @param {{grades?: number[], weeks?: number[]}} [equipmentBlank]
+ */
+export function isEquipmentBlank(equipmentBlank, grade, weekNum) {
+  return !!equipmentBlank?.grades?.includes(Number(grade)) || !!equipmentBlank?.weeks?.includes(Number(weekNum));
 }
 
 export function schoolDays(timetable) {
@@ -63,11 +72,14 @@ export function iterateTimetable(timetable) {
  * @param {object} [args.ppctOverrides] {key: tên bài đã sửa} của khối
  * @param {object} [args.equipmentDefaults] {MÔN: đồ dùng mặc định} của khối ('' = để trống)
  * @param {object} [args.ppctEquipment] {key: đồ dùng riêng của bài trong PPCT} của khối
- * @param {object} [args.lessonOverrides] {slotKey: {subject, title?, equipment?}} của tuần này
+ * @param {object} [args.ppctIntegration] {key: nội dung tích hợp của bài trong PPCT} của khối
+ * @param {object} [args.lessonOverrides] {slotKey: {subject, title?, equipment?, integration?}} của tuần này
  * @param {string[]} [args.notTaught]  các môn giáo viên không dạy: vẫn hiện tiết nhưng để trống tên bài
+ * @param {boolean} [args.blankEquipment] để trống mọi ô đồ dùng của tuần (kể cả ô đã sửa tay, bài đặt riêng)
  */
 export function buildWeekLessons({
-  week, timetable, index, grade, ppctOverrides = {}, equipmentDefaults = {}, ppctEquipment = {}, lessonOverrides = {}, notTaught = [],
+  week, timetable, index, grade, ppctOverrides = {}, equipmentDefaults = {}, ppctEquipment = {}, ppctIntegration = {}, lessonOverrides = {}, notTaught = [],
+  blankEquipment = false,
 }) {
   const counts = new Map();
   const skip = new Set(notTaught);
@@ -94,9 +106,12 @@ export function buildWeekLessons({
       title: '',
       baseEquipment: subjectEquipment(slot.subject, equipmentDefaults),
       equipment: '',
+      baseIntegration: '',
+      integration: '',
       warning: null,
       editedTitle: false,
       editedEquipment: false,
+      editedIntegration: false,
       notTaught: !!slot.subject && skip.has(slot.subject),
     };
     // Môn không dạy: giữ tiết và tên môn, bỏ tra PPCT và bỏ phần đã sửa (phần sửa vẫn lưu, bật lại là hiện).
@@ -117,10 +132,12 @@ export function buildWeekLessons({
         row.baseTitle = r.title;
         row.warning = r.warning;
         row.baseEquipment = resolveEquipment(slot.subject, r.key, { equipmentDefaults, ppctEquipment });
+        row.baseIntegration = (r.key && ppctIntegration[r.key]) || '';
       }
     }
     row.title = row.baseTitle;
     row.equipment = row.baseEquipment;
+    row.integration = row.baseIntegration;
     const o = lessonOverrides[slot.key];
     // Phần sửa chỉ áp dụng khi môn ở ô đó không đổi.
     if (o && normalizeSubject(o.subject) === slot.subject) {
@@ -132,6 +149,15 @@ export function buildWeekLessons({
         row.equipment = o.equipment;
         row.editedEquipment = true;
       }
+      if (o.integration != null) {
+        row.integration = o.integration;
+        row.editedIntegration = true;
+      }
+    }
+    // Công tắc để trống: không ghi đồ dùng, phần đã đặt / đã sửa vẫn lưu.
+    if (blankEquipment) {
+      row.equipment = '';
+      row.editedEquipment = false;
     }
     current.rows.push(row);
   }

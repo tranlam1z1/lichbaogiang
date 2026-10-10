@@ -14,6 +14,7 @@ export default function EquipmentDefaults({ grade, index }) {
   const own = state.equipmentDefaults[grade] || NONE;
   const perLesson = state.ppctEquipment[grade] || NONE;
   const editedCount = Object.keys(own).length;
+  const blankAll = !!state.equipmentBlank?.grades.includes(Number(grade));
 
   // Môn trong PPCT, môn đã đặt đồ dùng, và (khối đang dạy) môn trong thời khóa biểu.
   const subjects = useMemo(() => {
@@ -35,15 +36,31 @@ export default function EquipmentDefaults({ grade, index }) {
     <section className="card">
       <div className="card-head">
         <h2>Đồ dùng dạy học theo môn · Lớp {grade}</h2>
-        {editedCount > 0 && (
-          <span className="head-actions">
-            <span className="pill pill-edit">{editedCount} môn đã đặt</span>
-            <button type="button" className="link-btn" onClick={() => setConfirm(true)}>Trả về mặc định có sẵn</button>
-          </span>
-        )}
+        <span className="head-actions">
+          <label className="check check-small">
+            <input
+              type="checkbox"
+              checked={blankAll}
+              onChange={(e) => dispatch({ type: 'SET_EQUIPMENT_BLANK', scope: 'grade', id: grade, on: e.target.checked })}
+            />
+            <span>Để trống đồ dùng mọi tuần</span>
+          </label>
+          {editedCount > 0 && (
+            <>
+              <span className="pill pill-edit">{editedCount} môn đã đặt</span>
+              <button type="button" className="link-btn" onClick={() => setConfirm(true)}>Trả về mặc định có sẵn</button>
+            </>
+          )}
+        </span>
       </div>
+      {blankAll && (
+        <p className="banner banner-note">
+          Cột Đồ dùng dạy học đang để trống ở mọi tuần của lớp {grade}, cả trên thẻ Báo giảng lẫn khi tải file.
+          Đồ dùng đã đặt bên dưới vẫn được giữ; bỏ dấu "Để trống đồ dùng mọi tuần" là hiện lại.
+        </p>
+      )}
       <div className="table-scroll">
-        <table className="data-table equip-table">
+        <table className={`data-table equip-table${blankAll ? ' is-off' : ''}`}>
           <thead>
             <tr><th>Môn</th><th>Đồ dùng dạy học</th><th className="num">Bài đặt riêng</th></tr>
           </thead>
@@ -51,15 +68,17 @@ export default function EquipmentDefaults({ grade, index }) {
             {subjects.map((s) => {
               const edited = own[s] != null;
               const builtIn = defaultEquipment(s);
+              const value = subjectEquipment(s, own);
               return (
                 <tr key={s}>
                   <td className="nowrap">{s}</td>
                   <td className={`cell-equip${edited ? ' is-edited' : ''}`}>
                     <EditableText
-                      value={subjectEquipment(s, own)}
+                      value={value}
                       placeholder="(để trống)"
                       ariaLabel={`Đồ dùng dạy học môn ${s}`}
                       onCommit={(v) => dispatch({ type: 'SET_SUBJECT_EQUIPMENT', grade, subject: s, value: v })}
+                      onClear={value ? () => dispatch({ type: 'SET_SUBJECT_EQUIPMENT', grade, subject: s, value: '' }) : undefined}
                     />
                     {edited && (
                       <button
@@ -80,7 +99,7 @@ export default function EquipmentDefaults({ grade, index }) {
         </table>
       </div>
       <p className="hint">
-        Đồ dùng theo môn được ghi vào mọi tiết của môn đó; xóa hết chữ để để trống. Muốn ghi riêng cho một bài, sửa ở cột
+        Đồ dùng theo môn được ghi vào mọi tiết của môn đó; bấm ✕ (hoặc xóa hết chữ) để để trống. Muốn ghi riêng cho một bài, sửa ở cột
         Đồ dùng dạy học trong bảng Phân phối chương trình bên dưới. Ô đồ dùng đã sửa tay ở thẻ Báo giảng vẫn giữ nguyên.
       </p>
 
