@@ -5,6 +5,7 @@ import TimetableEditor from './components/TimetableEditor.jsx';
 import WeekCalendar from './components/WeekCalendar.jsx';
 import PpctTable from './components/PpctTable.jsx';
 import ClassInfo from './components/ClassInfo.jsx';
+import PlanSwitcher from './components/PlanSwitcher.jsx';
 import UserBar from './components/UserBar.jsx';
 import SaveStatus from './components/SaveStatus.jsx';
 import ZaloSupport from './components/ZaloSupport.jsx';
@@ -35,6 +36,7 @@ export default function App() {
                 {info.school} · Năm học {info.schoolYear}
               </p>
             </div>
+            <PlanSwitcher />
             <SaveStatus />
             <UserBar />
           </div>

@@ -1,6 +1,7 @@
 // Đồng bộ kế hoạch với tài khoản trên server. Module thuần (không phụ thuộc React) — kiểm thử bằng node --test.
 //  - Chọn phần dữ liệu cần đồng bộ (bỏ trường chỉ thuộc giao diện).
 //  - Bộ nhớ đệm trên máy theo từng tài khoản + dữ liệu cũ trước khi có tài khoản.
+//  - Một tài khoản có nhiều hồ sơ: chọn hồ sơ mở khi vào app (pickPlan).
 //  - Quyết định dùng bản nào khi mở app (planBoot).
 //  - Hàng đợi lưu: debounce, mỗi lúc một request, thử lại tăng dần khi mất mạng, xung đột 409 (createSyncer).
 
@@ -44,11 +45,21 @@ function readJson(storage, key) {
   }
 }
 
-/** Bản đệm của một tài khoản: { data, version, dirty, savedAt } hoặc null. */
+/**
+ * Bản đệm của một tài khoản — hồ sơ đang mở trên máy này: { planId, name, data, version, dirty, savedAt } hoặc null.
+ * planId = null: hồ sơ chưa có trên tài khoản, hoặc bản đệm ghi từ trước khi tài khoản có nhiều hồ sơ.
+ */
 export function readCache(userId, storage = defaultStorage()) {
   const c = readJson(storage, cacheKey(userId));
   if (!c || typeof c !== 'object' || !c.data) return null;
-  return { data: c.data, version: Number(c.version) || 0, dirty: !!c.dirty, savedAt: c.savedAt ?? null };
+  return {
+    planId: Number.isInteger(c.planId) ? c.planId : null,
+    name: typeof c.name === 'string' ? c.name : '',
+    data: c.data,
+    version: Number(c.version) || 0,
+    dirty: !!c.dirty,
+    savedAt: c.savedAt ?? null,
+  };
 }
 
 /** Ghi bản đệm; trả false nếu trình duyệt không cho ghi (đầy bộ nhớ, chế độ riêng tư…). */
@@ -82,6 +93,34 @@ export function removeLegacy(storage = defaultStorage()) {
   }
 }
 
+// ---------- Mở app: chọn hồ sơ ----------
+
+/** Hồ sơ đầu tiên của tài khoản (id nhỏ nhất) — hồ sơ duy nhất từ trước khi tài khoản có nhiều hồ sơ. */
+export function oldestPlanId(plans) {
+  return plans.reduce((min, p) => (min == null || p.id < min ? p.id : min), null);
+}
+
+/**
+ * Chọn hồ sơ mở khi vào app.
+ * @param {object} args
+ * @param {{id}[]} args.plans          danh sách hồ sơ trên tài khoản (GET /api/plans), mới sửa nhất đứng đầu
+ * @param {object | null} args.cache   bản đệm của tài khoản (readCache)
+ * @returns {{ id: number | null, cache: object | null }}
+ *   id = null: chưa có hồ sơ tương ứng trên tài khoản, lần lưu đầu sẽ tạo. cache = null: bỏ bản đệm, dùng bản trên tài khoản.
+ */
+export function pickPlan({ plans, cache }) {
+  const latest = plans[0]?.id ?? null;
+  if (!cache) return { id: latest, cache: null };
+  let id = cache.planId;
+  // Bản đệm ghi từ trước khi tài khoản có nhiều hồ sơ không kèm id: đó là hồ sơ đầu tiên của tài khoản.
+  if (id == null && cache.version > 0) id = oldestPlanId(plans);
+  if (id != null && plans.some((p) => p.id === id)) return { id, cache };
+  // Hồ sơ của bản đệm không (còn) trên tài khoản: còn thay đổi chưa lưu thì giữ lại thành hồ sơ mới,
+  // không thì mở hồ sơ mới sửa gần nhất.
+  if (cache.dirty || latest == null) return { id: null, cache };
+  return { id: latest, cache: null };
+}
+
 // ---------- Mở app: chọn bản dữ liệu ----------
 
 /** Giữ mục đang mở / tuần đang chọn của lần trước (chỉ lưu trên máy). */
@@ -96,9 +135,11 @@ function withUi(state, ui) {
 /**
  * Quyết định dữ liệu dùng khi mở app.
  * @param {object} args
- * @param {{data, version, updatedAt} | null} args.server  kết quả GET /api/plan (null nếu không tải được)
+ * @param {{data, version, updatedAt} | null} args.server  hồ sơ trên tài khoản (GET /api/plans/:id); data = null, version = 0
+ *                                                         nếu chưa có; null nếu không tải được
  * @param {object | null} args.cache   bản đệm của tài khoản (readCache)
  * @param {object | null} args.legacy  dữ liệu cũ (readLegacy)
+ * @param {object} [args.ui]           mục đang mở / tuần đang chọn cần giữ; mặc định lấy từ bản đệm
  * @returns
  *   { kind: 'ready', state, sync }            — dùng ngay; sync là giá trị khởi tạo cho createSyncer
  *   { kind: 'ask-upload', legacyState }       — server trống, máy có dữ liệu cũ → hỏi đưa lên
@@ -106,8 +147,7 @@ function withUi(state, ui) {
  *   { kind: 'error' }                          — không tải được và máy không có bản đệm
  *   Kèm dropLegacy: true khi dữ liệu cũ không cần hỏi (trống hoặc trùng bản trên server).
  */
-export function planBoot({ server, cache, legacy }) {
-  const ui = cache?.data;
+export function planBoot({ server, cache, legacy, ui = cache?.data }) {
   const cacheState = cache ? hydrate(cache.data) : null;
 
   if (!server) {

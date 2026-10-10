@@ -8,6 +8,7 @@ import {
   clearCache,
   createSyncer,
   payloadKey,
+  pickPlan,
   planBoot,
   readCache,
   resolveLegacy,
@@ -102,6 +103,16 @@ test('bản đệm tách riêng theo tài khoản', () => {
   assert.equal(readCache(1, st), null);
   assert.ok(st.has(cacheKey(2)));
   assert.notEqual(cacheKey(1), LEGACY_KEY);
+});
+
+test('bản đệm nhớ hồ sơ đang mở; bản đệm cũ (chưa có nhiều hồ sơ) không kèm id', () => {
+  const st = memoryStorage();
+  writeCache(1, { planId: 7, name: 'Cô Lan 3A', data: { a: 1 }, version: 3, dirty: false, savedAt: null }, st);
+  assert.equal(readCache(1, st).planId, 7);
+  assert.equal(readCache(1, st).name, 'Cô Lan 3A');
+  writeCache(2, { data: { b: 2 }, version: 1, dirty: false, savedAt: null }, st);
+  assert.equal(readCache(2, st).planId, null);
+  assert.equal(readCache(2, st).name, '');
 });
 
 // ---------- Hàng đợi lưu ----------
@@ -306,6 +317,56 @@ test('mở app: bản đệm đã lưu nhưng server có bản mới hơn → d�
   const cache = { data: edited('CU'), version: 2, dirty: false, savedAt: null };
   const b = planBoot({ server: server(edited('MOI'), 4), cache, legacy: null });
   assert.equal(b.state.info.className, 'MOI');
+});
+
+test('đổi hồ sơ: dùng bản trên tài khoản, giữ mục đang xem và tuần đang chọn nếu hồ sơ mới cũng có', () => {
+  const week = s0.calendar[5].id;
+  const b = planBoot({ server: server(edited('5B'), 2), cache: null, legacy: null, ui: { tab: 'timetable', selectedWeekId: week } });
+  assert.equal(b.kind, 'ready');
+  assert.equal(b.state.info.className, '5B');
+  assert.equal(b.state.tab, 'timetable');
+  assert.equal(b.state.selectedWeekId, week);
+  assert.equal(b.sync.synced, payloadKey(b.state), 'vừa mở thì không cần lưu');
+  const other = planBoot({ server: server(edited('5B'), 2), cache: null, legacy: null, ui: { tab: 'ppct', selectedWeekId: 'khong-co' } });
+  assert.notEqual(other.state.selectedWeekId, 'khong-co');
+});
+
+// ---------- Chọn hồ sơ khi mở app ----------
+
+// Danh sách trên tài khoản: mới sửa nhất đứng đầu.
+const plans = [{ id: 9 }, { id: 4 }, { id: 6 }];
+const cacheOf = (patch) => ({ planId: null, name: '', data: s0, version: 0, dirty: false, savedAt: null, ...patch });
+
+test('chọn hồ sơ: máy chưa có bản đệm → hồ sơ mới sửa gần nhất; tài khoản chưa có hồ sơ → tạo ở lần lưu đầu', () => {
+  assert.deepEqual(pickPlan({ plans, cache: null }), { id: 9, cache: null });
+  assert.deepEqual(pickPlan({ plans: [], cache: null }), { id: null, cache: null });
+});
+
+test('chọn hồ sơ: mở lại đúng hồ sơ đang làm dở trên máy này, kể cả khi hồ sơ khác mới sửa hơn', () => {
+  const cache = cacheOf({ planId: 6, version: 2, dirty: true });
+  assert.deepEqual(pickPlan({ plans, cache }), { id: 6, cache });
+});
+
+test('chọn hồ sơ: bản đệm cũ không kèm id là hồ sơ đầu tiên của tài khoản', () => {
+  const cache = cacheOf({ version: 5, dirty: true });
+  assert.deepEqual(pickPlan({ plans, cache }), { id: 4, cache });
+});
+
+test('chọn hồ sơ: hồ sơ của bản đệm đã bị xóa ở máy khác', () => {
+  // Không còn gì chưa lưu → bỏ bản đệm, mở hồ sơ mới sửa gần nhất.
+  assert.deepEqual(pickPlan({ plans, cache: cacheOf({ planId: 5, version: 2 }) }), { id: 9, cache: null });
+  // Còn thay đổi chưa lưu → giữ lại thành hồ sơ mới, không ghi đè hồ sơ nào khác.
+  const dirty = cacheOf({ planId: 5, version: 2, dirty: true });
+  assert.deepEqual(pickPlan({ plans, cache: dirty }), { id: null, cache: dirty });
+  // Tài khoản không còn hồ sơ nào → đưa bản trên máy lên lại.
+  const last = cacheOf({ planId: 5, version: 2 });
+  assert.deepEqual(pickPlan({ plans: [], cache: last }), { id: null, cache: last });
+});
+
+test('chọn hồ sơ: bản soạn khi chưa có hồ sơ trên tài khoản, sau đó máy khác đã tạo hồ sơ', () => {
+  const dirty = cacheOf({ dirty: true });
+  assert.deepEqual(pickPlan({ plans, cache: dirty }), { id: null, cache: dirty });
+  assert.deepEqual(pickPlan({ plans, cache: cacheOf({}) }), { id: 9, cache: null });
 });
 
 test('dữ liệu cũ: server trống → hỏi đưa lên; chọn đưa lên thì lưu với baseVersion 0', () => {

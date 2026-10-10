@@ -51,6 +51,7 @@ Vào trang `/dang-nhap`, gõ **Tên đăng nhập** và **Mật khẩu**, bấm 
 **Phần đầu trang** gồm:
 
 - Tên lớp, tên trường và năm học.
+- Nút **Hồ sơ:** đổi sang hồ sơ khác hoặc tạo hồ sơ mới khi soạn cho nhiều giáo viên, nhiều lớp (xem [Soạn cho nhiều giáo viên, nhiều lớp](#soạn-cho-nhiều-giáo-viên-nhiều-lớp)).
 - **Trạng thái lưu:** *✓ Đã lưu lúc …*, *Đang lưu…*, *Mất mạng…* (xem [mục 10](#10-lưu-dữ-liệu-và-sao-lưu)).
 - **Tên tài khoản:** bấm vào để xem lịch sử nạp điểm và tải file.
 - **Miễn phí: N lượt:** số lượt tải file miễn phí còn lại.
@@ -271,6 +272,18 @@ Mọi thay đổi được **tự động lưu vào tài khoản**. Nhờ vậy,
 | ! **Có phiên bản mới hơn** | Bạn vừa sửa ở máy hoặc tab khác. Bấm **Xem** để chọn giữ bản nào |
 
 > Khi đăng xuất mà còn thay đổi chưa lưu, ứng dụng sẽ hỏi. Nên chọn **Lưu rồi đăng xuất**.
+
+### Soạn cho nhiều giáo viên, nhiều lớp
+
+Một tài khoản lưu được **nhiều hồ sơ**. Mỗi hồ sơ là một bộ kế hoạch riêng: thông tin lớp, thời khóa biểu, lịch tuần, các chỗ đã sửa, chữ ký. Soạn cho ai thì tạo cho người đó một hồ sơ; khi họ cần sửa, chỉ việc mở lại hồ sơ, **không phải nhập lại thời khóa biểu**.
+
+Bấm nút **Hồ sơ** ở đầu trang:
+
+- **＋ Hồ sơ mới:** đặt tên (ví dụ *Cô Lan – 3A*, có thể để trống) rồi bấm **Tạo và mở**. Tích **Sao chép từ hồ sơ đang mở** nếu hồ sơ mới cùng trường, cùng lịch tuần — chỉ cần sửa những chỗ khác nhau.
+- **Mở:** chuyển sang hồ sơ đó. Hồ sơ đang làm được lưu xong rồi mới chuyển.
+- **Đổi tên**, **Xóa:** hồ sơ đã xóa không lấy lại được; hồ sơ đang mở thì không xóa được.
+
+> Hồ sơ không đặt tên sẽ hiện theo tên giáo viên, lớp và trường ở thẻ **Thông tin lớp**. Mỗi tài khoản lưu tối đa 100 hồ sơ.
 
 ### Tự sao lưu ra file
 

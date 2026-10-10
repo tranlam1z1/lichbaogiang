@@ -1526,6 +1526,160 @@ td.is-unknown .tkb-input {
   flex-wrap: wrap;
 }
 
+/* ---------- Hồ sơ: mỗi giáo viên / mỗi lớp một bộ kế hoạch ---------- */
+.plan-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  max-width: 210px;
+  min-height: 32px;
+  padding: 3px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.plan-btn:hover {
+  border-color: var(--violet);
+  color: var(--violet);
+}
+
+.plan-btn-label {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.plan-btn-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-dialog {
+  display: flex;
+  flex-direction: column;
+  width: min(620px, 100%);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+}
+
+.plan-search,
+.plan-row-form input {
+  min-height: 34px;
+  padding: 4px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.plan-search {
+  margin-bottom: 8px;
+}
+
+.plan-list {
+  flex: 1 1 auto;
+  min-height: 64px;
+  margin: 0 0 14px;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.plan-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.plan-row:last-child {
+  border-bottom: 0;
+}
+
+.plan-row.is-open {
+  background: var(--violet-soft);
+}
+
+.plan-row-empty {
+  color: var(--muted);
+}
+
+.plan-row-main {
+  display: grid;
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.plan-row-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.plan-row-sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.plan-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+
+.plan-row-ask {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--red);
+}
+
+.plan-row-form {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+}
+
+.plan-row-form input {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-new {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+}
+
+.plan-new .check {
+  align-items: flex-start;
+  font-weight: 400;
+}
+
+.plan-new .check input {
+  flex: none;
+}
+
+.modal .plan-new .hint {
+  margin: 0;
+}
+
+.plan-dialog .banner {
+  margin-bottom: 14px;
+}
+
 .auth-page {
   display: grid;
   place-items: center;

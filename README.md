@@ -106,8 +106,12 @@ Dữ liệu kế hoạch (TKB, lịch tuần, chỗ sửa tên bài…) vẫn **
 | POST | `/api/exports/:id/complete` | Báo đã tạo file thành công |
 | POST | `/api/exports/:id/refund` | Tạo file lỗi → hoàn lại lượt/điểm (chỉ một lần, trong 15 phút) |
 | GET | `/api/exports` | Lịch sử xuất file của mình (`?page=`) |
-| GET | `/api/plan` | Kế hoạch giảng dạy của mình → `{ data, version, updatedAt }` (chưa có: `data: null, version: 0`) |
-| PUT | `/api/plan` | `{ data, baseVersion }` → lưu nếu `baseVersion` khớp (0 = tạo mới), lệch thì 409 `PLAN_CONFLICT`; tối đa 512 KB |
+| GET | `/api/plans` | Danh sách hồ sơ kế hoạch của mình → `{ plans: [{ id, name, label, version, updatedAt }] }`, mới sửa nhất đứng đầu |
+| POST | `/api/plans` | `{ data, name? }` → tạo hồ sơ mới (tối đa 100 hồ sơ mỗi tài khoản, mỗi hồ sơ tối đa 512 KB) |
+| GET | `/api/plans/:id` | Một hồ sơ → `{ id, name, label, data, version, updatedAt }` |
+| PUT | `/api/plans/:id` | `{ data, baseVersion }` → lưu nếu `baseVersion` khớp, lệch thì 409 `PLAN_CONFLICT`; hồ sơ đã xóa thì 404 `PLAN_NOT_FOUND` |
+| PATCH | `/api/plans/:id` | `{ name }` → đổi tên hồ sơ (không đổi `version`) |
+| DELETE | `/api/plans/:id` | Xóa hồ sơ |
 | POST | `/api/topups` | `{ amountVnd }` → tạo yêu cầu nạp, trả mã chuyển khoản và link QR |
 | GET | `/api/topups` | Lịch sử nạp của mình (`?page=&status=PENDING`) |
 | POST | `/api/topups/:id/cancel` | Hủy yêu cầu đang chờ duyệt |
