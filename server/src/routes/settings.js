@@ -12,6 +12,7 @@ settingsRouter.get('/public', async (req, res) => {
     pointsForNewUser: s.pointsForNewUser,
     pointsPerExport: s.pointsPerExport,
     pointsPerExtraWeek: s.pointsPerExtraWeek,
+    pointsPerLessonPlanExport: s.pointsPerLessonPlanExport,
     topupUnitVnd: s.topupUnitVnd,
     pointsPerUnit: s.pointsPerUnit,
     topupEnabled: bankConfigured,

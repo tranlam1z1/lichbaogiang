@@ -7,6 +7,7 @@ export const SETTING_DEFS = {
   pointsForNewUser: { default: 0, min: 0, max: 1000000, label: 'Số điểm tặng cho tài khoản mới' },
   pointsPerExport: { default: 5, min: 0, max: 100000, label: 'Số điểm khi xuất 1 tuần (tuần đầu tiên)' },
   pointsPerExtraWeek: { default: 2, min: 0, max: 100000, label: 'Số điểm cho mỗi tuần thêm (từ tuần thứ 2)' },
+  pointsPerLessonPlanExport: { default: 10, min: 0, max: 100000, label: 'Điểm mỗi lần tải giáo án (1 tuần)' },
   topupUnitVnd: { default: 10000, min: 1000, max: 1000000, label: 'Mệnh giá nạp (tối thiểu và bước nhảy, đồng)' },
   pointsPerUnit: { default: 100, min: 1, max: 1000000, label: 'Số điểm nhận được cho mỗi mệnh giá nạp' },
 };

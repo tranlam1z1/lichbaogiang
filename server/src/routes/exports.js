@@ -27,12 +27,13 @@ exportsRouter.use(requireAuth);
 /** Bước 1: kiểm tra & trừ lượt/điểm theo số tuần, trả exportId. Frontend chỉ tạo file sau khi có exportId. */
 exportsRouter.post('/authorize', async (req, res) => {
   const fileType = String(req.body?.fileType || '').toUpperCase();
-  if (!FILE_TYPES[fileType]) throw validationError({ fileType: 'Loại file phải là DOCX (Word) hoặc XLSX (Excel).' });
+  if (!FILE_TYPES[fileType]) throw validationError({ fileType: 'Loại file phải là DOCX (Word), XLSX (Excel) hoặc LESSON_PLAN (Giáo án Word).' });
   // Không gửi số tuần (bản giao diện cũ) → tính như 1 tuần.
   const weeks = req.body?.weeks === undefined ? 1 : Number(req.body.weeks);
   if (!Number.isInteger(weeks) || weeks < 1 || weeks > MAX_EXPORT_WEEKS) {
     throw validationError({ weeks: `Số tuần phải từ 1 đến ${MAX_EXPORT_WEEKS}.` });
   }
+  if (fileType === 'LESSON_PLAN' && weeks !== 1) throw validationError({ weeks: 'Mỗi lần chỉ tải giáo án của 1 tuần.' });
   const { exportLog, user } = await authorizeExport(req.user.id, {
     fileType,
     weeks,

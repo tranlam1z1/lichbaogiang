@@ -3194,3 +3194,29 @@ body:has(.imp-toast) .zalo-support {
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
 }
+
+/* ---------- Kho giáo án ---------- */
+.plan-status .pill {
+  white-space: normal;
+}
+
+.plan-choice p {
+  margin: 0 0 var(--space-2);
+}
+
+.plan-choice .seg {
+  margin-bottom: 0;
+}
+
+.modal-form:has(.plan-label-table) {
+  width: min(900px, 100%);
+}
+
+.plan-label-table input[type='number'] {
+  width: 80px;
+}
+
+.plan-label-table .hint {
+  display: block;
+  margin: var(--space-1) 0 0;
+}
