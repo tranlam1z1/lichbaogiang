@@ -177,6 +177,7 @@ test('cài đặt công khai', async () => {
     pointsForNewUser: 0,
     pointsPerExport: 5,
     pointsPerExtraWeek: 2,
+    pointsPerLessonPlanExport: 10,
     topupUnitVnd: 10000,
     pointsPerUnit: 100,
     topupEnabled: true,
@@ -224,4 +225,43 @@ test('số tuần không hợp lệ bị từ chối', async () => {
     const r = await call('POST', '/exports/authorize', { fileType: 'DOCX', weeks, confirmCost: 5 });
     assert.equal(r.status, 400, `weeks=${weeks}`);
   }
+});
+
+test('tải giáo án: giá riêng, không dùng lượt miễn phí, chỉ 1 tuần', async () => {
+  // Mặc định 10 điểm mỗi lần; còn lượt miễn phí nhưng không được dùng.
+  const { call, id } = await newUser(62, { points: 25, free: 3 });
+  const ask = await call('POST', '/exports/authorize', { fileType: 'LESSON_PLAN', weeks: 1, confirmCost: 0 });
+  assert.equal(ask.status, 409);
+  assert.equal(ask.body.code, 'CONFIRM_REQUIRED');
+  assert.deepEqual(ask.body.details, { cost: 10, weeks: 1, points: 25, freeExportsLeft: 3 });
+  assert.equal((await call('POST', '/exports/authorize', { fileType: 'LESSON_PLAN', confirmCost: 5 })).status, 409);
+
+  const ok = await call('POST', '/exports/authorize', { fileType: 'lesson_plan', confirmCost: 10 });
+  assert.equal(ok.status, 201);
+  assert.equal(ok.body.export.fileType, 'LESSON_PLAN');
+  assert.equal(ok.body.export.chargeType, 'POINTS');
+  assert.equal(ok.body.export.pointsCharged, 10);
+  assert.equal(ok.body.user.points, 15);
+  assert.equal(ok.body.user.freeExportsLeft, 3, 'giữ nguyên lượt miễn phí');
+
+  for (const weeks of [2, 18]) {
+    const r = await call('POST', '/exports/authorize', { fileType: 'LESSON_PLAN', weeks, confirmCost: 10 });
+    assert.equal(r.status, 400, `weeks=${weeks}`);
+  }
+
+  await call('POST', '/exports/authorize', { fileType: 'LESSON_PLAN', confirmCost: 10 });
+  const poor = await call('POST', '/exports/authorize', { fileType: 'LESSON_PLAN', confirmCost: 10 });
+  assert.equal(poor.status, 402);
+  assert.equal(poor.body.code, 'INSUFFICIENT_POINTS');
+
+  const back = await call('POST', `/exports/${ok.body.exportId}/refund`, {});
+  assert.equal(back.body.user.points, 15);
+  assert.equal(back.body.user.freeExportsLeft, 3);
+
+  const user = await prisma.user.findUnique({ where: { id } });
+  assert.equal(user.points, 15);
+  assert.equal(user.freeExportsLeft, 3);
+  const rows = await ledger(id);
+  assert.ok(rows.some((r) => r.type === 'EXPORT' && r.points === -10 && r.note === 'Xuất file Giáo án Word 1 tuần'));
+  assert.ok(rows.some((r) => r.type === 'EXPORT_REFUND' && r.note === 'Hoàn lại do tạo file Giáo án Word lỗi'));
 });

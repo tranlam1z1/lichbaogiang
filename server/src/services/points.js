@@ -15,7 +15,7 @@ export const TX_OPTS = { maxWait: 10_000, timeout: 15_000 };
 /** Chỉ hoàn lại lượt/điểm cho lần xuất vừa cấp phép trong khoảng thời gian này. */
 export const REFUND_WINDOW_MS = 15 * 60 * 1000;
 
-export const FILE_TYPES = { DOCX: 'Word', XLSX: 'Excel' };
+export const FILE_TYPES = { DOCX: 'Word', XLSX: 'Excel', LESSON_PLAN: 'Giáo án Word' };
 
 /** Ghi sổ cái; user phải là bản ghi ĐÃ cập nhật để lấy đúng số dư sau giao dịch. */
 function writeLedger(tx, user, { type, points = 0, freeExports = 0, actorId = null, note = null, exportId = null, topUpId = null }) {
@@ -74,15 +74,18 @@ export async function createUserWithBonus(data) {
 /**
  * Cấp phép một lần xuất file `weeks` tuần. Tải 1 tuần: ưu tiên dùng lượt miễn phí, hết thì trừ điểm.
  * Tải từ 2 tuần: luôn trừ điểm theo số tuần (lượt miễn phí giữ nguyên), xem shared/pricing.js.
+ * Giáo án (LESSON_PLAN): luôn 1 tuần, giá pointsPerLessonPlanExport, không bao giờ dùng lượt miễn phí.
  * confirmCost = số điểm người dùng đã đồng ý trả (0 nếu họ nghĩ được dùng lượt miễn phí).
  * Nếu thực tế phải trừ điểm mà con số này không khớp giá hiện tại → 409 để frontend hỏi lại.
  */
 export async function authorizeExport(userId, { fileType, weeks = 1, confirmCost, description }) {
   return prisma.$transaction(async (tx) => {
-    const cost = exportCost(weeks, await getSettings(tx));
+    const settings = await getSettings(tx);
+    const lessonPlan = fileType === 'LESSON_PLAN';
+    const cost = lessonPlan ? settings.pointsPerLessonPlanExport : exportCost(weeks, settings);
 
     // Điều kiện nằm trong câu lệnh cập nhật: hai tab cùng dùng lượt cuối thì chỉ một tab được.
-    const free = canUseFreeExport(weeks, 1)
+    const free = !lessonPlan && canUseFreeExport(weeks, 1)
       ? await tx.user.updateMany({
         where: { id: userId, freeExportsLeft: { gt: 0 } },
         data: { freeExportsLeft: { decrement: 1 } },
@@ -94,7 +97,8 @@ export async function authorizeExport(userId, { fileType, weeks = 1, confirmCost
     if (free.count !== 1) {
       if (Number(confirmCost) !== cost) {
         const u = await balances(tx, userId);
-        const why = weeks > 1 ? `Tải ${weeks} tuần cần ${cost} điểm` : `Bạn đã hết lượt miễn phí. Lần xuất này sẽ trừ ${cost} điểm`;
+        const why = lessonPlan ? `Tải giáo án cần ${cost} điểm`
+          : weeks > 1 ? `Tải ${weeks} tuần cần ${cost} điểm` : `Bạn đã hết lượt miễn phí. Lần xuất này sẽ trừ ${cost} điểm`;
         throw new HttpError(409, `${why}, vui lòng xác nhận lại.`, {
           code: 'CONFIRM_REQUIRED',
           details: { cost, weeks, points: u.points, freeExportsLeft: u.freeExportsLeft },

@@ -6,7 +6,7 @@ import { exportCost } from '../../../shared/pricing.js';
 import { formatDateTime } from '../account/AccountLayout.jsx';
 import AdminLayout from './AdminLayout.jsx';
 
-const ORDER = ['freeExportsForNewUser', 'pointsForNewUser', 'pointsPerExport', 'pointsPerExtraWeek', 'topupUnitVnd', 'pointsPerUnit'];
+const ORDER = ['freeExportsForNewUser', 'pointsForNewUser', 'pointsPerExport', 'pointsPerExtraWeek', 'pointsPerLessonPlanExport', 'topupUnitVnd', 'pointsPerUnit'];
 
 /** Sửa số lượt miễn phí, điểm mỗi lần xuất, tỷ lệ quy đổi — lưu trong database. */
 export default function AdminSettings() {

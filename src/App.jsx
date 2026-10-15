@@ -1,6 +1,7 @@
 import { useApp } from './state/AppContext.jsx';
 import HelpPage from './components/HelpPage.jsx';
 import LessonsPage from './components/LessonsPage.jsx';
+import LessonPlansPage from './components/LessonPlansPage.jsx';
 import TimetableEditor from './components/TimetableEditor.jsx';
 import WeekCalendar from './components/WeekCalendar.jsx';
 import PpctTable from './components/PpctTable.jsx';
@@ -17,6 +18,7 @@ const TABS = [
   { id: 'timetable', label: 'Thời khóa biểu', short: 'TKB', icon: '▦' },
   { id: 'calendar', label: 'Lịch tuần', short: 'Lịch tuần', icon: '◷' },
   { id: 'lessons', label: 'Báo giảng', short: 'Báo giảng', icon: '✎' },
+  { id: 'plans', label: 'Kho giáo án', short: 'Giáo án', icon: '▤' },
   { id: 'ppct', label: 'Phân phối chương trình', short: 'PPCT', icon: '☰' },
 ];
 
@@ -61,6 +63,7 @@ export default function App() {
       <main className="page">
         {tab === 'help' && <HelpPage />}
         {tab === 'lessons' && <LessonsPage />}
+        {tab === 'plans' && <LessonPlansPage />}
         {tab === 'timetable' && <TimetableEditor />}
         {tab === 'calendar' && <WeekCalendar />}
         {tab === 'ppct' && <PpctTable />}

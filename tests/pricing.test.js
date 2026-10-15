@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { canUseFreeExport, exportCost, priceText, quoteExport } from '../shared/pricing.js';
+import { canUseFreeExport, exportCost, priceText, quoteExport, quoteLessonPlanExport } from '../shared/pricing.js';
 
 const settings = { pointsPerExport: 5, pointsPerExtraWeek: 2 };
 
@@ -35,4 +35,12 @@ test('báo giá: miễn phí / đủ điểm / thiếu điểm', () => {
 test('mô tả bảng giá', () => {
   assert.equal(priceText(settings), '1 tuần: 5 điểm, mỗi tuần thêm: 2 điểm');
   assert.equal(priceText({ pointsPerExport: 5, pointsPerExtraWeek: 0 }), '5 điểm mỗi lần tải');
+});
+
+test('báo giá giáo án: luôn trừ điểm, không dùng lượt miễn phí', () => {
+  assert.deepEqual(quoteLessonPlanExport({ points: 25, freeExportsLeft: 3 }, { pointsPerLessonPlanExport: 10 }), {
+    weeks: 1, free: false, cost: 10, enough: true, pointsAfter: 15,
+  });
+  assert.equal(quoteLessonPlanExport({ points: 5 }, { pointsPerLessonPlanExport: 10 }).enough, false);
+  assert.equal(quoteLessonPlanExport().cost, 0);
 });

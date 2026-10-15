@@ -37,6 +37,12 @@ export function quoteExport(weeks, { points = 0, freeExportsLeft = 0 } = {}, set
   };
 }
 
+/** Báo giá tải giáo án: luôn 1 tuần, luôn trừ điểm (không dùng lượt miễn phí). */
+export function quoteLessonPlanExport({ points = 0 } = {}, settings = {}) {
+  const cost = settings.pointsPerLessonPlanExport ?? 0;
+  return { weeks: 1, free: false, cost, enough: points >= cost, pointsAfter: points - cost };
+}
+
 /** Mô tả bảng giá ngắn gọn, VD "1 tuần: 5 điểm, mỗi tuần thêm: 2 điểm". */
 export function priceText({ pointsPerExport = 0, pointsPerExtraWeek = 0 } = {}) {
   return pointsPerExtraWeek > 0
