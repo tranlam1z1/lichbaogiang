@@ -6,3 +6,8 @@ tests/out
 .env
 .env.*
 !.env.example
+
+# Giáo án tự động: SGK (PDF ~1,8 GB) không commit; bản phác/ledger; kho file dev
+docs/sgk/
+.superpowers/
+server/storage/
