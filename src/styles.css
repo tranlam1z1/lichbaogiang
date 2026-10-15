@@ -1,25 +1,89 @@
-/* Kế hoạch giảng dạy — phong cách "vở ô li": nền giấy kẻ ô, mực tím, bút đỏ đánh dấu chỗ sửa. */
+/* Kế hoạch giảng dạy — hệ thiết kế "Sổ tay giáo viên": nền xám xanh dịu, mực chàm làm màu chính,
+   bút đỏ đánh dấu chỗ sửa. Mọi màu / khoảng cách / bo góc / đổ bóng lấy từ biến ở :root. */
 
 :root {
-  --paper: #fcfcff;
-  --grid: rgba(92, 72, 180, 0.07);
-  --grid-strong: rgba(92, 72, 180, 0.13);
-  --ink: #221c45;
-  --muted: #666184;
-  --violet: #4a35a0;
-  --violet-deep: #33246f;
-  --violet-soft: #eeeafb;
-  --line: #d8d2ee;
-  --line-strong: #b9b0dd;
-  --red: #c0392b;
-  --red-soft: #fdeeec;
-  --yellow: #fff3bf;
-  --green: #2f7d4f;
-  --green-soft: #e7f4ec;
-  --card: #ffffff;
-  --radius: 10px;
+  /* Màu nền & bề mặt */
+  --color-bg: #f4f6fa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8f9fc;
+  --color-surface-sunken: #eef1f6;
+
+  /* Chữ (độ tương phản ≥ 4.5:1 trên nền trắng và --color-bg) */
+  --color-text: #1b2135;
+  --color-text-muted: #565d73;
+  --color-on-primary: #ffffff;
+
+  /* Viền */
+  --color-border: #dfe3ec;
+  --color-border-strong: #c3c9d8;
+  --color-border-input: #8e94aa; /* ≥ 3:1 với nền trắng (WCAG 1.4.11) */
+
+  /* Màu chính: mực chàm */
+  --color-primary: #4338ca;
+  --color-primary-hover: #3730a3;
+  --color-primary-strong: #312e81;
+  --color-primary-soft: #eef0ff;
+  --color-primary-ring: rgba(67, 56, 202, 0.22);
+  --color-primary-border: #d5d9fb;
+
+  /* Trạng thái */
+  --color-danger: #c42b2b;
+  --color-danger-hover: #a12020;
+  --color-danger-soft: #fdecec;
+  --color-danger-border: #efb3b3;
+  --color-success: #1d7a45;
+  --color-success-soft: #e6f4ec;
+  --color-success-border: #bfe0cc;
+  --color-warning: #7a5200;
+  --color-warning-soft: #fff4cc;
+  --color-warning-border: #f1dc94;
+  --color-warning-accent: #d4a514;
+  --color-edited: #fffbe6;
+  --color-neutral-soft: #eceff4;
+
+  --color-overlay: rgba(17, 22, 40, 0.45);
+  --shadow-color: rgba(17, 24, 39, 0.08);
+  --shadow-color-strong: rgba(17, 24, 39, 0.2);
+
+  /* Khoảng cách (bội số 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Bo góc */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+
+  /* Đổ bóng */
+  --shadow-xs: 0 1px 2px var(--shadow-color);
+  --shadow-sm: 0 1px 3px var(--shadow-color), 0 1px 2px rgba(17, 24, 39, 0.04);
+  --shadow-md: 0 6px 16px var(--shadow-color);
+  --shadow-lg: 0 20px 48px var(--shadow-color-strong);
+
+  /* Chữ */
   --font-ui: 'Be Vietnam Pro', 'Segoe UI', Roboto, Arial, sans-serif;
   --font-sheet: 'Noto Serif', 'Times New Roman', Times, serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.85rem;
+  --text-md: 0.92rem;
+  --text-lg: 1.15rem;
+  --text-xl: 1.35rem;
+  --text-2xl: 1.75rem;
+
+  /* Kích thước điều khiển (≥ 24px theo WCAG 2.5.8) */
+  --control-h: 40px;
+  --control-h-sm: 32px;
+  --content-max: 1200px;
+  --focus-ring: 0 0 0 3px var(--color-primary-ring);
+
   color-scheme: light;
 }
 
@@ -40,14 +104,10 @@ body {
   font-family: var(--font-ui);
   font-size: 15px;
   line-height: 1.5;
-  color: var(--ink);
-  background-color: var(--paper);
-  /* Ô li: ô lớn 24px, chia 4 dòng kẻ nhỏ */
-  background-image:
-    linear-gradient(var(--grid-strong) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-strong) 1px, transparent 1px),
-    linear-gradient(var(--grid) 1px, transparent 1px);
-  background-size: 24px 24px, 24px 24px, 24px 6px;
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 button,
@@ -59,8 +119,13 @@ textarea {
 }
 
 :focus-visible {
-  outline: 2px solid var(--violet);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
 }
 
 h1,
@@ -68,37 +133,45 @@ h2,
 h3 {
   margin: 0;
   line-height: 1.25;
+  color: var(--color-text);
 }
 
 h2 {
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   font-weight: 700;
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 /* ---------- Thẻ Hướng dẫn sử dụng (docs/HUONG_DAN_SU_DUNG.md) ---------- */
 .help-doc {
   max-width: 860px;
   margin: 0 auto;
-  padding: 20px 24px 28px;
-  line-height: 1.65;
+  padding: var(--space-6) var(--space-8) var(--space-8);
+  line-height: 1.7;
 }
 
 .help-doc h2,
 .help-doc h3,
 .help-doc h4 {
   margin: 1.6em 0 0.5em;
-  color: var(--violet-deep);
+  color: var(--color-primary-strong);
   /* Chừa chỗ cho đầu trang dính khi bấm link mục lục */
   scroll-margin-top: 150px;
 }
 
 .help-doc h2 {
   margin-top: 0;
-  font-size: 1.5rem;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-2xl);
 }
 
 .help-doc h3 {
-  font-size: 1.2rem;
+  font-size: var(--text-xl);
 }
 
 .help-doc h4 {
@@ -130,14 +203,14 @@ h2 {
 
 .help-doc hr {
   border: 0;
-  border-top: 1px dashed var(--line-strong);
+  border-top: 1px solid var(--color-border);
   margin: 1.6em 0;
 }
 
 .help-doc blockquote {
-  padding: 8px 14px;
-  border-left: 4px solid var(--violet);
-  background: var(--violet-soft);
+  padding: var(--space-2) var(--space-4);
+  border-left: 4px solid var(--color-primary);
+  background: var(--color-primary-soft);
   border-radius: 0 var(--radius) var(--radius) 0;
 }
 
@@ -147,13 +220,20 @@ h2 {
 
 .help-doc code {
   padding: 1px 5px;
-  border-radius: 4px;
-  background: var(--violet-soft);
-  font-size: 0.92em;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken);
+  color: var(--color-primary-strong);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
 }
 
 .help-doc a {
-  color: var(--violet);
+  color: var(--color-primary);
+  text-underline-offset: 3px;
+}
+
+.help-doc a:hover {
+  color: var(--color-primary-hover);
 }
 
 .help-doc table {
@@ -163,19 +243,20 @@ h2 {
 
 .help-doc th,
 .help-doc td {
-  border: 1px solid var(--line);
+  border: 1px solid var(--color-border);
   padding: 6px 10px;
   text-align: left;
   vertical-align: top;
 }
 
 .help-doc th {
-  background: var(--violet-soft);
+  background: var(--color-surface-sunken);
+  font-weight: 600;
 }
 
 @media (max-width: 640px) {
   .help-doc {
-    padding: 14px 16px 20px;
+    padding: var(--space-4) var(--space-4) var(--space-5);
   }
 }
 
@@ -184,60 +265,63 @@ h2 {
   position: sticky;
   top: 0;
   z-index: 20;
-  background: rgba(255, 255, 255, 0.96);
-  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.97);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-xs);
   padding-top: env(safe-area-inset-top, 0px);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(8px);
 }
 
 .masthead-inner {
-  max-width: 1180px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 10px 16px 0;
+  padding: var(--space-3) var(--space-4) 0;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
-/* Nhãn vở: tên lớp trong khung viền đôi */
+/* Nhãn lớp: ô vuông màu chàm nhạt */
 .brand-mark {
   display: inline-grid;
   place-items: center;
-  min-width: 52px;
-  height: 40px;
-  padding: 0 8px;
-  border: 3px double var(--violet);
-  border-radius: 6px;
-  color: var(--violet);
-  font-family: var(--font-sheet);
+  flex: none;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-primary);
+  font-family: var(--font-ui);
   font-weight: 700;
-  font-size: 1.15rem;
-  background: #fff;
+  font-size: var(--text-lg);
+  background: var(--color-primary-soft);
 }
 
 .brand h1 {
-  font-size: 1.3rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--violet-deep);
+  color: var(--color-text);
+  letter-spacing: -0.01em;
 }
 
 .brand-sub {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .tabs {
   display: flex;
-  gap: 2px;
+  gap: var(--space-1);
   overflow-x: auto;
   scrollbar-width: none;
-  margin: 0 -16px;
-  padding: 0 16px;
+  margin: 0 calc(-1 * var(--space-4));
+  padding: 0 var(--space-4);
 }
 
 .tabs::-webkit-scrollbar {
@@ -248,19 +332,28 @@ h2 {
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 9px 14px 10px;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3) 9px;
   border: 0;
   border-bottom: 3px solid transparent;
+  border-radius: var(--radius) var(--radius) 0 0;
   background: none;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
 }
 
 .tab:hover {
-  color: var(--violet);
+  color: var(--color-primary);
+  background: var(--color-surface-muted);
+}
+
+/* Thanh tab cuộn ngang sẽ cắt mất viền focus nằm ngoài → vẽ viền vào trong */
+.tab:focus-visible {
+  outline-offset: -2px;
 }
 
 a.tab {
@@ -268,13 +361,17 @@ a.tab {
 }
 
 .tab.is-active {
-  color: var(--violet-deep);
-  border-bottom-color: var(--violet);
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .tab-icon {
   font-size: 0.95em;
-  opacity: 0.7;
+  opacity: 0.75;
+}
+
+.tab.is-active .tab-icon {
+  opacity: 1;
 }
 
 .tab-short {
@@ -282,14 +379,14 @@ a.tab {
 }
 
 .page {
-  max-width: 1180px;
+  max-width: var(--content-max);
   margin: 0 auto;
-  padding: 16px 16px calc(40px + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-5) var(--space-4) calc(40px + env(safe-area-inset-bottom, 0px));
 }
 
 .stack {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 /* Phần tử con của grid mặc định không co nhỏ hơn nội dung → bảng rộng đẩy cả trang tràn ngang trên điện thoại. */
@@ -299,14 +396,15 @@ a.tab {
 
 /* ---------- Thành phần chung ---------- */
 .card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-xs);
 }
 
 .card > h2 {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .card-head {
@@ -314,102 +412,119 @@ a.tab {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 12px;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .head-actions {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2) var(--space-3);
 }
 
 .card-text {
-  margin: 0 0 12px;
-  color: var(--muted);
+  margin: 0 0 var(--space-3);
+  color: var(--color-text-muted);
   max-width: 70ch;
 }
 
+/* Nút: phụ (mặc định) · chính · nguy hiểm · viền đỏ · không viền */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 7px 14px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: #fff;
+  gap: var(--space-2);
+  min-height: var(--control-h);
+  padding: 7px var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-weight: 600;
+  line-height: 1.25;
   cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-  border-color: var(--violet);
-  color: var(--violet);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .btn:disabled {
-  opacity: 0.45;
-  cursor: default;
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn-primary {
-  background: var(--violet);
-  border-color: var(--violet);
-  color: #fff;
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--violet-deep);
-  color: #fff;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+  color: var(--color-on-primary);
 }
 
 .btn-danger {
-  background: var(--red);
-  border-color: var(--red);
-  color: #fff;
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-on-primary);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: #9e2c20;
-  border-color: #9e2c20;
-  color: #fff;
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+  color: var(--color-on-primary);
 }
 
 .btn-danger-outline {
-  color: var(--red);
-  border-color: #e7b3ad;
+  color: var(--color-danger);
+  border-color: var(--color-danger-border);
 }
 
 .btn-danger-outline:hover:not(:disabled) {
-  color: var(--red);
-  border-color: var(--red);
-  background: var(--red-soft);
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
 }
 
 .btn-icon {
-  width: 38px;
+  width: var(--control-h);
   padding: 0;
   font-size: 1.4rem;
   line-height: 1;
 }
 
 .btn-small {
-  min-height: 30px;
-  min-width: 30px;
-  padding: 2px 8px;
+  min-height: var(--control-h-sm);
+  min-width: var(--control-h-sm);
+  padding: 3px 10px;
+  font-size: var(--text-md);
 }
 
 .btn-quiet {
   border-color: transparent;
-  color: var(--muted);
+  background: transparent;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+
+.btn-quiet:hover:not(:disabled) {
+  border-color: transparent;
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
 }
 
 .btn-block {
   width: 100%;
-  margin-top: 12px;
+  margin-top: var(--space-3);
 }
 
 .pager {
@@ -417,69 +532,79 @@ a.tab {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 6px;
-  margin-top: 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
 .pager-gap {
-  padding: 0 4px;
-  color: var(--muted);
+  padding: 0 var(--space-1);
+  color: var(--color-text-muted);
 }
 
 .button-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--space-2) var(--space-3);
 }
 
 .link-btn {
   border: 0;
   background: none;
-  padding: 4px 0;
-  color: var(--violet);
+  padding: var(--space-1) 0;
+  color: var(--color-primary);
   font-weight: 600;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: pointer;
 }
 
+.link-btn:hover {
+  color: var(--color-primary-hover);
+  text-decoration-thickness: 2px;
+}
+
 .pill {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--violet-soft);
-  color: var(--violet-deep);
-  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
 }
 
 .pill-warn {
-  background: var(--red-soft);
-  color: var(--red);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .pill-edit {
-  background: var(--yellow);
-  color: #6d5300;
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
 }
 
 .pill-ok {
-  background: var(--green-soft);
-  color: var(--green);
+  background: var(--color-success-soft);
+  color: var(--color-success);
 }
 
 .pill-muted {
-  margin-left: 8px;
-  padding: 1px 8px;
-  background: #eef0f4;
-  color: var(--muted);
-  font-size: 0.75rem;
+  margin-left: var(--space-2);
+  padding: 1px var(--space-2);
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
 }
 
 .taught-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 18px;
+  gap: var(--space-2) 18px;
 }
 
 .taught-item {
@@ -489,64 +614,106 @@ a.tab {
   cursor: pointer;
 }
 
+/* Thông báo: nền nhạt + vạch màu bên trái */
 .banner {
-  margin: 0 0 12px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  margin: 0 0 var(--space-3);
+  padding: 10px var(--space-4);
+  border: 1px solid transparent;
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+  font-size: var(--text-md);
 }
 
 .banner-error {
-  max-width: 1180px;
-  margin: 12px auto 0;
-  background: var(--red-soft);
-  color: var(--red);
+  max-width: var(--content-max);
+  margin: var(--space-3) auto 0;
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-border);
+  border-left-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
 .banner-note {
-  background: var(--yellow);
-  color: #5c4700;
+  background: var(--color-warning-soft);
+  border-color: var(--color-warning-border);
+  border-left-color: var(--color-warning-accent);
+  color: var(--color-warning);
 }
 
 .hint {
   margin: 10px 0 0;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .empty {
-  padding: 40px 16px;
+  padding: 40px var(--space-4);
   text-align: center;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 /* ---------- Ô nhập ---------- */
 .field {
   display: grid;
-  gap: 4px;
-  font-size: 0.85rem;
+  gap: 6px;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--muted);
+  color: var(--color-text);
 }
 
 .field input,
 .field select,
 .data-table input,
 .data-table select {
-  min-height: 38px;
-  padding: 6px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: #fff;
+  min-height: var(--control-h);
+  padding: 6px var(--space-3);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font-size: 0.95rem;
   font-weight: 400;
-  color: var(--ink);
+  color: var(--color-text);
   width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.field input:hover,
+.field select:hover,
+.data-table input:hover,
+.data-table select:hover {
+  border-color: var(--color-text-muted);
+}
+
+.field input:focus-visible,
+.field select:focus-visible,
+.data-table input:focus-visible,
+.data-table select:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  box-shadow: var(--focus-ring);
+}
+
+.field input:disabled,
+.field select:disabled,
+.data-table input:disabled,
+.data-table select:disabled {
+  background: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.field input::placeholder,
+.data-table input::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.8;
 }
 
 .field-inline {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   white-space: nowrap;
 }
 
@@ -561,7 +728,7 @@ a.tab {
 .check {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   font-weight: 600;
   cursor: pointer;
 }
@@ -569,11 +736,11 @@ a.tab {
 .check input {
   width: 18px;
   height: 18px;
-  accent-color: var(--violet);
+  accent-color: var(--color-primary);
 }
 
 .check-small {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .check-small input {
@@ -585,16 +752,17 @@ a.tab {
 .sig-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 16px;
+  gap: var(--space-4);
 }
 
 .sig-item {
   display: grid;
   align-content: start;
   gap: 10px;
-  padding: 14px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
 }
 
 .sig-item h3 {
@@ -610,10 +778,10 @@ a.tab {
   display: grid;
   place-items: center;
   height: 96px;
-  padding: 8px;
-  border: 1px dashed var(--line-strong);
-  border-radius: 8px;
-  background: #fff;
+  padding: var(--space-2);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
 }
 
 .sig-preview img {
@@ -625,8 +793,8 @@ a.tab {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px 16px;
-  margin-bottom: 14px;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .gen-grid {
@@ -643,8 +811,8 @@ a.tab {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 12px 20px;
-  margin-bottom: 14px;
+  gap: var(--space-3) var(--space-5);
+  margin-bottom: var(--space-4);
 }
 
 .filters .field {
@@ -652,20 +820,20 @@ a.tab {
 }
 
 .result-count {
-  margin: 0 0 8px;
-  font-size: 0.85rem;
-  color: var(--muted);
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 /* ---------- Thanh chọn tuần ---------- */
 .week-strip {
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .week-strip-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .week-list {
@@ -674,7 +842,7 @@ a.tab {
   align-items: flex-end;
   gap: 6px;
   overflow-x: auto;
-  padding: 18px 2px 8px;
+  padding: 20px 4px var(--space-2);
   scroll-snap-type: x proximity;
 }
 
@@ -690,7 +858,7 @@ a.tab {
   left: 0;
   font-size: 0.72rem;
   font-weight: 700;
-  color: var(--violet);
+  color: var(--color-primary);
   white-space: nowrap;
 }
 
@@ -698,39 +866,43 @@ a.tab {
   position: relative;
   display: grid;
   justify-items: center;
-  width: 54px;
-  padding: 5px 0 4px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  width: 56px;
+  padding: 6px 0 5px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
   cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
 }
 
 .week-chip:hover {
-  border-color: var(--violet);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .week-num {
-  font-family: var(--font-sheet);
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   line-height: 1.1;
-  color: var(--violet-deep);
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .week-date {
   font-size: 0.7rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .week-chip.is-selected {
-  background: var(--violet);
-  border-color: var(--violet);
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  box-shadow: 0 2px 6px var(--color-primary-ring);
 }
 
 .week-chip.is-selected .week-num,
 .week-chip.is-selected .week-date {
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 /* Tuần hiện tại: chấm đỏ như dấu bút đỏ */
@@ -742,20 +914,23 @@ a.tab {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--red);
+  background: var(--color-danger);
+  box-shadow: 0 0 0 2px var(--color-surface);
 }
 
 .week-chip.is-off {
   cursor: default;
   width: 62px;
-  background: repeating-linear-gradient(135deg, #f4f2fa 0 5px, #fbfaff 5px 10px);
+  background: repeating-linear-gradient(135deg, var(--color-surface-sunken) 0 5px, var(--color-surface-muted) 5px 10px);
   border-style: dashed;
+  border-color: var(--color-border-strong);
+  box-shadow: none;
 }
 
 .week-off-label {
   font-size: 0.7rem;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--color-text-muted);
   line-height: 1.5;
   white-space: nowrap;
 }
@@ -765,24 +940,25 @@ a.tab {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 16px;
-  margin-bottom: 14px;
-  padding: 10px 14px;
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  gap: 10px var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
 }
 
 .range-custom {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 12px;
-  margin-top: 8px;
+  gap: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
 }
 
 .export-actions {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   margin-left: auto;
 }
 
@@ -793,19 +969,20 @@ a.tab {
 }
 
 .export-msg.is-ok {
-  color: var(--green);
+  color: var(--color-success);
 }
 
 .export-msg.is-error {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 /* ---------- Bảng báo giảng ---------- */
 .sheet {
-  background: #fff;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-xs);
 }
 
 .sheet-head {
@@ -813,38 +990,46 @@ a.tab {
   flex-wrap: wrap;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 12px;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .sheet-title {
   display: grid;
+  gap: 2px;
 }
 
 .sheet-week {
   font-family: var(--font-sheet);
   font-size: 1.9rem;
   font-weight: 700;
-  color: var(--violet-deep);
+  color: var(--color-primary-strong);
   line-height: 1.1;
 }
 
 .sheet-dates {
-  color: var(--muted);
-  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
 }
 
 .sheet-meta {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 12px;
+  gap: var(--space-2) var(--space-3);
 }
 
 .table-scroll {
+  max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
+}
+
+/* Bảng danh sách (không có viền ngoài) đặt trong khung bo góc */
+.table-scroll:has(> .data-table) {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
 
 .lesson-table,
@@ -871,24 +1056,25 @@ a.tab {
 
 .lesson-table th,
 .lesson-table td {
-  border: 1px solid var(--line-strong);
-  padding: 4px 8px;
+  border: 1px solid var(--color-border-strong);
+  padding: var(--space-1) var(--space-2);
   vertical-align: middle;
 }
 
 .lesson-table thead th {
   position: sticky;
   top: 0;
-  background: var(--violet-soft);
+  background: var(--color-primary-soft);
   font-family: var(--font-ui);
-  font-size: 0.82rem;
-  color: var(--violet-deep);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary-strong);
   text-align: center;
-  padding: 8px 6px;
+  padding: var(--space-2) 6px;
 }
 
 .lesson-table tr.day-start > * {
-  border-top: 2px solid var(--violet);
+  border-top: 2px solid var(--color-primary);
 }
 
 .lesson-table tbody tr:first-child > * {
@@ -897,7 +1083,7 @@ a.tab {
 
 .cell-day {
   text-align: center;
-  background: #faf9ff;
+  background: var(--color-surface-muted);
 }
 
 .day-name {
@@ -907,37 +1093,38 @@ a.tab {
 
 .day-date {
   display: block;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
   font-weight: 400;
 }
 
 .cell-session {
   text-align: center;
   font-style: italic;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .cell-num {
   text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .cell-subject {
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
 }
 
 .cell-ppct {
-  color: var(--violet);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 .lesson-table tr.is-empty td {
-  background: #fcfcfe;
+  background: var(--color-surface-muted);
 }
 
 .lesson-table tr.is-not-taught .cell-subject {
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-weight: 400;
 }
 
@@ -957,50 +1144,52 @@ a.tab {
   display: block;
   width: 100%;
   min-height: 28px;
-  padding: 3px 4px;
+  padding: 3px var(--space-1);
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
   resize: none;
   overflow: hidden;
   line-height: 1.4;
   font-family: inherit;
+  transition: border-color 0.15s, background-color 0.15s;
 }
 
 .cell-edit:hover {
-  border-color: var(--line);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
 }
 
 .cell-edit:focus {
-  border-color: var(--violet);
-  background: #fff;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
   outline: none;
-  box-shadow: 0 0 0 3px var(--violet-soft);
+  box-shadow: 0 0 0 1px var(--color-primary), var(--focus-ring);
 }
 
 /* Ô đã sửa: vạch bút đỏ bên trái, nền vàng nhạt */
 td.is-edited {
-  background: #fffbe8;
-  box-shadow: inset 3px 0 0 var(--red);
+  background: var(--color-edited);
+  box-shadow: inset 3px 0 0 var(--color-danger);
 }
 
 .cell-warn {
   display: block;
-  padding: 0 4px 2px;
+  padding: 0 var(--space-1) 2px;
   font-family: var(--font-ui);
   font-size: 0.78rem;
   font-style: italic;
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 .revert {
   border: 0;
   background: none;
-  padding: 0 4px;
+  padding: 0 var(--space-1);
   font-family: var(--font-ui);
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--red);
+  color: var(--color-danger);
   cursor: pointer;
 }
 
@@ -1017,23 +1206,23 @@ td.is-edited {
   position: absolute;
   top: 8px;
   right: 10px;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: none;
   font-family: var(--font-ui);
   font-size: 0.72rem;
-  line-height: 20px;
-  color: var(--muted);
+  line-height: 24px;
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .cell-clear:hover,
 .cell-clear:focus-visible {
-  background: var(--red-soft);
-  color: var(--red);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .data-table .cell-clear {
@@ -1048,78 +1237,94 @@ td.is-edited {
 
 .tkb-table th,
 .tkb-table td {
-  border: 1px solid var(--line);
+  border: 1px solid var(--color-border-strong);
   padding: 3px;
   text-align: center;
 }
 
 .tkb-table thead th {
-  background: var(--violet-soft);
-  color: var(--violet-deep);
-  font-size: 0.85rem;
-  padding: 8px 4px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: var(--space-2) var(--space-1);
+}
+
+.tkb-table tbody th,
+.tkb-table .cell-session {
+  background: var(--color-surface-muted);
 }
 
 .tkb-table tr.session-start > * {
-  border-top: 2px solid var(--violet);
+  border-top: 2px solid var(--color-primary);
 }
 
 .tkb-input {
   width: 100%;
   min-width: 100px;
   min-height: 34px;
-  padding: 4px 6px;
+  padding: var(--space-1) 6px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   text-align: center;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   text-transform: uppercase;
+  transition: border-color 0.15s, background-color 0.15s;
 }
 
 .tkb-input:hover {
-  border-color: var(--line);
+  border-color: var(--color-border-strong);
+  background: var(--color-surface);
 }
 
 .tkb-input:focus {
-  border-color: var(--violet);
-  background: #fff;
+  border-color: var(--color-primary);
+  background: var(--color-surface);
   outline: none;
+  box-shadow: 0 0 0 1px var(--color-primary), var(--focus-ring);
 }
 
 td.is-unknown {
-  background: var(--red-soft);
+  background: var(--color-danger-soft);
 }
 
 td.is-unknown .tkb-input {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 /* ---------- Bảng dữ liệu ---------- */
 .data-table {
-  font-size: 0.9rem;
+  font-size: var(--text-md);
 }
 
 .data-table th,
 .data-table td {
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--line);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
   vertical-align: middle;
 }
 
+.data-table tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
 .data-table thead th {
-  background: var(--violet-soft);
-  color: var(--violet-deep);
-  font-size: 0.82rem;
+  background: var(--color-surface-sunken);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  font-weight: 600;
   white-space: nowrap;
+  border-bottom-color: var(--color-border-strong);
 }
 
 .data-table .num {
   text-align: center;
   width: 1%;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .nowrap {
@@ -1130,17 +1335,17 @@ td.is-unknown .tkb-input {
 .status-under .status-text,
 .status-missing .status-text,
 .status-unknown .status-text {
-  color: var(--red);
+  color: var(--color-danger);
   font-weight: 600;
 }
 
 .status-ok .status-text {
-  color: var(--green);
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .status-skip .status-text {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .check-add {
@@ -1157,8 +1362,8 @@ td.is-unknown .tkb-input {
 }
 
 .check-table tr.is-custom .input-num {
-  border-color: var(--violet);
-  background: var(--violet-soft);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .check-table .row-actions .btn {
@@ -1169,7 +1374,7 @@ td.is-unknown .tkb-input {
 }
 
 .check-table .row-actions .btn:hover .icon {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 .hidden-subjects {
@@ -1177,9 +1382,9 @@ td.is-unknown .tkb-input {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  margin: 12px 0 0;
+  margin: var(--space-3) 0 0;
   font-size: 0.88rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .cal-table {
@@ -1187,7 +1392,7 @@ td.is-unknown .tkb-input {
 }
 
 .cal-table td {
-  padding: 4px 6px;
+  padding: var(--space-1) 6px;
 }
 
 .cal-table .input-num {
@@ -1199,17 +1404,18 @@ td.is-unknown .tkb-input {
 }
 
 .cal-table tr.is-off td {
-  background: #f7f6fb;
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
 }
 
 .cal-table tr.has-issue td {
-  background: var(--red-soft);
+  background: var(--color-danger-soft);
 }
 
 .weekday-hint {
   display: block;
   font-size: 0.72rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .row-actions {
@@ -1217,11 +1423,12 @@ td.is-unknown .tkb-input {
 }
 
 .issue-list {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   padding: 10px 14px 10px 32px;
-  border-radius: 8px;
-  background: var(--red-soft);
-  color: var(--red);
+  border: 1px solid var(--color-danger-border);
+  border-radius: var(--radius);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
   font-size: 0.88rem;
 }
 
@@ -1245,7 +1452,7 @@ td.is-unknown .tkb-input {
 
 /* Đang bật "Để trống đồ dùng mọi tuần": nội dung vẫn giữ nhưng không được ghi ra */
 .equip-table.is-off .cell-edit {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 /* ---------- Hộp thoại ---------- */
@@ -1255,25 +1462,31 @@ td.is-unknown .tkb-input {
   z-index: 50;
   display: grid;
   place-items: center;
-  padding: 16px;
-  background: rgba(34, 28, 69, 0.4);
+  padding: var(--space-4);
+  background: var(--color-overlay);
 }
 
 .modal {
   width: min(440px, 100%);
-  padding: 20px;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 20px 50px rgba(34, 28, 69, 0.25);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal h2 {
+  font-size: var(--text-lg);
 }
 
 .modal p {
   margin: 10px 0 18px;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .modal-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
   gap: 10px;
 }
@@ -1290,24 +1503,24 @@ td.is-unknown .tkb-input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 14px 10px 12px;
-  border: 1.5px solid var(--line);
-  border-radius: var(--radius);
-  background: var(--card);
-  color: var(--ink);
+  gap: var(--space-2);
+  padding: 14px 10px var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
   text-align: center;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
 }
 
 .orient-option:hover {
-  border-color: var(--line-strong);
+  border-color: var(--color-border-input);
 }
 
 .orient-option.is-active {
-  border-color: var(--violet);
-  background: var(--violet-soft);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .orient-option input {
@@ -1317,15 +1530,15 @@ td.is-unknown .tkb-input {
 }
 
 .orient-option:has(input:focus-visible) {
-  outline: 2px solid var(--violet);
+  outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
 .orient-page {
   display: block;
-  border: 2px solid var(--line-strong);
+  border: 2px solid var(--color-border-strong);
   border-radius: 3px;
-  background: repeating-linear-gradient(to bottom, transparent 0 5px, var(--grid-strong) 5px 6px) content-box, #fff;
+  background: repeating-linear-gradient(to bottom, transparent 0 5px, var(--color-border) 5px 6px) content-box, var(--color-surface);
   padding: 5px;
 }
 
@@ -1341,7 +1554,7 @@ td.is-unknown .tkb-input {
 }
 
 .orient-option.is-active .orient-page {
-  border-color: var(--violet);
+  border-color: var(--color-primary);
 }
 
 .orient-text {
@@ -1350,7 +1563,7 @@ td.is-unknown .tkb-input {
 }
 
 .orient-text small {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 /* Chọn phạm vi tuần khi xuất file: mỗi dòng kèm giá */
@@ -1372,9 +1585,9 @@ td.is-unknown .tkb-input {
 .export-fieldset legend {
   margin-bottom: 6px;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--muted);
+  color: var(--color-text);
 }
 
 .range-options {
@@ -1387,25 +1600,26 @@ td.is-unknown .tkb-input {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  border: 1.5px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  color: var(--ink);
+  padding: var(--space-2) var(--space-3);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
   cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .range-option:hover {
-  border-color: var(--line-strong);
+  border-color: var(--color-border-input);
 }
 
 .range-option.is-active {
-  border-color: var(--violet);
-  background: var(--violet-soft);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
 }
 
 .range-option.is-empty {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .range-option input {
@@ -1413,7 +1627,7 @@ td.is-unknown .tkb-input {
   height: 16px;
   margin: 0;
   flex: none;
-  accent-color: var(--violet);
+  accent-color: var(--color-primary);
 }
 
 .range-text {
@@ -1423,18 +1637,18 @@ td.is-unknown .tkb-input {
 }
 
 .range-text small {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .range-price {
   flex: none;
   font-weight: 700;
-  color: var(--violet-deep);
+  color: var(--color-primary-strong);
   white-space: nowrap;
 }
 
 .range-price.is-free {
-  color: var(--green);
+  color: var(--color-success);
 }
 
 .range-custom .field-inline input {
@@ -1442,15 +1656,17 @@ td.is-unknown .tkb-input {
 }
 
 .export-total {
-  padding: 10px 12px;
-  border-radius: 8px;
-  background: var(--green-soft);
-  color: var(--ink);
-  font-size: 0.9rem;
+  padding: 10px var(--space-3);
+  border: 1px solid var(--color-success-border);
+  border-radius: var(--radius);
+  background: var(--color-success-soft);
+  color: var(--color-text);
+  font-size: var(--text-md);
 }
 
 .export-total.is-short {
-  background: var(--red-soft);
+  border-color: var(--color-danger-border);
+  background: var(--color-danger-soft);
 }
 
 .modal-form .export-total p {
@@ -1459,33 +1675,32 @@ td.is-unknown .tkb-input {
 }
 
 .modal-form .export-total p + p {
-  margin-top: 4px;
+  margin-top: var(--space-1);
 }
 
 .export-total.is-short strong {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 .export-breakdown,
 .modal-form .export-total .export-note {
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
 }
 
-/* ---------- Màn hình nhỏ ---------- */
 /* ---------- Tài khoản ---------- */
 .userbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px 8px;
+  gap: 6px var(--space-2);
   margin-left: auto;
 }
 
 .userbar-name {
   font-weight: 600;
-  color: var(--violet-deep);
+  color: var(--color-text);
   max-width: 16ch;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1499,10 +1714,10 @@ td.is-unknown .tkb-input {
   gap: 6px;
   margin-left: auto;
   padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--green-soft);
-  color: var(--green);
-  font-size: 0.82rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1512,18 +1727,18 @@ td.is-unknown .tkb-input {
 }
 
 .save-status.is-saving {
-  background: var(--violet-soft);
-  color: var(--violet-deep);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-strong);
 }
 
 .save-status.is-offline {
-  background: var(--yellow);
-  color: #5c4700;
+  background: var(--color-warning-soft);
+  color: var(--color-warning);
 }
 
 .save-status.is-error {
-  background: var(--red-soft);
-  color: var(--red);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .save-icon {
@@ -1544,6 +1759,9 @@ td.is-unknown .tkb-input {
   position: absolute;
   width: 1px;
   height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
@@ -1559,17 +1777,17 @@ td.is-unknown .tkb-input {
 }
 
 .modal .choice-body p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
 }
 
 .modal .choice-body .choice-plan {
-  color: var(--ink);
+  color: var(--color-text);
 }
 
 .choice-list {
-  margin: 0 0 8px;
+  margin: 0 0 var(--space-2);
   padding-left: 20px;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .choice-dialog .modal-actions {
@@ -1582,25 +1800,28 @@ td.is-unknown .tkb-input {
   align-items: center;
   gap: 6px;
   flex: none;
-  max-width: 210px;
-  min-height: 32px;
+  max-width: 220px;
+  min-height: var(--control-h-sm);
   padding: 3px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: #fff;
-  font-size: 0.85rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+  font-size: var(--text-sm);
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
 }
 
 .plan-btn:hover {
-  border-color: var(--violet);
-  color: var(--violet);
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
 }
 
 .plan-btn-label {
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-weight: 500;
 }
 
@@ -1620,15 +1841,23 @@ td.is-unknown .tkb-input {
 
 .plan-search,
 .plan-row-form input {
-  min-height: 34px;
-  padding: 4px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: #fff;
+  min-height: 36px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.plan-search:focus-visible,
+.plan-row-form input:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  box-shadow: var(--focus-ring);
 }
 
 .plan-search {
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .plan-list {
@@ -1638,8 +1867,8 @@ td.is-unknown .tkb-input {
   padding: 0;
   overflow-y: auto;
   list-style: none;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
 }
 
 .plan-row {
@@ -1647,8 +1876,8 @@ td.is-unknown .tkb-input {
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 10px;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--line);
+  padding: 10px var(--space-3);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .plan-row:last-child {
@@ -1656,11 +1885,12 @@ td.is-unknown .tkb-input {
 }
 
 .plan-row.is-open {
-  background: var(--violet-soft);
+  background: var(--color-primary-soft);
+  box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 .plan-row-empty {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .plan-row-main {
@@ -1675,8 +1905,8 @@ td.is-unknown .tkb-input {
 }
 
 .plan-row-sub {
-  font-size: 0.82rem;
-  color: var(--muted);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
   overflow-wrap: anywhere;
 }
 
@@ -1688,9 +1918,9 @@ td.is-unknown .tkb-input {
 }
 
 .plan-row-ask {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 .plan-row-form {
@@ -1708,9 +1938,10 @@ td.is-unknown .tkb-input {
   display: grid;
   gap: 10px;
   margin-bottom: 14px;
-  padding: 12px;
-  border: 1px dashed var(--line-strong);
-  border-radius: 8px;
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
 }
 
 .plan-new .check {
@@ -1730,45 +1961,50 @@ td.is-unknown .tkb-input {
   margin-bottom: 14px;
 }
 
+/* ---------- Đăng nhập / Đăng ký ---------- */
 .auth-page {
   display: grid;
   place-items: center;
   min-height: 100vh;
-  padding: 24px 16px calc(24px + env(safe-area-inset-bottom, 0px));
+  padding: var(--space-6) var(--space-4) calc(var(--space-6) + env(safe-area-inset-bottom, 0px));
+  background:
+    radial-gradient(1100px 420px at 50% -120px, var(--color-primary-soft), transparent 70%),
+    var(--color-bg);
 }
 
 .auth-card {
   width: 100%;
   max-width: 420px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(51, 36, 111, 0.08);
+  padding: var(--space-8) 28px;
+  box-shadow: var(--shadow-md);
 }
 
 .auth-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .auth-brand h1 {
-  font-size: 1.4rem;
-  color: var(--violet-deep);
+  font-size: var(--text-xl);
+  color: var(--color-text);
 }
 
 .auth-app {
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 .auth-form {
   display: grid;
-  gap: 14px;
+  gap: var(--space-4);
 }
 
 .auth-field input[aria-invalid='true'] {
-  border-color: var(--red);
+  border-color: var(--color-danger);
 }
 
 .input-addon {
@@ -1776,7 +2012,7 @@ td.is-unknown .tkb-input {
 }
 
 .input-addon input {
-  padding-right: 40px;
+  padding-right: 44px;
 }
 
 /* Edge tự thêm nút xem mật khẩu riêng — ẩn đi để không bị hai con mắt. */
@@ -1789,55 +2025,67 @@ td.is-unknown .tkb-input {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 38px;
+  width: var(--control-h);
   display: grid;
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
   background: none;
-  color: var(--muted);
+  color: var(--color-text-muted);
   cursor: pointer;
 }
 
 .password-toggle:hover {
-  color: var(--violet);
+  color: var(--color-primary);
+}
+
+.password-toggle:focus-visible {
+  outline-offset: -3px;
 }
 
 .field-hint,
 .field-error {
   font-size: 0.8rem;
   font-weight: 400;
+  color: var(--color-text-muted);
 }
 
 .field-error {
-  color: var(--red);
+  color: var(--color-danger);
+  font-weight: 600;
 }
 
 .banner-alert {
-  background: var(--red-soft);
-  color: var(--red);
+  background: var(--color-danger-soft);
+  border-color: var(--color-danger-border);
+  border-left-color: var(--color-danger);
+  color: var(--color-danger);
 }
 
 .auth-footer {
-  margin: 16px 0 0;
+  margin: var(--space-5) 0 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
   text-align: center;
-  font-size: 0.9rem;
-  color: var(--muted);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
 }
 
 .auth-footer a {
-  color: var(--violet);
+  color: var(--color-primary);
   font-weight: 600;
+  text-underline-offset: 3px;
 }
 
 .pill-link {
   text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 .pill-link:hover {
-  background: var(--violet);
-  color: #fff;
+  background: var(--color-primary);
+  color: var(--color-on-primary);
 }
 
 a.userbar-name {
@@ -1845,21 +2093,23 @@ a.userbar-name {
 }
 
 a.userbar-name:hover {
-  color: var(--violet);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ---------- Xuất file có tính điểm ---------- */
 .export-price {
   flex-basis: 100%;
   margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 /* ---------- Nạp điểm ---------- */
 .topup-form {
   display: grid;
-  gap: 12px;
+  gap: var(--space-3);
   max-width: 460px;
 }
 
@@ -1872,9 +2122,10 @@ a.userbar-name:hover {
 }
 
 .topup-item {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) 14px;
+  background: var(--color-surface);
 }
 
 .topup-row {
@@ -1889,47 +2140,48 @@ a.userbar-name:hover {
 }
 
 .topup-date {
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 
 .transfer-code {
-  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: var(--violet-deep);
+  color: var(--color-primary-strong);
 }
 
 .transfer {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 12px 24px;
+  gap: var(--space-3) var(--space-6);
   align-items: start;
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--line-strong);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px dashed var(--color-border-strong);
 }
 
+/* Mã QR luôn nền trắng để điện thoại quét được. */
 .transfer-qr {
   width: 260px;
   max-width: 100%;
   height: auto;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
   background: #fff;
 }
 
 .transfer-info {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 8px 16px;
+  gap: 10px var(--space-4);
   margin: 0;
   align-items: center;
 }
 
 .transfer-info dt {
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
 }
 
 .transfer-info dd {
@@ -1937,7 +2189,7 @@ a.userbar-name:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .transfer-note {
@@ -1946,33 +2198,43 @@ a.userbar-name:hover {
 }
 
 /* ---------- Lịch sử ---------- */
+/* Nút chuyển chế độ dạng phân đoạn */
 .seg {
   display: inline-flex;
+  flex-wrap: wrap;
   gap: 2px;
   padding: 3px;
   margin-bottom: 14px;
-  border-radius: 10px;
-  background: var(--violet-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-sunken);
 }
 
 .seg-btn {
-  padding: 6px 16px;
+  min-height: var(--control-h-sm);
+  padding: 5px var(--space-4);
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: none;
-  color: var(--violet-deep);
+  color: var(--color-text-muted);
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.seg-btn:hover {
+  color: var(--color-text);
 }
 
 .seg-btn.is-active {
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(51, 36, 111, 0.15);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
 }
 
 .history-table th {
   white-space: nowrap;
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-weight: 600;
 }
 
@@ -1982,9 +2244,9 @@ a.userbar-name:hover {
 }
 
 .history-note {
-  margin-top: 4px;
+  margin-top: var(--space-1);
   font-size: 0.8rem;
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 /* ---------- Quản trị ---------- */
@@ -1994,11 +2256,11 @@ a.btn {
 }
 
 a.btn-primary {
-  color: #fff;
+  color: var(--color-on-primary);
 }
 
 .data-table a {
-  color: var(--violet);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -2008,9 +2270,9 @@ a.btn-primary {
   min-width: 20px;
   height: 20px;
   padding: 0 6px;
-  border-radius: 999px;
-  background: var(--red);
-  color: #fff;
+  border-radius: var(--radius-pill);
+  background: var(--color-danger);
+  color: var(--color-on-primary);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -2018,36 +2280,40 @@ a.btn-primary {
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 12px;
+  gap: var(--space-3);
 }
 
 .stat-tile {
   display: grid;
   align-content: start;
-  gap: 4px;
-  padding: 14px 16px;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--ink);
+  gap: var(--space-1);
+  padding: var(--space-4) 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+  color: var(--color-text);
   text-decoration: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .stat-tile.is-link:hover {
-  border-color: var(--violet);
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-tile.has-alert {
-  border-left: 4px solid var(--red);
+  border-left: 4px solid var(--color-danger);
 }
 
 .stat-label {
-  font-size: 0.85rem;
-  color: var(--muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-muted);
 }
 
 .stat-value {
-  font-size: 1.75rem;
+  font-size: var(--text-2xl);
   font-weight: 700;
   line-height: 1.2;
   font-variant-numeric: tabular-nums;
@@ -2055,7 +2321,7 @@ a.btn-primary {
 
 .stat-detail {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .admin-filters .field input[type='date'] {
@@ -2074,16 +2340,16 @@ a.btn-primary {
 .admin-table a,
 .mini-list a,
 .breadcrumb a {
-  color: var(--violet);
+  color: var(--color-primary);
   font-weight: 600;
 }
 
 .admin-table .is-plus {
-  color: var(--green);
+  color: var(--color-success);
 }
 
 .admin-table .is-minus {
-  color: var(--red);
+  color: var(--color-danger);
 }
 
 tr.is-clickable {
@@ -2091,38 +2357,41 @@ tr.is-clickable {
 }
 
 tr.is-clickable:hover td {
-  background: var(--violet-soft);
+  background: var(--color-primary-soft);
 }
 
 .breadcrumb {
   margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, max-content) minmax(160px, 1fr));
-  gap: 8px 16px;
-  margin: 0 0 16px;
+  gap: 10px var(--space-4);
+  margin: 0 0 var(--space-4);
 }
 
 .info-grid dt {
-  color: var(--muted);
-  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
 }
 
 .info-grid dd {
   margin: 0;
+  font-weight: 500;
 }
 
 .admin-actions {
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
 }
 
 .two-col {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+  gap: var(--space-4);
 }
 
 .mini-list {
@@ -2130,14 +2399,15 @@ tr.is-clickable:hover td {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
-  font-size: 0.9rem;
+  gap: var(--space-2);
+  font-size: var(--text-md);
 }
 
 .temp-password code {
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: #fff;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  font-family: var(--font-mono);
   font-size: 1.05rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -2145,8 +2415,8 @@ tr.is-clickable:hover td {
 
 .modal-form .modal-body {
   display: grid;
-  gap: 12px;
-  margin: 10px 0 16px;
+  gap: var(--space-3);
+  margin: var(--space-3) 0 var(--space-5);
 }
 
 .modal-form .modal-body p {
@@ -2160,15 +2430,16 @@ tr.is-clickable:hover td {
 
 .settings-form {
   display: grid;
-  gap: 16px;
+  gap: var(--space-4);
   max-width: 560px;
 }
 
 .settings-preview {
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: var(--violet-soft);
-  font-size: 0.9rem;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-primary-border);
+  border-radius: var(--radius);
+  background: var(--color-primary-soft);
+  font-size: var(--text-md);
 }
 
 .settings-preview ul {
@@ -2192,18 +2463,21 @@ tr.is-clickable:hover td {
 
 .imp-paste {
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  padding: var(--space-2) 10px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
+  background: var(--color-surface);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   resize: vertical;
   tab-size: 12;
 }
 
 .imp-paste:focus {
-  border-color: var(--violet);
-  outline: none;
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+  box-shadow: var(--focus-ring);
 }
 
 .imp-file {
@@ -2215,7 +2489,7 @@ tr.is-clickable:hover td {
 
 .imp-file-name {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
   overflow-wrap: anywhere;
 }
 
@@ -2233,16 +2507,16 @@ tr.is-clickable:hover td {
 .modal p.imp-note,
 .modal .imp-edit p {
   margin: 0;
-  color: var(--ink);
+  color: var(--color-text);
 }
 
 .modal p.imp-note {
   font-size: 0.85rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .imp-bad-text {
-  color: var(--red);
+  color: var(--color-danger);
   font-weight: 700;
 }
 
@@ -2252,8 +2526,8 @@ tr.is-clickable:hover td {
   align-items: center;
   gap: 6px 16px;
   padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--violet-soft);
+  border-radius: var(--radius);
+  background: var(--color-primary-soft);
   font-size: 0.88rem;
 }
 
@@ -2271,7 +2545,7 @@ tr.is-clickable:hover td {
   min-height: 32px;
   padding: 4px 6px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   font-size: 0.8rem;
   font-weight: 600;
@@ -2282,28 +2556,28 @@ tr.is-clickable:hover td {
 
 .imp-cell:hover,
 .imp-table td.is-editing .imp-cell {
-  border-color: var(--violet);
+  border-color: var(--color-primary);
 }
 
 .imp-table td.is-changed,
 .imp-swatch.is-changed {
-  background: var(--yellow);
+  background: var(--color-warning-soft);
 }
 
 .imp-table td.is-bad,
 .imp-swatch.is-bad {
-  background: var(--red-soft);
-  color: var(--red);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
 }
 
 .imp-table td.is-bad .imp-cell {
-  border: 1px dashed var(--red);
+  border: 1px dashed var(--color-danger);
 }
 
 .imp-table td.is-skipped,
 .imp-swatch.is-skipped {
-  background: var(--paper);
-  color: var(--muted);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
 }
 
 .imp-table td.is-skipped .imp-cell {
@@ -2328,7 +2602,7 @@ tr.is-clickable:hover td {
   width: 14px;
   height: 14px;
   margin-left: 6px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--color-border-strong);
   border-radius: 3px;
 }
 
@@ -2336,9 +2610,9 @@ tr.is-clickable:hover td {
   display: grid;
   gap: 8px;
   padding: 10px 12px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
-  background: var(--paper);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-bg);
 }
 
 .imp-edit-row {
@@ -2350,19 +2624,26 @@ tr.is-clickable:hover td {
 .imp-edit-row input {
   flex: 1 1 180px;
   min-height: 32px;
-  padding: 4px 10px;
-  border: 1px solid var(--line-strong);
-  border-radius: 8px;
+  padding: var(--space-1) 10px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius);
 }
 
+.imp-edit-row input:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+
+/* Bám đáy hộp thoại: bù đúng phần đệm của .modal */
 .imp-actions {
   flex-wrap: wrap;
   position: sticky;
-  bottom: -20px;
-  margin: 0 -20px -20px;
-  padding: 12px 20px;
-  border-top: 1px solid var(--line);
-  background: var(--card);
+  bottom: calc(-1 * var(--space-6));
+  margin: 0 calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  padding: var(--space-3) var(--space-6);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
 .imp-toast {
@@ -2376,10 +2657,10 @@ tr.is-clickable:hover td {
   width: max-content;
   max-width: calc(100% - 32px);
   padding: 8px 8px 8px 16px;
-  border-radius: 10px;
-  background: var(--ink);
-  color: #fff;
-  box-shadow: 0 10px 30px rgba(34, 28, 69, 0.3);
+  border-radius: var(--radius-lg);
+  background: var(--color-text);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-lg);
   transform: translateX(-50%);
 }
 
@@ -2388,7 +2669,7 @@ tr.is-clickable:hover td {
 }
 
 .imp-toast .imp-toast-close {
-  color: #fff;
+  color: var(--color-on-primary);
   font-size: 1.2rem;
 }
 
@@ -2439,17 +2720,61 @@ tr.is-clickable:hover td {
     display: inline;
   }
 
+  .masthead-inner {
+    padding: 10px var(--space-3) 0;
+  }
+
+  .tabs {
+    margin: 0 calc(-1 * var(--space-3));
+    padding: 0 var(--space-3);
+  }
+
+  .brand {
+    gap: 10px;
+  }
+
+  .brand-mark {
+    min-width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .brand h1 {
+    font-size: 1.05rem;
+  }
+
   .tab {
-    padding: 8px 10px 9px;
+    padding: var(--space-2) 10px 9px;
   }
 
   .page {
-    padding: 12px 10px 40px;
+    padding: var(--space-3) 10px 40px;
   }
 
   .card,
   .sheet {
-    padding: 12px;
+    padding: 14px var(--space-3);
+  }
+
+  .card-head {
+    margin-bottom: var(--space-3);
+  }
+
+  /* .imp-modal có phần đệm riêng (khớp với .imp-actions) */
+  .modal:not(.imp-modal) {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .modal-actions .btn {
+    flex: 1 1 auto;
+  }
+
+  .auth-card {
+    padding: var(--space-6) var(--space-5);
+  }
+
+  .help-doc h2 {
+    font-size: var(--text-xl);
   }
 
   .sheet-week {
@@ -2509,12 +2834,12 @@ tr.is-clickable:hover td {
 /* ---------- Nút hỗ trợ Zalo ---------- */
 /* Nằm dưới hộp thoại (z-index 50) và toast (60), trên nội dung trang. */
 .zalo-support {
-  --zs-bg: var(--card);
-  --zs-ink: var(--ink);
-  --zs-muted: var(--muted);
-  --zs-line: var(--line);
-  --zs-accent: var(--violet);
-  --zs-accent-ink: #fff;
+  --zs-bg: var(--color-surface);
+  --zs-ink: var(--color-text);
+  --zs-muted: var(--color-text-muted);
+  --zs-line: var(--color-border);
+  --zs-accent: var(--color-primary);
+  --zs-accent-ink: var(--color-on-primary);
   position: fixed;
   right: calc(16px + env(safe-area-inset-right, 0px));
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
@@ -2547,7 +2872,7 @@ body:has(.imp-toast) .zalo-support {
   border-radius: 50%;
   background: var(--zs-accent);
   color: var(--zs-accent-ink);
-  box-shadow: 0 6px 18px rgba(34, 28, 69, 0.28);
+  box-shadow: 0 6px 18px var(--shadow-color-strong);
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
@@ -2566,7 +2891,7 @@ body:has(.imp-toast) .zalo-support {
 
 .zalo-fab:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(34, 28, 69, 0.32);
+  box-shadow: 0 10px 24px var(--shadow-color-strong);
 }
 
 .zalo-fab:focus-visible {
@@ -2579,9 +2904,9 @@ body:has(.imp-toast) .zalo-support {
   right: calc(100% + 10px);
   top: 50%;
   padding: 5px 10px;
-  border-radius: 6px;
-  background: var(--ink);
-  color: #fff;
+  border-radius: var(--radius-sm);
+  background: var(--color-text);
+  color: var(--color-on-primary);
   font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
@@ -2641,10 +2966,10 @@ body:has(.imp-toast) .zalo-support {
   max-width: min(260px, calc(100vw - 130px));
   padding: 8px 6px 8px 12px;
   border: 1px solid var(--zs-line);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--zs-bg);
   color: var(--zs-ink);
-  box-shadow: 0 10px 28px rgba(34, 28, 69, 0.22);
+  box-shadow: 0 10px 28px var(--shadow-color-strong);
   animation: zalo-hint-in 0.35s ease-out both;
 }
 
@@ -2731,10 +3056,10 @@ body:has(.imp-toast) .zalo-support {
   overflow-y: auto;
   padding: 16px;
   border: 1px solid var(--zs-line);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--zs-bg);
   color: var(--zs-ink);
-  box-shadow: 0 16px 40px rgba(34, 28, 69, 0.25);
+  box-shadow: 0 16px 40px var(--shadow-color-strong);
 }
 
 .zalo-panel p {
@@ -2760,7 +3085,7 @@ body:has(.imp-toast) .zalo-support {
 /* Mã QR luôn nền trắng để điện thoại quét được, kể cả ở chế độ tối. */
 .zalo-qr svg {
   flex: none;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #fff;
 }
 
@@ -2795,12 +3120,12 @@ body:has(.imp-toast) .zalo-support {
 
 @media (prefers-color-scheme: dark) {
   .zalo-support {
-    --zs-bg: #1f1b36;
-    --zs-ink: #ece9fb;
-    --zs-muted: #a9a3c9;
-    --zs-line: #3b3560;
-    --zs-accent: #8f7ce6;
-    --zs-accent-ink: #14112a;
+    --zs-bg: #1b1f33;
+    --zs-ink: #eceefb;
+    --zs-muted: #a7acc4;
+    --zs-line: #353b5c;
+    --zs-accent: #8f97f2;
+    --zs-accent-ink: #11142a;
   }
 
   .zalo-panel .btn-primary {
@@ -2810,7 +3135,7 @@ body:has(.imp-toast) .zalo-support {
   }
 
   .zalo-panel .btn-primary:hover {
-    background: #a695f0;
+    background: #aab0f6;
     color: var(--zs-accent-ink);
   }
 
