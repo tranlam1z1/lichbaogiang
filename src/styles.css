@@ -664,6 +664,7 @@ a.tab {
 
 .field input,
 .field select,
+.field textarea,
 .data-table input,
 .data-table select {
   min-height: var(--control-h);
@@ -680,6 +681,7 @@ a.tab {
 
 .field input:hover,
 .field select:hover,
+.field textarea:hover,
 .data-table input:hover,
 .data-table select:hover {
   border-color: var(--color-text-muted);
@@ -687,6 +689,7 @@ a.tab {
 
 .field input:focus-visible,
 .field select:focus-visible,
+.field textarea:focus-visible,
 .data-table input:focus-visible,
 .data-table select:focus-visible {
   border-color: var(--color-primary);
@@ -3219,4 +3222,210 @@ body:has(.imp-toast) .zalo-support {
 .plan-label-table .hint {
   display: block;
   margin: var(--space-1) 0 0;
+}
+
+/* ---------- Thông báo (modal, cột hai bên, dải trên nội dung) ---------- */
+.ann-body {
+  font-size: var(--text-md);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.ann-body > :first-child {
+  margin-top: 0;
+}
+
+.ann-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* .modal p mặc định chữ mờ — nội dung thông báo cần đọc rõ. */
+.ann-body p,
+.ann-body ul,
+.ann-body ol,
+.ann-body blockquote {
+  margin: 0 0 0.6em;
+  color: var(--color-text);
+}
+
+.ann-body ul,
+.ann-body ol {
+  padding-left: 1.3em;
+}
+
+.ann-body h2,
+.ann-body h3,
+.ann-body h4 {
+  margin: 0.8em 0 0.4em;
+  font-size: 1rem;
+}
+
+.ann-body a {
+  color: var(--color-primary);
+  text-underline-offset: 3px;
+}
+
+.ann-body code {
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  background: var(--color-surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+.ann-modal {
+  --ann-accent: var(--color-primary);
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 2 * var(--space-4));
+  overflow-y: auto;
+  border-top: 4px solid var(--ann-accent);
+}
+
+.ann-modal h2 {
+  margin-bottom: var(--space-3);
+}
+
+.ann-modal .ann-body {
+  margin-bottom: var(--space-5);
+}
+
+.modal p.ann-count {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.ann-card {
+  --ann-accent: var(--color-primary);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-left: 4px solid var(--ann-accent);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+
+.ann-card h3 {
+  margin-bottom: var(--space-1);
+  font-size: var(--text-md);
+}
+
+.ann-card .ann-body {
+  font-size: var(--text-sm);
+}
+
+.tone-warning {
+  --ann-accent: var(--color-warning-accent);
+}
+
+.tone-success {
+  --ann-accent: var(--color-success);
+}
+
+/* Màn hình hẹp: dải thu gọn phía trên nội dung. */
+.ann-strip {
+  margin-bottom: var(--space-4);
+}
+
+.ann-strip summary {
+  width: fit-content;
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary-strong);
+  cursor: pointer;
+}
+
+.ann-strip-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.ann-side {
+  display: none;
+}
+
+/* Đủ chỗ hai bên nội dung (1200px + 2 × 240px): chuyển thông báo ra hai cột dính khi cuộn. */
+@media (min-width: 1680px) {
+  .app-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, var(--content-max)) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .app-body > .page {
+    grid-column: 2;
+    width: 100%;
+  }
+
+  .ann-side {
+    position: sticky;
+    /* Chừa chỗ cho đầu trang dính (cùng mốc với .help-doc h2) */
+    top: 150px;
+    display: grid;
+    gap: var(--space-3);
+    width: min(280px, 100% - 2 * var(--space-4));
+    max-height: calc(100dvh - 170px);
+    margin-top: var(--space-5);
+    overflow-y: auto;
+  }
+
+  .ann-side-left {
+    grid-column: 1;
+    justify-self: end;
+  }
+
+  .ann-side-right {
+    grid-column: 3;
+    justify-self: start;
+  }
+
+  .ann-strip {
+    display: none;
+  }
+}
+
+/* Form quản lý thông báo (admin) */
+.ann-form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.ann-form textarea {
+  resize: vertical;
+  min-height: 120px;
+  font-weight: 400;
+}
+
+.ann-form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.ann-form-row .check {
+  min-height: var(--control-h);
+}
+
+.ann-preview {
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+  font-size: var(--text-sm);
+}
+
+/* Thắng .modal-form .modal-body p { margin: 0 } để xem trước giống lúc hiển thị thật. */
+.modal-form .ann-body p {
+  margin: 0 0 0.6em;
+}
+
+.ann-preview > strong {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--color-text-muted);
 }

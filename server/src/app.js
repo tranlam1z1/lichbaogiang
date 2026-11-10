@@ -8,6 +8,7 @@ import { config } from './config.js';
 import { loadUser } from './middleware/auth.js';
 import { errorHandler, notFound, requireJsonForWrites } from './middleware/errors.js';
 import { adminRouter } from './routes/admin/index.js';
+import { announcementsRouter } from './routes/announcements.js';
 import { authRouter } from './routes/auth.js';
 import { exportsRouter } from './routes/exports.js';
 import { planRouter } from './routes/plan.js';
@@ -52,6 +53,7 @@ export function createApp() {
   api.use('/exports', exportsRouter);
   api.use('/plans', planRouter);
   api.use('/topups', topupsRouter);
+  api.use('/announcements', announcementsRouter);
   api.use('/admin', adminRouter);
   api.use('/webhooks', webhooksRouter);
   api.use(notFound);

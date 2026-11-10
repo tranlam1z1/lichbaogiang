@@ -2,7 +2,16 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { parseInline, parseMarkdown, slugify } from '../src/lib/markdown.js';
+import { parseInline, parseMarkdown, safeHref, slugify } from '../src/lib/markdown.js';
+
+test('safeHref chỉ giữ link an toàn, chặn javascript: và data:', () => {
+  for (const ok of ['#muc', '/nap-diem', 'https://zalo.me/x', 'http://a.vn', 'mailto:a@b.vn', 'tel:0912345678']) {
+    assert.equal(safeHref(ok), ok);
+  }
+  for (const bad of ['javascript:alert(1)', 'JavaScript:alert(1)', 'data:text/html,x', '//evil.com', 'vbscript:x']) {
+    assert.equal(safeHref(bad), null, bad);
+  }
+});
 
 test('slug tiêu đề giống GitHub để link mục lục trong file .md vẫn chạy', () => {
   assert.equal(slugify('3. Bước 1 — Điền thông tin lớp'), '3-bước-1--điền-thông-tin-lớp');

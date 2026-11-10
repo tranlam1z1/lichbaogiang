@@ -64,6 +64,23 @@ model Setting {
   updatedAt   DateTime @updatedAt
 }
 
+/// Thông báo admin đăng cho người dùng: modal khi vào trang hoặc thẻ ở cột trái/phải.
+model Announcement {
+  id        Int       @id @default(autoincrement())
+  title     String
+  body      String // Markdown
+  placement String // MODAL | LEFT | RIGHT
+  tone      String    @default("INFO") // INFO | WARNING | SUCCESS — chỉ đổi màu hiển thị
+  isActive  Boolean   @default(true)
+  startsAt  DateTime? // trống = hiện ngay
+  endsAt    DateTime? // trống = không hết hạn
+  sortOrder Int       @default(0) // nhỏ hiện trước
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([isActive, placement])
+}
+
 /// Sổ cái: MỌI thay đổi điểm hoặc lượt miễn phí đều có một dòng ở đây.
 model PointTransaction {
   id               Int      @id @default(autoincrement())

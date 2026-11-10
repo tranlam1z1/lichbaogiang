@@ -10,6 +10,7 @@ import PlanSwitcher from './components/PlanSwitcher.jsx';
 import UserBar from './components/UserBar.jsx';
 import SaveStatus from './components/SaveStatus.jsx';
 import ZaloSupport from './components/ZaloSupport.jsx';
+import { AnnouncementModal, AnnouncementSide, AnnouncementStrip, useAnnouncements } from './components/Announcements.jsx';
 
 const TABS = [
   { id: 'help', label: 'Hướng dẫn sử dụng', short: 'Hướng dẫn', icon: '?' },
@@ -25,6 +26,7 @@ const TABS = [
 export default function App() {
   const { state, dispatch } = useApp();
   const { info, tab } = state;
+  const announcements = useAnnouncements();
 
   return (
     <div className="app">
@@ -60,17 +62,23 @@ export default function App() {
         </div>
       </header>
 
-      <main className="page">
-        {tab === 'help' && <HelpPage />}
-        {tab === 'lessons' && <LessonsPage />}
-        {tab === 'plans' && <LessonPlansPage />}
-        {tab === 'timetable' && <TimetableEditor />}
-        {tab === 'calendar' && <WeekCalendar />}
-        {tab === 'ppct' && <PpctTable />}
-        {tab === 'info' && <ClassInfo />}
-      </main>
+      <div className="app-body">
+        <AnnouncementSide side="left" items={announcements.left} />
+        <main className="page">
+          <AnnouncementStrip items={[...announcements.left, ...announcements.right]} />
+          {tab === 'help' && <HelpPage />}
+          {tab === 'lessons' && <LessonsPage />}
+          {tab === 'plans' && <LessonPlansPage />}
+          {tab === 'timetable' && <TimetableEditor />}
+          {tab === 'calendar' && <WeekCalendar />}
+          {tab === 'ppct' && <PpctTable />}
+          {tab === 'info' && <ClassInfo />}
+        </main>
+        <AnnouncementSide side="right" items={announcements.right} />
+      </div>
 
       <ZaloSupport />
+      <AnnouncementModal items={announcements.modals} onClose={announcements.dismissModals} />
     </div>
   );
 }

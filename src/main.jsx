@@ -20,6 +20,7 @@ const AdminBankTransactions = lazy(() => import('./pages/admin/AdminBankTransact
 const AdminTransactions = lazy(() => import('./pages/admin/AdminTransactions.jsx'));
 const AdminExports = lazy(() => import('./pages/admin/AdminExports.jsx'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings.jsx'));
+const AdminAnnouncements = lazy(() => import('./pages/admin/AdminAnnouncements.jsx'));
 
 const admin = (Page) => (
   <RequireAdmin>
@@ -56,6 +57,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/admin/giao-dich" element={admin(AdminTransactions)} />
           <Route path="/admin/xuat-file" element={admin(AdminExports)} />
           <Route path="/admin/cai-dat" element={admin(AdminSettings)} />
+          <Route path="/admin/thong-bao" element={admin(AdminAnnouncements)} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
