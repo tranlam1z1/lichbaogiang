@@ -8,6 +8,7 @@ import { requireAdmin } from '../../middleware/auth.js';
 import { BANK_TX_STATUSES, assignBankTransaction, resolveBankTransaction } from '../../services/bankTransfers.js';
 import { approveTopUp, rejectTopUp } from '../../services/points.js';
 import { SETTING_DEFS, getSettings, updateSettings } from '../../services/settings.js';
+import { adminAnnouncementsRouter } from '../announcements.js';
 import { publicExport } from '../exports.js';
 import { TOPUP_STATUSES, publicTopUp } from '../topups.js';
 import { TRANSACTION_TYPES, publicTransaction, userBrief, userFilter } from './shared.js';
@@ -67,6 +68,7 @@ adminRouter.get('/stats', async (req, res) => {
 
 // ---------- Người dùng ----------
 adminRouter.use('/users', usersRouter);
+adminRouter.use('/announcements', adminAnnouncementsRouter);
 
 // ---------- Duyệt nạp điểm ----------
 /** Số yêu cầu chờ duyệt — hiện trên tab điều hướng của mọi trang quản trị. */

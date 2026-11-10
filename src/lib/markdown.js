@@ -11,7 +11,12 @@ export function slugify(text) {
     .replace(/\s/g, '-');
 }
 
-const LIST_RE = /^(\s*)([-*]|\d+\.)\s+(.*)$/;
+/** Chỉ giữ link an toàn: #mục, đường dẫn nội bộ, http(s), mailto, tel. Còn lại (javascript:, data:…) → null. */
+export function safeHref(href) {
+  return /^(#|\/(?!\/)|https?:\/\/|mailto:|tel:)/i.test(href) ? href : null;
+}
+
+const LIST_RE =/^(\s*)([-*]|\d+\.)\s+(.*)$/;
 const isBlank = (l) => !l.trim();
 const indentOf = (l) => l.match(/^\s*/)[0].length;
 

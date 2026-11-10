@@ -8,6 +8,8 @@ export function publicUser(u) {
     role: u.role,
     freeExportsLeft: u.freeExportsLeft,
     points: u.points,
+    // Frontend dùng làm mốc "lần đăng nhập này" để hiện lại modal thông báo sau mỗi lần đăng nhập.
+    lastLoginAt: u.lastLoginAt,
     createdAt: u.createdAt,
   };
 }
