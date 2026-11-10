@@ -23,12 +23,23 @@ import ChoiceDialog from '../components/ChoiceDialog.jsx';
 
 const AppContext = createContext(null);
 
-// Chỉ mục PPCT dựng một lần cho mỗi khối.
+// Chỉ mục PPCT dựng một lần cho mỗi khối. Khối admin đã thay (GET /api/ppct) dùng bản đó, còn lại dùng bản gốc.
 const indexCache = new Map();
+let customPpct = {};
 export function getPpctIndex(grade) {
   const g = String(grade);
-  if (!indexCache.has(g)) indexCache.set(g, buildPpctIndex(ppctData[g] || []));
+  if (!indexCache.has(g)) indexCache.set(g, buildPpctIndex(customPpct[g] || ppctData[g] || []));
   return indexCache.get(g);
+}
+
+/** Tải PPCT admin đã thay; lỗi mạng thì giữ bản đang có. */
+async function loadCustomPpct() {
+  try {
+    customPpct = (await api.get('/ppct')).grades || {};
+    indexCache.clear();
+  } catch {
+    // shortcut: mất mạng lúc mở thì dùng bản gốc/bản đã tải trước, đến lần mở sau mới cập nhật.
+  }
 }
 
 /** Tải một bản kế hoạch về máy dưới dạng file sao lưu .json. */
@@ -89,6 +100,7 @@ function PlanLoader({ userId, children }) {
       const saved = readCache(userId);
       let cache = saved;
       let server = null;
+      const ppctLoaded = loadCustomPpct();
       try {
         const { plans } = await api.get('/plans');
         const pick = pickPlan({ plans, cache });
@@ -98,6 +110,7 @@ function PlanLoader({ userId, children }) {
       } catch (e) {
         if (e.status === 401) return; // phiên hết hạn → AuthContext tự chuyển về trang đăng nhập
       }
+      await ppctLoaded;
       if (cancelled) return;
       const b = planBoot({ server, cache, legacy: readLegacy(), ui: saved?.data });
       if (b.dropLegacy) removeLegacy();

@@ -21,6 +21,7 @@ const AdminTransactions = lazy(() => import('./pages/admin/AdminTransactions.jsx
 const AdminExports = lazy(() => import('./pages/admin/AdminExports.jsx'));
 const AdminSettings = lazy(() => import('./pages/admin/AdminSettings.jsx'));
 const AdminAnnouncements = lazy(() => import('./pages/admin/AdminAnnouncements.jsx'));
+const AdminPpct = lazy(() => import('./pages/admin/AdminPpct.jsx'));
 
 const admin = (Page) => (
   <RequireAdmin>
@@ -58,6 +59,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/admin/xuat-file" element={admin(AdminExports)} />
           <Route path="/admin/cai-dat" element={admin(AdminSettings)} />
           <Route path="/admin/thong-bao" element={admin(AdminAnnouncements)} />
+          <Route path="/admin/ppct" element={admin(AdminPpct)} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>

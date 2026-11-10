@@ -30,6 +30,7 @@ export default function AdminLayout({ title, children }) {
     { to: '/admin/giao-dich', label: 'Giao dịch', icon: '⇄' },
     { to: '/admin/xuat-file', label: 'Xuất file', icon: '⎙' },
     { to: '/admin/thong-bao', label: 'Thông báo', icon: '✉' },
+    { to: '/admin/ppct', label: 'PPCT', icon: '☰' },
     { to: '/admin/cai-dat', label: 'Cài đặt', icon: '⚙' },
     { to: '/', label: 'Về trang kế hoạch', icon: '✎', end: true },
   ];

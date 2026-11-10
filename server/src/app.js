@@ -12,6 +12,7 @@ import { announcementsRouter } from './routes/announcements.js';
 import { authRouter } from './routes/auth.js';
 import { exportsRouter } from './routes/exports.js';
 import { planRouter } from './routes/plan.js';
+import { ppctRouter } from './routes/ppct.js';
 import { settingsRouter } from './routes/settings.js';
 import { topupsRouter } from './routes/topups.js';
 import { webhooksRouter } from './routes/webhooks.js';
@@ -41,6 +42,8 @@ export function createApp() {
   }
   // Kế hoạch giảng dạy lớn hơn các request khác: nhận tới 1 MB, route tự báo lỗi rõ ràng khi vượt 512 KB.
   app.use('/api/plans', express.json({ limit: '1mb' }));
+  // PPCT một khối ~100–200 KB JSON.
+  app.use('/api/admin/ppct', express.json({ limit: '1mb' }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
@@ -52,6 +55,7 @@ export function createApp() {
   api.use('/settings', settingsRouter);
   api.use('/exports', exportsRouter);
   api.use('/plans', planRouter);
+  api.use('/ppct', ppctRouter);
   api.use('/topups', topupsRouter);
   api.use('/announcements', announcementsRouter);
   api.use('/admin', adminRouter);

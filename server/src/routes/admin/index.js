@@ -10,6 +10,7 @@ import { approveTopUp, rejectTopUp } from '../../services/points.js';
 import { SETTING_DEFS, getSettings, updateSettings } from '../../services/settings.js';
 import { adminAnnouncementsRouter } from '../announcements.js';
 import { publicExport } from '../exports.js';
+import { adminPpctRouter } from '../ppct.js';
 import { TOPUP_STATUSES, publicTopUp } from '../topups.js';
 import { TRANSACTION_TYPES, publicTransaction, userBrief, userFilter } from './shared.js';
 import { usersRouter } from './users.js';
@@ -69,6 +70,7 @@ adminRouter.get('/stats', async (req, res) => {
 // ---------- Người dùng ----------
 adminRouter.use('/users', usersRouter);
 adminRouter.use('/announcements', adminAnnouncementsRouter);
+adminRouter.use('/ppct', adminPpctRouter);
 
 // ---------- Duyệt nạp điểm ----------
 /** Số yêu cầu chờ duyệt — hiện trên tab điều hướng của mọi trang quản trị. */

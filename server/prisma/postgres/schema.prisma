@@ -178,3 +178,12 @@ model BankTransaction {
   @@index([status, createdAt])
   @@index([topUpId])
 }
+
+/// PPCT một khối do admin tải lên, thay cho bản gốc đóng gói trong src/data/ppct.json. Không có dòng = dùng bản gốc.
+model Ppct {
+  grade       Int      @id // 1–5
+  data        String // JSON: mảng [môn, tuần, tiết thứ, số tiết PPCT, tên bài]
+  rowCount    Int
+  updatedById Int?
+  updatedAt   DateTime @updatedAt
+}
