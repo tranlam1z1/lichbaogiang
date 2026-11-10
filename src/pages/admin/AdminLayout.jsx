@@ -35,7 +35,7 @@ export default function AdminLayout({ title, children }) {
   ];
   return (
     <PendingContext.Provider value={refreshPending}>
-      <AccountLayout title={title} subtitle="Kế hoạch giảng dạy · Quản trị" links={links}>
+      <AccountLayout title={title} subtitle="Kế hoạch giảng dạy · Quản trị" links={links} sidebar>
         {children}
       </AccountLayout>
     </PendingContext.Provider>

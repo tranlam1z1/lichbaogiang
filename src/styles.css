@@ -3411,6 +3411,18 @@ body:has(.imp-toast) .zalo-support {
   min-height: var(--control-h);
 }
 
+.modal-form:has(.ann-form) {
+  width: min(640px, 100%);
+}
+
+/* datetime-local có bề rộng tối thiểu riêng, không ép thì tràn khỏi cột */
+.ann-form-row > .field,
+.ann-form-row .field input,
+.ann-form-row .field select {
+  min-width: 0;
+  width: 100%;
+}
+
 .ann-preview {
   padding: var(--space-3);
   border: 1px dashed var(--color-border-strong);
@@ -3428,4 +3440,87 @@ body:has(.imp-toast) .zalo-support {
   display: block;
   margin-bottom: var(--space-1);
   color: var(--color-text-muted);
+}
+
+/* ---------- Trang quản trị: menu dọc bên trái ---------- */
+.masthead-flat .masthead-inner {
+  padding-bottom: var(--space-1);
+}
+
+.side-shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  align-items: start;
+  max-width: calc(var(--content-max) + 240px);
+  margin: 0 auto;
+}
+
+.side-shell > .page {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.side-nav {
+  position: sticky;
+  /* Ngay dưới đầu trang dính (không còn thanh tab) */
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: calc(100vh - 72px);
+  overflow-y: auto;
+  padding: var(--space-5) 0 var(--space-5) var(--space-4);
+}
+
+.side-nav .tab {
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  border: 0;
+  border-radius: var(--radius);
+  white-space: normal;
+}
+
+.side-nav .tab.is-active {
+  background: var(--color-primary-soft);
+}
+
+.side-nav .tab-badge {
+  margin-left: auto;
+}
+
+/* Tách "Về trang kế hoạch" khỏi các mục quản trị */
+.side-nav .tab:last-child {
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 900px) {
+  .side-shell {
+    display: block;
+  }
+
+  .side-nav {
+    position: static;
+    flex-direction: row;
+    gap: var(--space-1);
+    max-height: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .side-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .side-nav .tab {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .side-nav .tab:last-child {
+    margin-top: 0;
+  }
 }

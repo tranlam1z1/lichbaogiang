@@ -10,11 +10,24 @@ export const ACCOUNT_LINKS = [
 /**
  * Khung cho các trang tài khoản (nạp điểm, lịch sử) và trang quản trị: cùng header với trang kế hoạch.
  * links: [{ to, label, icon, end?, badge? }]
+ * sidebar: menu dọc bên trái (trang quản trị) thay cho thanh tab dưới header; màn hẹp vẫn là dải tab ngang.
  */
-export default function AccountLayout({ title, subtitle = 'Kế hoạch giảng dạy · Tài khoản', links = ACCOUNT_LINKS, children }) {
+export default function AccountLayout({ title, subtitle = 'Kế hoạch giảng dạy · Tài khoản', links = ACCOUNT_LINKS, sidebar = false, children }) {
+  const nav = (
+    <nav className={sidebar ? 'side-nav' : 'tabs'} aria-label="Điều hướng">
+      {links.map((l) => (
+        <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `tab${isActive ? ' is-active' : ''}`}>
+          <span className="tab-icon" aria-hidden="true">{l.icon}</span>
+          <span>{l.label}</span>
+          {l.badge ? <span className="tab-badge" aria-label={`${l.badge} mục cần xử lý`}>{l.badge}</span> : null}
+        </NavLink>
+      ))}
+    </nav>
+  );
+  const main = <main className="page stack">{children}</main>;
   return (
     <div className="app">
-      <header className="masthead">
+      <header className={`masthead${sidebar ? ' masthead-flat' : ''}`}>
         <div className="masthead-inner">
           <div className="brand">
             <span className="brand-mark" aria-hidden="true">📒</span>
@@ -24,18 +37,17 @@ export default function AccountLayout({ title, subtitle = 'Kế hoạch giảng 
             </div>
             <UserBar />
           </div>
-          <nav className="tabs" aria-label="Điều hướng">
-            {links.map((l) => (
-              <NavLink key={l.to} to={l.to} end={l.end} className={({ isActive }) => `tab${isActive ? ' is-active' : ''}`}>
-                <span className="tab-icon" aria-hidden="true">{l.icon}</span>
-                <span>{l.label}</span>
-                {l.badge ? <span className="tab-badge" aria-label={`${l.badge} mục cần xử lý`}>{l.badge}</span> : null}
-              </NavLink>
-            ))}
-          </nav>
+          {!sidebar && nav}
         </div>
       </header>
-      <main className="page stack">{children}</main>
+      {sidebar ? (
+        <div className="side-shell">
+          {nav}
+          {main}
+        </div>
+      ) : (
+        main
+      )}
     </div>
   );
 }
