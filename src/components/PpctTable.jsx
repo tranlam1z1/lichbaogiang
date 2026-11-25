@@ -2,6 +2,7 @@ import { useDeferredValue, useMemo, useRef, useState } from 'react';
 import { useApp, getPpctIndex } from '../state/AppContext.jsx';
 import { foldVietnamese } from '../lib/text.js';
 import { subjectEquipment } from '../lib/schedule.js';
+import { GRADES } from '../../shared/plan.js';
 import EditableText from './EditableText.jsx';
 import ConfirmDialog from './ConfirmDialog.jsx';
 import EquipmentDefaults from './EquipmentDefaults.jsx';
@@ -99,7 +100,7 @@ export default function PpctTable() {
           <label className="field">
             <span>Khối</span>
             <select value={grade} onChange={(e) => { setGrade(e.target.value); setSubject(''); setPage(0); }}>
-              {[1, 2, 3, 4, 5].map((g) => <option key={g} value={g}>Lớp {g}{String(g) === String(classGrade) ? ' (lớp đang dạy)' : ''}</option>)}
+              {GRADES.map((g) => <option key={g} value={g}>Lớp {g}{String(g) === String(classGrade) ? ' (lớp đang dạy)' : ''}</option>)}
             </select>
           </label>
           <label className="field">

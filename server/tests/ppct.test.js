@@ -40,7 +40,7 @@ test('validate: dòng sai báo số dòng, khối sai trả 404', async () => {
   assert.equal(bad.status, 400);
   assert.match(bad.body.message, /^Dòng 2: tuần/);
   assert.equal((await admin('PUT', '/admin/ppct/3', { rows: [] })).status, 400);
-  assert.equal((await admin('PUT', '/admin/ppct/9', { rows })).status, 404);
+  assert.equal((await admin('PUT', '/admin/ppct/10', { rows })).status, 404);
 });
 
 test('tải lên → người dùng nhận bản mới; khôi phục → về bản gốc', async () => {

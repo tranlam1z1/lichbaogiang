@@ -4,7 +4,8 @@ import { prisma } from '../db.js';
 import { HttpError, validationError } from '../lib/errors.js';
 import { requireAuth } from '../middleware/auth.js';
 
-export const PPCT_GRADES = [1, 2, 3, 4, 5];
+import { GRADES } from '../../../shared/plan.js';
+export const PPCT_GRADES = GRADES;
 export const MAX_PPCT_ROWS = 5000;
 const SUBJECT_MAX = 60;
 const NAME_MAX = 500;

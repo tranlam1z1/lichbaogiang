@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useApp } from '../state/AppContext.jsx';
 import { toBackup } from '../state/reducer.js';
 import { SIGNATURE_ROLES, prepareSignature } from '../lib/signature.js';
+import { GRADES } from '../../shared/plan.js';
 import ConfirmDialog from './ConfirmDialog.jsx';
 
 const FIELDS = [
@@ -114,7 +115,7 @@ export default function ClassInfo() {
           <label className="field">
             <span>Khối</span>
             <select value={info.grade} onChange={set('grade')}>
-              {[1, 2, 3, 4, 5].map((g) => <option key={g} value={g}>Lớp {g}</option>)}
+              {GRADES.map((g) => <option key={g} value={g}>Lớp {g}</option>)}
             </select>
           </label>
           <label className="field">

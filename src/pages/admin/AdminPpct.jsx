@@ -6,7 +6,8 @@ import ConfirmDialog from '../../components/ConfirmDialog.jsx';
 import { formatDateTime } from '../account/AccountLayout.jsx';
 import AdminLayout from './AdminLayout.jsx';
 
-const GRADES = ['1', '2', '3', '4', '5'];
+import { GRADES as ALL_GRADES } from '../../../shared/plan.js';
+const GRADES = ALL_GRADES.map(String);
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /** Thay PPCT từng khối bằng file Excel; khối chưa thay dùng bản gốc đóng gói trong ứng dụng. */

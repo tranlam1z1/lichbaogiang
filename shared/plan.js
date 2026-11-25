@@ -12,3 +12,6 @@ export function planLabel(info) {
   const className = text(i.className);
   return [text(i.teacher), className && `Lớp ${className}`, text(i.school)].filter(Boolean).join(' · ').slice(0, 200);
 }
+
+/** Các khối lớp có PPCT (1–5 tiểu học, 6–9 THCS). */
+export const GRADES = [1, 2, 3, 4, 5, 6, 7, 8, 9];
